@@ -27,6 +27,13 @@ public class RequestBodies {
         if (type == ApiModels.AutoRequest.class && node.path("request_id").isTextual()
                 && node.get("request_id").textValue().matches(ContractJson.UUID_PATTERN))
             request.setAttribute(REQUEST_ID_ATTRIBUTE, node.get("request_id").textValue());
+        return shapeWithDefaults(node, type);
+    }
+    /** Upload and organizer fetch use the same bounded parser and legacy optional defaults. */
+    public Dataset.Envelope dataset(byte[] bytes) {
+        return shapeWithDefaults(json.parse(bytes, DATASET_LIMIT), Dataset.Envelope.class);
+    }
+    private <T> T shapeWithDefaults(JsonNode node, Class<T> type) {
         // Preserve legacy optional defaults only; never coerce values or discard unknown fields.
         if (node instanceof ObjectNode object) {
             if (type == Dataset.Envelope.class) {

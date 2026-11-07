@@ -3,8 +3,9 @@
 This module implements application liveness and a static Vanilla JS start page (T03),
 strict contract DTOs/validation and deterministic scoring (T04), and persistent SQLite,
 JSON import, versioned checklist REST and manual evaluation/history (T05), plus
-immutable evaluations and atomic appeals/review (T06, pending peer review).
-Organizer API fetching and Java-to-ML HTTP integration are not implemented.
+immutable evaluations and atomic appeals/review (T06), and organizer dataset fetching
+with a minimal Vanilla group_id form (T07, pending peer review).
+Java-to-ML HTTP integration is not implemented.
 The legacy backend/frontend and shared contract2.0.0 are unchanged.
 
 ## Requirements and pinned versions
@@ -261,5 +262,98 @@ python3 server/src/test/python/review_smoke.py
 
 No real DEV/CONTROL data, provider calls, ML HTTP integration, reviewer UI or authentication
 is involved. Exact-substring grounding cannot establish whether a human decision is
-semantically justified. T06 remains in_progress until the second participant reviews the
-Java API/revision behavior, additive schema and verification evidence required by plan.json.
+semantically justified. T06 was closed after Nurtas's review on 2026-11-07, as reported by
+Farhat; Nurtas did not independently rerun the 5,841 passing JUnit tests. See plan.json.
+
+## T07 organizer fetch and minimal UI
+
+The Java-served page now accepts group_id, shows loading/success/safe errors, accepted
+record count, and saved conversation counts grouped by dataset. It uses same-origin
+`POST /api/datasets/fetch` and `GET /api/conversations`; external text is rendered with
+textContent. It is not the T12 conversation viewer, checklist editor or review dashboard.
+
+```text
+POST /api/datasets/fetch
+Content-Type: application/json
+
+{"group_id":"DEV"}
+```
+
+Success200 returns the same `Dataset.ImportResult` as upload: dataset_group_id,
+imported_records, languages and channels. imported_records counts accepted input rows,
+including identical reimports, not only newly inserted rows. The UI refreshes the stored
+count separately. Request JSON is strict; group_id must be nonblank and at most200 Unicode
+code points (an engineering limit, not an organizer rule). The browser cannot supply a URL.
+
+Configure **only the Java process** with `CQA_ORGANIZER_URL` (Spring property
+`cqa.organizer-url`): the complete private signed GET URI supplied by the organizers.
+For an interactive Bash launch, enter it without putting it in shell history or arguments:
+
+```bash
+read -r -s -p 'Organizer URL: ' CQA_ORGANIZER_URL
+export CQA_ORGANIZER_URL
+java -jar server/target/freedom-cqa-server-0.1.0.jar
+```
+
+Never commit the value, put it in static files, or enable HTTP wire logging with credentials.
+Absent configuration leaves startup/health/manual import available; fetch returns503.
+URLs must be absolute ASCII HTTP(S) URIs with non-ASCII characters percent-encoded,
+without user-info or fragments. Malformed/unsupported URLs fail safely on fetch.
+
+The local Student Guide v3 confirms GET with group_id. The adapter replaces its value
+with UTF-8 query encoding, or appends it if absent. Encoded group_id keys are recognized;
+duplicate group_id keys collapse to one. Every other query segment stays byte-for-byte
+unchanged: order, case of percent escapes, plus signs, duplicate keys and empty values.
+No other query parameter is invented or required by the adapter. Retaining a signature
+does **not** guarantee that it authorizes another group:401/403 are reported honestly.
+All redirects are rejected, including same-origin redirects. No request body, transcript,
+audio locator or provider input is sent upstream; only the GET query is sent.
+
+`CQA_ORGANIZER_CONNECT_TIMEOUT_MS` defaults to3000 (bounded1..5000).
+`CQA_ORGANIZER_RESPONSE_TIMEOUT_MS` defaults to10000 (bounded1..30000), including headers
+and the entire streamed body. The UI waits up to35s, then asks to refresh before retrying.
+The adapter makes one application-level request with no application retry loop. A bounded
+body subscriber rejects responses over16MiB, including chunked responses without a length;
+non-identity Content-Encoding is rejected. Non-success bodies are discarded, not relayed.
+
+Fetch and upload share the T05 parser/defaults and ConversationService.importDataset.
+Optional absent error/audio_url keep the existing defaults; explicit nulls and unknown
+fields remain strict. Envelope success/error/count/unique IDs/types are validated and the
+returned dataset_group_id must exactly match the request. The HTTP wait has no SQLite
+transaction. The existing short atomic import preserves all source fields and positional
+IDs, accepts identical reimports and returns409 VERSION_CONFLICT for changed source data.
+DEV/CONTROL use independent composite identities. The user's persistent DB was not used
+for T07 verification; test DEV/CONTROL labels contain only newly synthesized data.
+
+Organizer errors are **Java-only**, scoped to this new domain endpoint. They use the familiar
+detail envelope (`code`, fixed safe `message`, `retryable:false`, `request_id:null`) with the
+codes below. They are not ML errors and are not additions to shared contract2.0.0 schemas.
+Validation422 INVALID_INPUT and storage409 VERSION_CONFLICT retain their existing meaning.
+
+| HTTP | Java organizer codes |
+|---|---|
+| 503 | ORGANIZER_UNCONFIGURED, ORGANIZER_CONFIGURATION_ERROR, ORGANIZER_UNAVAILABLE, ORGANIZER_RATE_LIMITED |
+| 504 | ORGANIZER_TIMEOUT |
+| 404 | ORGANIZER_NOT_FOUND (upstream404) |
+| 502 | ORGANIZER_ACCESS_DENIED (upstream401/403), ORGANIZER_REDIRECT_REJECTED, ORGANIZER_UPSTREAM_ERROR |
+| 502 | ORGANIZER_INVALID_RESPONSE, ORGANIZER_GROUP_MISMATCH, ORGANIZER_RESPONSE_TOO_LARGE |
+
+Responses/logs never include upstream URL, credentials, raw bodies or transcripts. The UI
+uses its own fixed allowlist of error messages, so even a proxy body is not displayed.
+No automatic retries, Groq calls or Java-to-Python ML requests are introduced.
+
+`OrganizerApiTest` runs against a local synthetic HTTP server, with actual Spring HTTP
+and temporary SQLite. `OrganizerUriTest` covers raw-query replacement and invalid URI
+configuration. The standalone smoke runs the packaged Java process with a synthetic
+organizer, imports6 unique conversations (3 each under synthetic DEV/CONTROL), checks
+idempotency/rollback/exact source preservation and closes/restarts Java on the same temp DB:
+
+```bash
+python3 -B server/src/test/python/organizer_smoke.py
+# Optional: keep that verified synthetic app alive for manual/browser form checks.
+python3 -B server/src/test/python/organizer_smoke.py --serve
+```
+
+Real organizer GET: **NOT RUN**; it requires explicit permission. Live availability,
+signature expiry and access to the organizer's CONTROL group remain unverified. T07 awaits
+its own peer review; T06 approval does not imply approval of the new organizer boundary.

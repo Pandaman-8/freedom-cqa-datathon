@@ -2889,8 +2889,19 @@
         "T05"
       ],
       "files": [
-        "server/src/main/java/cqa/dataset/",
-        "server/src/main/resources/static/js/datasets.js"
+        "server/src/main/java/cqa/dataset/OrganizerClient.java",
+        "server/src/main/java/cqa/dataset/OrganizerService.java",
+        "server/src/main/java/cqa/dataset/OrganizerFailure.java",
+        "server/src/main/java/cqa/api/OrganizerController.java",
+        "server/src/main/java/cqa/api/RequestBodies.java",
+        "server/src/main/resources/application.properties",
+        "server/src/main/resources/static/index.html",
+        "server/src/main/resources/static/styles.css",
+        "server/src/main/resources/static/js/datasets.js",
+        "server/src/test/java/cqa/OrganizerApiTest.java",
+        "server/src/test/java/cqa/dataset/OrganizerUriTest.java",
+        "server/src/test/python/organizer_smoke.py",
+        "server/README.md"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -2905,23 +2916,169 @@
         "Envelope validation/atomic import общий с upload; safe errors, no secret in browser/logs."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "./server/mvnw -f server/pom.xml clean verify",
+        "python3 server/src/test/python/scoring_reference.py --check",
+        "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+        "python3 -B server/src/test/python/organizer_smoke.py --serve (packaged HTTP/restart assertions plus actual browser checks)",
+        "Peer review of the new Java organizer boundary/error codes, privacy and test evidence remains pending.",
+        "Real organizer GET: NOT RUN. Explicit permission is required before accessing that endpoint."
       ],
       "estimate_hours": 0.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "Signed URL params/expiry/HTTP errors; реальный organizer network GET ещё не проверен.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "Technical implementation and automated/browser verification completed; mandatory T07 peer review remains outstanding. T06 approval does not approve T07.",
+        "Real organizer GET NOT RUN. Signature validity/expiry, real service availability and access to another group_id remain unverified; preserved query bytes do not guarantee authorization.",
+        "Java-only organizer errors add scoped ORGANIZER_* codes without modifying ML contract2.0.0 or shared schemas. Review those codes and the UI behavior before merge.",
+        "Engineering limits: group_id<=200 Unicode code points, response<=16MiB, connect default3s/max5s, complete-response default10s/max30s. Non-identity encoding and all redirects are rejected.",
+        "Only minimal fetch form/group counters implemented. Conversation viewer/editor/evaluation/review UI remain T12/T14; Java-to-Python HTTP remains T13."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-07",
+          "kind": "scope_and_base",
+          "branch": "codex/fs-T07-organizer",
+          "base_commit": "b6d48be9cd33b3c1cef9b594d3d7b8efd4649672",
+          "details": "Started only after separate T06 closure commit was verified and pushed normally to main. PR4 merge de281b5 confirmed through GitHub metadata. No T07 commit/push/PR/merge; no dependent T12/T13/T14/batch work."
+        },
+        {
+          "kind": "official_source",
+          "path": "data/official/student_guide_v3.pdf",
+          "details": "Read locally: GET with group_id confirmed. URI annotations inspected only for query key names; signed URI/values withheld, not written to repo/logs. Adapter requires only group_id and preserves every other existing raw query segment; it does not invent mandatory parameters. No organizer network request made."
+        },
+        {
+          "kind": "implementation",
+          "endpoint": "POST /api/datasets/fetch",
+          "request": "{\"group_id\":\"DEV\"}",
+          "configuration": "CQA_ORGANIZER_URL / cqa.organizer-url, private Java-side environment/config only. Optional CQA_ORGANIZER_CONNECT_TIMEOUT_MS and CQA_ORGANIZER_RESPONSE_TIMEOUT_MS; bounded defaults documented in server/README.md.",
+          "details": [
+            "Java HTTP adapter uses configured destination, replaces/appends UTF-8 encoded group_id, recognizes encoded keys and collapses only duplicate group_id. Other query bytes/order/percent escape case/plus/empty/duplicate parameters preserved.",
+            "No redirects or application retry loop. Whole-body future deadline includes stalled body; bounded subscriber enforces16MiB without trusting Content-Length. Unconfigured/malformed URL gives safe error on fetch without breaking health/manual import.",
+            "Fetch/upload share RequestBodies dataset parser/defaults and existing ConversationService.importDataset. Group identity must match exactly. No SQLite transaction during HTTP wait; unchanged T05 atomic import/idempotency/source roles/timestamps/order/audio/message IDs.",
+            "Java-only ORGANIZER_* error envelope uses fixed safe messages. No shared ML codes/schema changes; input422 and changed-content409 unchanged. Browser cannot supply a URL; non-success upstream bodies are discarded.",
+            "Minimal Vanilla form has loading/disabled state, safe messages, imported_records count, refreshed stored count/group list. Uses textContent and same-origin Java routes, no credentials/URL/transcripts in frontend."
+          ]
+        },
+        {
+          "kind": "clean_build_and_tests",
+          "command": "./server/mvnw -f server/pom.xml clean verify",
+          "result": "BUILD SUCCESS;5894 tests,0 failures,0 errors,0 skipped. Existing5841 plus53 T07 tests.",
+          "suites": [
+            {
+              "suite": "cqa.FoundationTest",
+              "tests": 4,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.OrganizerApiTest",
+              "tests": 45,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.ReviewApiTest",
+              "tests": 56,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.ReviewMigrationTest",
+              "tests": 1,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.StorageApiTest",
+              "tests": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dataset.OrganizerUriTest",
+              "tests": 8,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dto.ContractFixturesTest",
+              "tests": 72,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dto.StrictDtoTest",
+              "tests": 499,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.scoring.ScoringEngineTest",
+              "tests": 5191,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "coverage": "Synthetic local upstream only: GET/raw query, exact multilingual source preservation, repeat/upload idempotency, synthetic DEV/CONTROL separation, injection-safe group encoding, mismatched/unknown groups,401/403/404/429/5xx, redirects never followed, header/body timeout, refused connection, invalid JSON/UTF8/envelope/role/language/message, oversize fixed/chunked body, optional defaults, atomic conflict rollback, restart, unconfigured startup and safe logs/frontend/errors. All T05/T06 regression suites passed."
+        },
+        {
+          "kind": "scoring_and_contract",
+          "results": [
+            "PASS:5184 exact Fraction reference combinations across all score fields.",
+            "PASS:4 Draft2020-12 schemas equal embedded plan.json; contract2.0.0 and POST /v1/evaluate unchanged;72 fixture expectations pass."
+          ]
+        },
+        {
+          "kind": "packaged_http_smoke",
+          "command": "python3 -B server/src/test/python/organizer_smoke.py --serve",
+          "result": "PASS: actual packaged Java JVM and local synthetic upstream; temporary SQLite/free loopback ports. GET/raw query, fetch/upload, duplicate reimport, access-denied and mismatched group errors, fetch/upload conflict rollback, exact original sources/positional messages, and process restart from another working directory.",
+          "unique_conversations_before_browser": 6,
+          "synthetic_groups": {
+            "DEV": 3,
+            "CONTROL": 3
+          },
+          "real_organizer_get": "NOT RUN",
+          "privacy": "Only synthetic data; no real organizer/provider/Groq/ML requests or user persistent SQLite. Own test processes and temporary database cleaned up."
+        },
+        {
+          "kind": "browser_verification",
+          "tool": "browser:control-in-app-browser",
+          "result": "PASS on the packaged temporary app: initial6 records; repeated DEV succeeds with count6; DENIED shows fixed safe error and count6; SLOW disables textbox/button while loading then updates count9; HTML-like group_id is literal text with zero img nodes and count12; whitespace-only group rejected; screenshot inspected and no horizontal overflow at default viewport.",
+          "additional_synthetic_records": 6,
+          "final_temporary_record_count": 12,
+          "details": "Initial browser tab attachment timed out; a fresh documented tab connected successfully. No viewport override or production data. Test tab closed and temporary JVM/upstream stopped after verification."
+        },
+        {
+          "kind": "preservation",
+          "details": "Protected contracts, ML, legacy backend/frontend, AGENTS, scoring code and T06 review/repository files unchanged, including frontend/package-lock.json. No official signed URI, real datasets, SQLite/PDF files or secrets added to diff. Only T07 changed in plan after the separate T06 closure commit."
+        },
+        {
+          "kind": "peer_review_pending",
+          "technical_status": "implemented_and_verified",
+          "formal_status": "in_progress",
+          "acknowledgment": null,
+          "required_review": [
+            "Java organizer configuration, raw query preservation, bounded HTTP and safe Java-only error codes.",
+            "Shared parser/import reuse, no changes to ML/scoring/review semantics, privacy and synthetic evidence.",
+            "Minimal UI states and5894 JUnit/HTTP/browser verification evidence."
+          ],
+          "details": "No T07 peer approval is claimed. Real organizer GET remains a separately reported limitation, not a synthetic-test PASS."
+        }
+      ],
       "requirement_ids": [
         "R04",
         "R23"
