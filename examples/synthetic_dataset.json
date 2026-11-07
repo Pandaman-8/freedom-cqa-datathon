@@ -1,0 +1,33 @@
+{
+  "error": "",
+  "isSuccess": true,
+  "data": {
+    "dataset_group_id": "SYNTHETIC",
+    "total_records": 2,
+    "records": [
+      {
+        "conversation_id": "demo-ru-001", "channel": "agent chat", "language": "RU", "audio_url": null,
+        "transcript": [
+          {"timestamp":"00:00", "speaker":"client", "text":"Здравствуйте, где скачать отчёт?"},
+          {"timestamp":"00:02", "speaker":"bot", "text":"Здравствуйте! Передаю ваш вопрос сотруднику."},
+          {"timestamp":"00:05", "speaker":"system", "text":"Оператор подключился."},
+          {"timestamp":"00:08", "speaker":"operator", "text":"Здравствуйте! Меня зовут Анна. Откройте Меню, затем Отчёты, выберите период и скачайте отчёт."},
+          {"timestamp":"00:22", "speaker":"client", "text":"Нашёл, спасибо!"},
+          {"timestamp":"00:28", "speaker":"operator", "text":"Рада помочь. Если будут вопросы, напишите нам. До свидания!"}
+        ]
+      },
+      {
+        "conversation_id": "demo-en-002", "channel": "agent chat", "language": "EN", "audio_url": null,
+        "transcript": [
+          {"timestamp":"00:00", "speaker":"client", "text":"My order was declined. Could you explain why?"},
+          {"timestamp":"00:04", "speaker":"system", "text":"An agent joined the conversation."},
+          {"timestamp":"00:06", "speaker":"operator", "text":"Hi, I'm Ada from support. What message do you see?"},
+          {"timestamp":"00:20", "speaker":"client", "text":"It only says declined. I don't know what to do next."},
+          {"timestamp":"00:40", "speaker":"operator", "text":"I can send this for review if you provide the order ID."},
+          {"timestamp":"00:58", "speaker":"client", "text":"I'll find it and return later."},
+          {"timestamp":"01:04", "speaker":"operator", "text":"You can return to this chat. Have a good day."}
+        ]
+      }
+    ]
+  }
+}

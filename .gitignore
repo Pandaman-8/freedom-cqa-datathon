@@ -1,0 +1,40 @@
+# Python artifacts / local venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.coverage
+
+# Node artifacts
+node_modules/
+dist/
+
+# Secrets / private settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Datathon datasets, recordings and customer data
+/data/*
+!/data/.gitkeep
+/backend/data/
+/uploads/
+/recordings/
+/invoke.json
+/**/invoke.json
+DEV*.json
+CONTROL*.json
+*.sqlite
+*.sqlite3
+*.db
+*.wav
+*.mp3
+*.m4a
+
+# Editor and OS
+.vscode/
+.idea/
+.DS_Store
