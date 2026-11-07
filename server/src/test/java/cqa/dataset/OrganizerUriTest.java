@@ -12,7 +12,7 @@ class OrganizerUriTest {
             "https://example.invalid/?sig=a%2fb+%3D&%67roup_id=DEV&&group_id=OLD&sv=x&sp=", "CONTROL").toString());
         assertEquals("https://example.invalid/?sig=raw&group_id=DEV", OrganizerClient.forGroup("https://example.invalid/?sig=raw", "DEV").toString());
     }
-    @ParameterizedTest @ValueSource(strings={"file:///tmp/private", "https://user:secret@example.invalid/", "https://example.invalid/#fragment", "not a URL", "https://example.invalid/%invalid", "https://example.invalid:99999/", "http://example.invalid:0/"})
+    @ParameterizedTest @ValueSource(strings={"file:///tmp/private", "https://user:secret@example.invalid/", "https://example.invalid/#fragment", "not a URL", "https://example.invalid/%invalid", "https://example.invalid:99999/", "http://example.invalid:0/", "relative/path", "//example.invalid/path", "/relative/path"})
     void unsafeOrMalformedConfiguredAddressIsRejectedWithoutEcho(String value) {
         var failure = assertThrows(OrganizerFailure.class, () -> OrganizerClient.forGroup(value, "DEV"));
         assertEquals(OrganizerFailure.Reason.CONFIGURATION_ERROR, failure.reason); assertFalse(failure.getMessage().contains(value));

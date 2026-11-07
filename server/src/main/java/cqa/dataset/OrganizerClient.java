@@ -32,7 +32,8 @@ public class OrganizerClient implements AutoCloseable {
         if (configured == null || configured.isBlank()) throw new OrganizerFailure(UNCONFIGURED);
         try {
             URI uri = new URI(configured);
-            if (!Set.of("http", "https").contains(uri.getScheme()) || uri.getHost() == null
+            String scheme = uri.getScheme();
+            if (scheme == null || !Set.of("http", "https").contains(scheme) || uri.getHost() == null
                     || uri.getRawUserInfo() != null || uri.getRawFragment() != null
                     || uri.getPort() == 0 || uri.getPort() > 65535 || !uri.toASCIIString().equals(configured))
                 throw new OrganizerFailure(CONFIGURATION_ERROR);

@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.system.*;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.io.IOException;
 import java.net.*;
@@ -240,6 +241,32 @@ class OrganizerApiTest {
             error(call(url(invalid), "POST", "/api/datasets/fetch", Map.of("group_id", group)), 503, "ORGANIZER_CONFIGURATION_ERROR");
             assertEquals(200, call(url(invalid), "GET", "/api/health", null).status());
         }
+    }
+    @ParameterizedTest @ValueSource(strings={"relative/path", "//example.invalid/path", "/relative/path"})
+    void schemeLessConfigurationReturns503WithoutLeaksOrStorageChanges(String invalidUrl, CapturedOutput output) throws Exception {
+        // Exercise the environment variable binding without changing the process-wide environment.
+        try (var invalid = (ServletWebServerApplicationContext) new SpringApplicationBuilder(Application.class)
+                .initializers(context -> context.getEnvironment().getPropertySources().addFirst(
+                    new SystemEnvironmentPropertySource("organizer-test-environment", Map.of("CQA_ORGANIZER_URL", invalidUrl))))
+                .run("--server.port=0", "--cqa.db-path=" + directory.resolve("no-scheme-" + sequence + ".sqlite"),
+                    "--spring.main.banner-mode=off", "--logging.level.root=WARN")) {
+            String target = url(invalid);
+            assertEquals(200, call(target, "POST", "/api/datasets/import", dataset(group)).status());
+            var jdbc = invalid.getBean(JdbcTemplate.class);
+            var before = new LinkedHashMap<String, List<Map<String, Object>>>();
+            for (String table : List.of("checklists", "checklist_heads", "conversations", "evaluations", "evaluation_reviews", "appeals"))
+                before.put(table, jdbc.queryForList("SELECT * FROM " + table + " ORDER BY rowid"));
+
+            var reply = call(target, "POST", "/api/datasets/fetch", Map.of("group_id", group));
+            error(reply, 503, "ORGANIZER_CONFIGURATION_ERROR");
+            assertFalse(reply.raw().contains(invalidUrl));
+            assertEquals(0, requests.get());
+            before.forEach((table, rows) -> assertEquals(rows, jdbc.queryForList("SELECT * FROM " + table + " ORDER BY rowid"), table));
+            assertEquals(200, call(target, "GET", "/api/health", null).status());
+            assertEquals(200, call(target, "POST", "/api/datasets/import", dataset(group)).status());
+        }
+        assertFalse(output.getAll().contains(invalidUrl));
+        safe(output.getAll());
     }
     @Test void restartRetainsExactSourcesAndFetchIsStillIdempotent() throws Exception {
         assertEquals(200, fetch().status()); var before = app.getBean(JdbcTemplate.class).queryForList("SELECT * FROM conversations ORDER BY id");
