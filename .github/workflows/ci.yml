@@ -29,3 +29,21 @@ jobs:
       - name: Build Vite
         working-directory: frontend
         run: npm run build
+
+  ml-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ML dependencies
+        run: python -m pip install -r ml-service/requirements-dev.txt -r contracts/requirements.txt
+      - name: Run ML tests
+        env:
+          PYTHONPATH: ml-service
+          GROQ_API_KEY: ''
+          GROQ_FREE_PLAN_CONFIRMED: 'false'
+        run: python -m pytest -q ml-service/tests
+      - name: Validate 72 contract fixtures
+        run: python -B contracts/validate.py
