@@ -4,8 +4,10 @@ The approved application is **Java21 + Spring Boot + SQLite**, serving HTML/CSS/
 ES modules at localhost:8080. T07 organizer fetch is closed; T12 provides conversations,
 versioned checklist editing, manual evaluations, evidence, original/final scores and review
 (T12 closed after peer approval). T13 adds the Java ML HTTP client, durable request ledger
-and AI UI for exact own synthetic fixtures. Live Python/provider E2E is still pending
-Nurtas's readiness confirmation; local fake-server verification is not live inference.
+and AI UI for exact own synthetic fixtures. T13 is closed after the live Groq E2E and
+peer approval reported by Farhat, corroborated by the persisted synthetic request/result.
+T14 verifies model appeals and manual evaluation with an extended checklist v2; dynamic
+v2 inference remains blocked pending a separately approved fixture and live-run agreement.
 
 Start and verify using [server/README.md](server/README.md), including an isolated synthetic
 browser walkthrough. No Node build is required for the target application. The Python ML
