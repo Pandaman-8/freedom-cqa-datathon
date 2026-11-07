@@ -1,0 +1,4813 @@
+{
+  "schema_version": "2.0.0",
+  "project": {
+    "name": "Freedom CQA",
+    "repository": "https://github.com/Pandaman-8/freedom-cqa-datathon",
+    "audited_commit": "a8261f5",
+    "planning_date": "2026-11-07",
+    "timezone": "Asia/Almaty",
+    "mode": "planning_only",
+    "official_start_at": null,
+    "control_offset_hours": 23,
+    "code_freeze_offset_hours": 24,
+    "demo_max_minutes": 5,
+    "status_vocabulary": [
+      "planned",
+      "ready",
+      "in_progress",
+      "blocked",
+      "done",
+      "deferred"
+    ],
+    "status_authority": "Только tasks[].status в plan.json. Markdown — пояснения, не второй трекер.",
+    "objective": "Java/Vanilla MVP: import → checklist/version → real Python ML HTTP → Java score → evidence → appeal/review → UI criterion change → DEV/CONTROL batch.",
+    "schedule": {
+      "origin": "T0 — начало реализации; официальный H0 неизвестен. Все окна условны при доступных источниках, provider и build dependencies.",
+      "hours_to_rehearsal": 17.5,
+      "recovery_buffer_hours": 3,
+      "control_freeze_window_hours": 1,
+      "minimum_remaining_to_H23_hours": 20.5,
+      "minimum_remaining_to_H24_hours": 21.5,
+      "estimate_range_hours_to_rehearsal": [
+        17.5,
+        24
+      ],
+      "assumptions": "Два участника; Joint занимает обоих. Это инженерная оценка, не измеренная скорость команды. Ожидание PDF/разрешений, inference DEV и загрузка зависимостей сверх заложенного времени увеличивают срок.",
+      "compression_rule": "P1/P2 выключены из baseline. Если до H23 меньше20.5ч — высокий риск; сохранить обязательные flows и batch, сократить оформление/число providers. Не заменять Java Python-бэкендом. При срыве ранних рубежей явно пересогласовать объём, не обещать все gates.",
+      "withdrawn_previous_estimate": "11.25ч до rehearsal /15.25ч до freeze относились к сохранению старого стека и больше не применимы.",
+      "resource_hours": {
+        "Farhat_exclusive": 14.5,
+        "Nurtas_exclusive": 6.25,
+        "Joint_each_person": 4.0
+      },
+      "dependency_only_critical_path_to_rehearsal": {
+        "task_ids": [
+          "T02",
+          "T03",
+          "T04",
+          "T05",
+          "T12",
+          "T13",
+          "T21",
+          "T16",
+          "T18",
+          "T19"
+        ],
+        "hours": 13.75,
+        "note": "Не учитывает занятость одного Farhat; практически применять17.5ч resource baseline."
+      },
+      "resource_constrained_critical_chain": [
+        "T02",
+        "T01",
+        "T03",
+        "T04",
+        "T05",
+        "T12",
+        "T13",
+        "T06",
+        "T14",
+        "T07",
+        "T21",
+        "T16",
+        "T18",
+        "T19"
+      ]
+    },
+    "plan_revision": "java-vanilla-http-ml/2"
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "path": "data/official/student_guide_v3.pdf",
+      "authority": "official",
+      "status": "read",
+      "evidence": "Все 4 страницы извлечены в память; стр.2 визуально проверена; метаданные ссылки стр.3 изучены.",
+      "privacy": "PDF содержит signed API URI с sig. Не публиковать файл/ссылку."
+    },
+    {
+      "id": "S2",
+      "path": "data/official/chat_quality_checklist.pdf",
+      "authority": "official",
+      "status": "missing",
+      "evidence": "Файл отсутствует; точные формулировки/NA/scales/rounding не сверены с оригиналом."
+    },
+    {
+      "id": "S3",
+      "path": "data/dev/invoke.json",
+      "authority": "dataset",
+      "status": "read",
+      "evidence": "Все записи структурно проверены; семантический gold не размечен, аудио не скачано/не прослушано.",
+      "privacy": "В документах только агрегаты и номера кандидатов, никаких реплик/URL."
+    },
+    {
+      "id": "S4",
+      "path": "backend/; frontend/; tests/; scripts/; .github/",
+      "authority": "implementation",
+      "status": "read_and_exercised",
+      "evidence": "13 existing tests in-memory; Vite write:false; runtime render; 5184 scoring combinations; synthetic defect probes."
+    },
+    {
+      "id": "S5",
+      "path": "backend/app/seed/chat_quality.json",
+      "authority": "repository_provisional",
+      "status": "read",
+      "evidence": "8 критериев согласуются с ориентировкой пользователя; дословность относительно S2 не доказана."
+    },
+    {
+      "id": "S6",
+      "path": "AGENTS.md; README.md; docs/requirements.md; docs/architecture.md; docs/api-contract.md; docs/ml-contract.md",
+      "authority": "repository_secondary",
+      "status": "read"
+    },
+    {
+      "id": "S7",
+      "path": "user_request",
+      "authority": "user_scope",
+      "status": "read",
+      "evidence": "Разрешены ровно четыре planning artifacts, запрещены implementation/commit/push/paid calls/private publication."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R01",
+      "requirement": "Редактор criterion/wording/weight/type/scale/NA",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: Editor/API есть, runtime сломан.",
+      "gap": "Перенести редактор в Vanilla JS и Java versioned API; browser verification.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T03",
+        "T12",
+        "T14"
+      ],
+      "verification": "Произвольный новый criterion применяется без code edits."
+    },
+    {
+      "id": "R02",
+      "requirement": "8 начальных критериев из официального PDF",
+      "source": "S1:p1;S2",
+      "current_implementation": "Historical Python/React foundation: Seed соответствует ориентировке пользователя.",
+      "gap": "S2 отсутствует; дословность не доказана.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T01",
+        "T09"
+      ],
+      "verification": "Каждый instruction/NA/level сверён с PDF."
+    },
+    {
+      "id": "R03",
+      "requirement": "Версии и неизменяемость истории",
+      "source": "S7;S6",
+      "current_implementation": "Historical Python/React foundation: Append-only checklist есть; evaluation берёт latest.",
+      "gap": "Pin version и score snapshot.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T05",
+        "T06"
+      ],
+      "verification": "Concurrent edit не меняет evaluation version/history."
+    },
+    {
+      "id": "R04",
+      "requirement": "Получение DEV/CONTROL по group_id",
+      "source": "S1:p1,p3,p4",
+      "current_implementation": "Historical Python/React foundation: Работает импорт готового JSON.",
+      "gap": "Нет backend GET-adapter/UI group_id.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T07",
+        "T17",
+        "T20",
+        "T21"
+      ],
+      "verification": "Два group_id загружаются без browser credentials; upload fallback сохранён."
+    },
+    {
+      "id": "R05",
+      "requirement": "Выбор checklist и автоматическая оценка",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: API keys поддерживает; UI hardcodes chat-quality; auto501.",
+      "gap": "Selector и настоящий adapter.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T08",
+        "T10",
+        "T11",
+        "T12",
+        "T13"
+      ],
+      "verification": "Real evaluation сохранена с выбранными key/version."
+    },
+    {
+      "id": "R06",
+      "requirement": "RU/KZ/EN",
+      "source": "S1:p1,p2",
+      "current_implementation": "Historical Python/React foundation: Импорт/вывод работают, ML нет.",
+      "gap": "Language quality.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T09",
+        "T15"
+      ],
+      "verification": "Минимум 2 размеченных собственных synthetic cases на язык, human review."
+    },
+    {
+      "id": "R07",
+      "requirement": "Оператор отдельно от bot/system",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: Роли сохраняются, semantic evaluator нет.",
+      "gap": "Role/order prompt и tests.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T09",
+        "T10",
+        "T15"
+      ],
+      "verification": "Bot greeting не засчитан; system verification учтён в последовательности."
+    },
+    {
+      "id": "R08",
+      "requirement": "Исходные timestamps и стабильные message IDs",
+      "source": "S1:p3;S7",
+      "current_implementation": "Historical Python/React foundation: Строки и positional mNNNN сохраняются.",
+      "gap": "Перенести importer в Java с теми же IDs/строками и regression fixtures.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T04",
+        "T16"
+      ],
+      "verification": "Одинаковые timestamps не склеивают сообщения; строки не преобразованы."
+    },
+    {
+      "id": "R09",
+      "requirement": "Ответ, баллы, вес, explanation, evidence",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: API всё считает; UI не выводит earned/effective weights.",
+      "gap": "Полная карточка.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T12",
+        "T13"
+      ],
+      "verification": "Scale7/10 weight15 → raw10.5 и правильный normalized contribution."
+    },
+    {
+      "id": "R10",
+      "requirement": "Переход к message/audio fragment",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: Message jump/player реализованы, audio seek нет.",
+      "gap": "Рабочий UI, jump verification; Q02 для calls.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T12",
+        "T15",
+        "T16"
+      ],
+      "verification": "Evidence jump ведёт к нужному ID при одинаковом времени; playback/link доступен."
+    },
+    {
+      "id": "R11",
+      "requirement": "NA reason и checked context для omission",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: Schema требует evidence; substring проверяет наличие, не смысл.",
+      "gap": "NA rule UI и semantic cases.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T04",
+        "T09",
+        "T11",
+        "T12",
+        "T15"
+      ],
+      "verification": "NA исключает вес; omission имеет настоящие context quotes."
+    },
+    {
+      "id": "R12",
+      "requirement": "Нормализация весов, шкал и total",
+      "source": "S1:p2;S5",
+      "current_implementation": "Historical Python/React foundation: 5184 сочетания совпали с независимым Fraction reference.",
+      "gap": "Finite-input validation; math сохранить.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T04",
+        "T16"
+      ],
+      "verification": "Illegal level/NA rejected; custom all-NA→null, maximum100."
+    },
+    {
+      "id": "R13",
+      "requirement": "Итоги секций при заданных sections",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: Backend есть, UI нет.",
+      "gap": "Section scores/NA output.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T12"
+      ],
+      "verification": "Секция без веса→NA; проценты секций не суммируются."
+    },
+    {
+      "id": "R14",
+      "requirement": "Грубая ошибка отдельно",
+      "source": "S1:p2;S5",
+      "current_implementation": "Historical Python/React foundation: C08 flag не штрафует total.",
+      "gap": "Сохранить после ML/review.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T09",
+        "T14",
+        "T16"
+      ],
+      "verification": "100 + flag возможно; total не обнуляется."
+    },
+    {
+      "id": "R15",
+      "requirement": "Апелляция criterion/comment",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: API/UI есть; неатомарный duplicate check.",
+      "gap": "Atomic uniqueness, AI E2E.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T06",
+        "T14"
+      ],
+      "verification": "Concurrent create→одна open запись и201/409."
+    },
+    {
+      "id": "R16",
+      "requirement": "Reviewer reason, original/final, recalculation",
+      "source": "S1:p2",
+      "current_implementation": "Historical Python/React foundation: Sequential flow работает; original score пересчитывается при GET.",
+      "gap": "Snapshot/atomic decisions/original details.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T06",
+        "T12",
+        "T14"
+      ],
+      "verification": "Решение не переписывается, original immutable, final derived."
+    },
+    {
+      "id": "R17",
+      "requirement": "Новый criterion в UI на control",
+      "source": "S1:p1,p4",
+      "current_implementation": "Historical Python/React foundation: Manual added-criterion test есть; ML отсутствует.",
+      "gap": "Real dynamic-model E2E.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T10",
+        "T14",
+        "T20"
+      ],
+      "verification": "Новый ID/type/levels/NA применён без source/prompt edits."
+    },
+    {
+      "id": "R18",
+      "requirement": "Прослушивание или player link",
+      "source": "S1:p2,p3",
+      "current_implementation": "Historical Python/React foundation: Audio element+link есть; реальные URLs не проверены.",
+      "gap": "Local playback/expiry handling.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T15"
+      ],
+      "verification": "Воспроизведение/ссылка проверены или явная ошибка; no unsupported prosody claim."
+    },
+    {
+      "id": "R19",
+      "requirement": "Публичный GitHub и воспроизводимый запуск",
+      "source": "S1:p4",
+      "current_implementation": "Historical Python/React foundation: README/CI есть; lock untracked; remote не проверен.",
+      "gap": "Pinned deps/runtime smoke/fresh launch.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T18"
+      ],
+      "verification": "Clean checkout запускается; публичность и передача ссылки проверены человеком."
+    },
+    {
+      "id": "R20",
+      "requirement": "HTML/CSS/JS и без регистрации",
+      "source": "S1:p1,p4",
+      "current_implementation": "Historical Python/React foundation: React/Vite без login.",
+      "gap": "Java same-origin HTML/CSS/Vanilla JS; no framework build required.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T03",
+        "T12",
+        "T19"
+      ],
+      "verification": "Demo без login; Dynamics deployment сейчас не требуется."
+    },
+    {
+      "id": "R21",
+      "requirement": "Модель/стоимость paid evaluation",
+      "source": "S1:p4",
+      "current_implementation": "Historical Python/React foundation: Provider/usage/cost нет.",
+      "gap": "Все попытки учитываются.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T08",
+        "T10",
+        "T17",
+        "T19"
+      ],
+      "verification": "Actual model и summed cost disclosed; unknown не равен0."
+    },
+    {
+      "id": "R22",
+      "requirement": "H23 CONTROL/H24 freeze/≤5min",
+      "source": "S1:p4",
+      "current_implementation": "Historical Python/React foundation: Release/demo не проверены.",
+      "gap": "Rehearsal, freeze, UI-only changes.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T17",
+        "T19",
+        "T20",
+        "T21"
+      ],
+      "verification": "≤300s; frozen commit; CONTROL не заменён DEV."
+    },
+    {
+      "id": "R23",
+      "requirement": "Privacy public repo/external model",
+      "source": "S7;S1:p4",
+      "current_implementation": "Historical Python/React foundation: data gitignored; PDF содержит signed API link.",
+      "gap": "Policy, backend secrets, safe errors/release scan.",
+      "priority": "P0",
+      "planned_task_ids": [
+        "T07",
+        "T08",
+        "T11",
+        "T18",
+        "T20"
+      ],
+      "verification": "No real data/audio/tokens in git/logs/bundle; no unauthorized external submission."
+    },
+    {
+      "id": "R24",
+      "requirement": "Для дикции/интонации нужен звук",
+      "source": "S1:p4",
+      "current_implementation": "Historical Python/React foundation: Audio analysis отсутствует.",
+      "gap": "Уточнить обязательность, не изобретать rubric.",
+      "priority": "P2",
+      "planned_task_ids": [
+        "T01",
+        "T26"
+      ],
+      "verification": "При обязательности отдельный согласованный audio scope; иначе disclosed limitation."
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "A01",
+      "statement": "Seed временный до точной сверки PDF.",
+      "validation_task": "T01"
+    },
+    {
+      "id": "A02",
+      "statement": "ROUND_HALF_UP не подтверждён оригиналом для точных половин.",
+      "validation_task": "T01"
+    },
+    {
+      "id": "A03",
+      "statement": "Звонки: общие текстовые правила, без выдуманной интонации/дикции или новых штрафов.",
+      "validation_task": "T01"
+    },
+    {
+      "id": "A04",
+      "statement": "Секции seed — текущая конфигурация, официальный состав не подтверждён.",
+      "validation_task": "T01"
+    },
+    {
+      "id": "A05",
+      "statement": "Localhost/один backend-процесс; без production auth и тяжёлой инфраструктуры.",
+      "validation_task": "T02"
+    },
+    {
+      "id": "A06",
+      "statement": "H0 неизвестен; T0 графика не заменяет официальный старт.",
+      "validation_task": "T01"
+    },
+    {
+      "id": "A07",
+      "statement": "Provider, budget, rate limits и разрешение на реальные данные пока неизвестны.",
+      "validation_task": "T08"
+    },
+    {
+      "id": "A08",
+      "statement": "Quality thresholds/limits плана — engineering choices, не веса жюри.",
+      "validation_task": "T02"
+    },
+    {
+      "id": "A09",
+      "statement": "В предоставленных материалах не найдена отдельная нормативная база ответов компании для factual accuracy C04. Полнота по transcript и фактическая правильность внешних утверждений — разные проверки.",
+      "validation_task": "T01"
+    }
+  ],
+  "unresolved_questions": [
+    {
+      "id": "Q01",
+      "audience": "organizers_or_user",
+      "question": "Предоставить отсутствующий checklist PDF.",
+      "blocking_scope": "Официальная сверка seed/G1; provisional development возможна.",
+      "task_ids": [
+        "T01"
+      ]
+    },
+    {
+      "id": "Q02",
+      "audience": "organizers",
+      "question": "Как применять chat rubric к calls; обязательны ли автоматические prosody/audio-segment evidence или достаточно message+player?",
+      "blocking_scope": "Voice-specific rules/T26. Если обязательны — пересчитать scope и поднять priority.",
+      "task_ids": [
+        "T01",
+        "T15",
+        "T26"
+      ]
+    },
+    {
+      "id": "Q03",
+      "audience": "organizers_and_team",
+      "question": "Разрешена ли отправка транскриптов/реальных звонков выбранному external LLM; retention/data constraints?",
+      "blocking_scope": "Любые реальные external calls; до ответа только own synthetic или разрешённый local inference.",
+      "task_ids": [
+        "T08",
+        "T17",
+        "T20"
+      ]
+    },
+    {
+      "id": "Q04",
+      "audience": "user_or_organizers",
+      "question": "Точное H0, CONTROL, freeze и время выступления?",
+      "blocking_scope": "Календарные deadlines, не относительное планирование.",
+      "task_ids": [
+        "T01",
+        "T20"
+      ]
+    },
+    {
+      "id": "Q05",
+      "audience": "organizers",
+      "question": "CONTROL size, rate limits и обновление истёкших API/audio signatures?",
+      "blocking_scope": "Capacity/refresh.",
+      "task_ids": [
+        "T07",
+        "T17",
+        "T20",
+        "T24"
+      ]
+    },
+    {
+      "id": "Q06",
+      "audience": "team",
+      "question": "Бюджет, доступные ключи и оборудование local model?",
+      "blocking_scope": "Выбор provider; не вопрос к жюри.",
+      "task_ids": [
+        "T08"
+      ]
+    },
+    {
+      "id": "Q07",
+      "audience": "organizers",
+      "question": "Есть ли нормативные ответы/база знаний для проверки фактической правильности консультации C04; как отмечать неподтверждаемые по transcript утверждения?",
+      "blocking_scope": "Заявления о проверенной factual correctness; нельзя заменять недостаток знания произвольным NA или выдуманными правилами.",
+      "task_ids": [
+        "T01",
+        "T09",
+        "T15"
+      ]
+    }
+  ],
+  "architecture": {
+    "decision": "Java 21 + Spring Boot MVC + JDBC/JdbcTemplate + SQLite; HTML5/CSS3/Vanilla JS static assets; отдельный Python ML HTTP service.",
+    "state": "planned_not_implemented",
+    "framework_decision": {
+      "selected": "Spring Boot MVC",
+      "reason": "Готовые REST/JSON, validation, exception handling, JDBC и интеграционные тесты уменьшают ручную инфраструктуру. Один Maven module, без JPA/Hibernate/WebFlux. Вес framework не равен времени разработки.",
+      "alternatives": [
+        {
+          "name": "Javalin",
+          "assessment": "Компактные routes/static files, но JSON validation/error mapping/DAO conventions нужно собрать. При готовом проверенном шаблоне Farhat допустим согласованный выбор в T02; не поддерживать две Java реализации."
+        },
+        {
+          "name": "JDK HttpServer",
+          "assessment": "Нет внешнего web framework, но routing/JSON/validation/test plumbing вручную; для текущих workflows повышает риск времени."
+        }
+      ],
+      "decision_gate": "T02≤30min: зафиксировать framework/version и JSON; T03 проверяет wrapper/build/start. Не менять framework после интеграции без явного пересчёта.",
+      "environment": "Java/javac21 найдены; mvn/gradle не найдены; Java build не выполнялся. T03 включает Maven Wrapper и загрузку pinned dependencies.",
+      "sources": [
+        "https://docs.spring.io/spring-boot/system-requirements.html",
+        "https://docs.spring.io/spring-boot/reference/data/sql.html",
+        "https://javalin.io/documentation",
+        "https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/com/sun/net/httpserver/HttpServer.html"
+      ]
+    },
+    "boundaries": [
+      {
+        "component": "Vanilla UI",
+        "owner": "Farhat",
+        "responsibility": "server/src/main/resources/static/: index.html, styles.css, js/api.js, state.js, checklist.js, results.js, review.js, batch.js. Native ES modules, templates/textContent, fetch same-origin /api. No browser credentials or authoritative scoring."
+      },
+      {
+        "component": "Java API/domain",
+        "owner": "Farhat",
+        "responsibility": "server/: MVC controllers → services → JDBC repositories; DTO/Bean Validation + explicit context checks; import, versions, deterministic BigDecimal scoring, immutable snapshots, review, sequential batch."
+      },
+      {
+        "component": "SQLite",
+        "owner": "Farhat",
+        "responsibility": "Только Java читает/пишет целевую DB. Explicit absolute DB path, foreign_keys/busy_timeout на каждом connection; короткие atomic transactions, без transaction во время HTTP inference."
+      },
+      {
+        "component": "Python ML service",
+        "owner": "Nurtas",
+        "responsibility": "ml-service/: transport endpoint, Pydantic strict schemas from agreed JSON contract, dynamic prompt/provider, evidence validation, bounded retries/usage; без DB и totals. FastAPI здесь допустим; выбор transport не меняет Java API."
+      },
+      {
+        "component": "Shared contract",
+        "owner": "Joint",
+        "responsibility": "contracts/ JSON Schema Draft2020-12 и synthetic fixtures — language-neutral authority. Farhat owns edits; Nurtas review. Java DTO и Python schemas обязаны проходить одинаковые fixtures."
+      }
+    ],
+    "flow": [
+      "Browser → Java localhost:8080 static + /api",
+      "Java pins conversation/checklist snapshots",
+      "Java POST http://127.0.0.1:8001/v1/evaluate (contract2.0.0)",
+      "Python → real provider → validated answers + diagnostics",
+      "Java revalidates IDs/version/evidence → BigDecimal calculate → atomic snapshot save",
+      "Vanilla UI renders original/final; reviewer decisions saved atomically"
+    ],
+    "frontend_design": {
+      "views": [
+        "dataset/group_id/upload and conversation list",
+        "versioned checklist selector/editor",
+        "dialogue and result/sections/evidence/player",
+        "appeal/reviewer original/final",
+        "DEV/CONTROL batch progress/errors"
+      ],
+      "state": "Single explicit state store; stable internal draft IDs; request token/AbortController for navigation, disabled duplicate submit; drafts retained by checklist/evaluation key.",
+      "security": "Untrusted text via textContent, no innerHTML transcript insertion; organizer secret Java env only; ML key Python env only. Same-origin Java serves assets; localhost services.",
+      "testing": "Browser workflow/DOM assertions, no React/JSX/Vite build dependency."
+    },
+    "migrations": [
+      {
+        "task_id": "T03",
+        "description": "New server/ Java module with static assets; existing backend/ and frontend/ retained as legacy reference. No legacy fullstack runtime in target."
+      },
+      {
+        "task_id": "T04",
+        "description": "Port official seed semantics and pure Python math to Java BigDecimal, compare5184 cases and edge fixtures. Python scorer is reference only."
+      },
+      {
+        "task_id": "T05",
+        "description": "New explicit data/cqa-java.sqlite; migrate import/checklist/evaluation functionality, not a gateway to Python domain API. No simultaneous writers or assumed file-schema compatibility."
+      },
+      {
+        "task_id": "T06",
+        "description": "Original answers/score/scoring_version snapshots and atomic decisions; UNIQUE open appeal + revision guard. Old DB remains untouched. If old history must be retained, explicit export/import with counts/IDs/version checks; reconstructed scores labelled, never presented as original snapshots."
+      },
+      {
+        "task_id": "T24",
+        "description": "Separate transcript hash from rotatable audio locator, keeping IDs/history stable."
+      }
+    ],
+    "non_goals": [
+      "Redis/distributed workers/PostgreSQL",
+      "JPA dialect work, native image, cloud deployment",
+      "Authentication for local demo",
+      "Invented call rubric or new ASR",
+      "Production-grade work during hackathon"
+    ]
+  },
+  "contracts": {
+    "id": "CQA_EVALUATOR",
+    "version": "2.0.0",
+    "state": "proposed_requires_joint_agreement_before_implementation",
+    "specification": "docs/INTEGRATION_CONTRACT.md",
+    "owner": "Farhat",
+    "co_reviewer": "Nurtas",
+    "existing_signature": "LEGACY ONLY: evaluate(conversation: dict, checklist: Checklist) -> list[CriterionAnswer]",
+    "proposed_signature": "POST http://127.0.0.1:8001/v1/evaluate (application/json UTF-8): EvaluationRequest -> EvaluationResult",
+    "input": {
+      "conversation_fields": [
+        "id",
+        "dataset_group_id",
+        "conversation_id",
+        "channel",
+        "language",
+        "messages"
+      ],
+      "message_fields": [
+        "id",
+        "timestamp",
+        "speaker",
+        "text"
+      ],
+      "checklist": "Полный Checklist, включая key/version/sections/criteria/instruction/kind/weight/levels/allow_na/na_rule.",
+      "excluded_from_provider": [
+        "audio_url",
+        "content_hash",
+        "imported_at",
+        "database paths",
+        "credentials"
+      ],
+      "timestamps": "Исходные строки: chat MM:SS, call ISO8601 with timezone. ID по позиции, не времени.",
+      "envelope_fields": [
+        "contract_version",
+        "request_id",
+        "conversation",
+        "checklist"
+      ],
+      "identity_rule": "Response conversation_id equals conversation.id (composite internal ID), not the raw source conversation_id. request_id is canonical lowercase UUID generated once by UI/Java per explicit evaluation intent."
+    },
+    "result_fields": [
+      "contract_version",
+      "request_id",
+      "conversation_id",
+      "checklist_key",
+      "checklist_version",
+      "answers",
+      "diagnostics"
+    ],
+    "answer_fields": [
+      "criterion_id",
+      "answer",
+      "value",
+      "explanation",
+      "evidence"
+    ],
+    "evidence_fields": [
+      "message_id",
+      "quote"
+    ],
+    "invariants": [
+      "Exactly one answer per configured ID; no missing/duplicate/unknown.",
+      "yes/no/na/scale; finite scale exactly in levels; otherwise value=null.",
+      "NA only allow_na with explanation; flag weight0/noNA.",
+      "Nonblank explanation; nonblank exact quote in existing message without normalization.",
+      "Omission cites checked real context, not invented negative quote.",
+      "No model total/weight/score override.",
+      "Adapter copies identity/version from input; API verifies against pinned request."
+    ],
+    "diagnostics": {
+      "source": "Adapter/SDK, not model-generated text",
+      "fields": [
+        "provider",
+        "model",
+        "prompt_version",
+        "attempt_count",
+        "input_tokens",
+        "output_tokens",
+        "estimated_cost_usd",
+        "latency_ms",
+        "warnings"
+      ],
+      "unknown": "null, not 0",
+      "cost": "Сумма usage всех оплаченных попыток × актуальные цены выбранного provider; источник/дата цены фиксируются в T08.",
+      "privacy": "No raw prompts/responses/URLs/secrets; allowlisted warning codes only.",
+      "warning_codes": [
+        "DOMAIN_FACT_UNVERIFIED",
+        "TRANSCRIPTION_AMBIGUOUS",
+        "AUDIO_NOT_ASSESSED",
+        "MODEL_UNCERTAINTY"
+      ]
+    },
+    "validation_layers": [
+      "Strict JSON both languages: UTF-8 object, no duplicate keys/coercion/nonfinite/extra fields",
+      "Shared JSON Schema + Java DTO/Bean Validation + Python strict schema",
+      "Same context checks: complete IDs/kind/levels/NA/checklist composition",
+      "Exact nonblank source evidence; same Unicode strings, no normalization",
+      "Java BigDecimal calculate only",
+      "Atomic Java snapshot/result persistence"
+    ],
+    "failure_policy": {
+      "max_attempts": 2,
+      "per_attempt_timeout_seconds": 30,
+      "overall_deadline_seconds": 65,
+      "connect_timeout_seconds": 5,
+      "max_backoff_seconds": 2,
+      "retryable": [
+        "transport timeout",
+        "429/5xx if Retry-After fits deadline",
+        "invalid JSON/schema/evidence once with safe feedback"
+      ],
+      "non_retryable": [
+        "auth/permission",
+        "context overflow",
+        "missing config",
+        "privacy permission missing",
+        "unknown checklist/version"
+      ],
+      "partial": "No partial evaluation persisted; request/error ledger may be persisted. No fabricated yes/no/NA fallback.",
+      "error_codes": {
+        "422": "INVALID_INPUT / INPUT_TOO_LARGE / UNSUPPORTED_CONTRACT",
+        "404": "NOT_FOUND",
+        "409": "VERSION_CONFLICT / REVIEW_CONFLICT / REQUEST_ID_CONFLICT",
+        "501": "EVALUATOR_UNCONFIGURED",
+        "502": "EVALUATOR_INVALID_OUTPUT / EVALUATOR_PROVIDER_ERROR",
+        "503": "EVALUATOR_RATE_LIMITED / EVALUATOR_AUTH / PRIVACY_POLICY_UNCONFIGURED / EVALUATOR_BUSY",
+        "504": "EVALUATOR_TIMEOUT",
+        "413": "PAYLOAD_TOO_LARGE"
+      },
+      "source": "Предлагаемые engineering defaults, не требования организаторов.",
+      "java_http_total_timeout_seconds": 70,
+      "java_connect_timeout_seconds": 3,
+      "browser_timeout_seconds": 75,
+      "java_post_retries": 0,
+      "ml_concurrency": 1
+    },
+    "rest_changes": [
+      {
+        "endpoint": "POST /api/evaluations/manual and /auto",
+        "change": "Required checklist_version>=1; /auto also requires request_id UUID. Version missing422/unknown404; exact historical version allowed.",
+        "migration": "Coordinated Java DTO + Vanilla client replacement; explicit response/timeout/idempotency behavior in T05/T13."
+      },
+      {
+        "endpoint": "PUT /api/checklists/{key}",
+        "change": "Required expected_version query; mismatch409; draft body same."
+      },
+      {
+        "endpoint": "POST /api/datasets/fetch",
+        "change": "New {group_id}; backend configured URL, preserve other signature query parameters; existing file import remains."
+      },
+      {
+        "endpoint": "GET /api/health",
+        "change": "Actual readiness without paid probe/secrets."
+      },
+      {
+        "endpoint": "GET /api/evaluations/{id}",
+        "change": "Keep existing fields; additive contract_version/scoring_version/metadata/review_revision; original_score snapshot."
+      },
+      {
+        "endpoint": "GET /api/evaluation-requests/{request_id}",
+        "change": "New status resource for timeout/reload/batch reconciliation; fields request_id/status/evaluation_id/error."
+      }
+    ],
+    "minimum_tests": [
+      "CT01 complete valid synthetic",
+      "CT02 missing/duplicate/unknown criterion",
+      "CT03 discrete scales/NA/flag",
+      "CT04 unknown ID/forged quote/blank",
+      "CT05 changed arbitrary criterion",
+      "CT06 concurrent checklist edit during model call",
+      "CT07 invalid/empty JSON, timeout, 429, no persistence",
+      "CT08 all-attempt usage/cost and no secrets",
+      "CT09 original/final review immutability",
+      "CT10 bot/operator/system identity, RU/KZ/EN and timestamps",
+      "CT11 Java/Python same strict JSON positive/negative fixtures and HTTP status/error envelopes",
+      "CT12 Wrong request/conversation/checklist/version echo rejected by Java; no result persisted",
+      "CT13 Java BigDecimal vs legacy Python/Fraction5184 cases plus custom scales/all-NA/rounding edges",
+      "CT14 HTTP connection refused/slow/invalid bytes/oversize/version mismatch; no Java POST retries",
+      "CT15 Persisted request lifecycle, reload/batch progress, duplicate intent and unknown outcome"
+    ],
+    "compatibility": "One JSON Schema Draft2020-12 + shared fixtures; two conforming implementations (Java DTO/Jackson/Bean Validation and Python strict Pydantic). Exact contract_version2.0.0 required now; any JSON/endpoint/field/score/message ID/validation change requires Farhat+Nurtas agreement BEFORE implementation. /v1 is first HTTP route generation, not the envelope version.",
+    "payload_limits": {
+      "dataset_bytes": 16777216,
+      "model_response_bytes": 262144,
+      "max_configured_criteria": 100,
+      "source": "Предлагаемые технические лимиты, не правила жюри; сверить с CONTROL, не обрезать сообщения/criteria молча.",
+      "ml_request_bytes": 1048576
+    },
+    "example_fixture": {
+      "input": {
+        "contract_version": "2.0.0",
+        "conversation": {
+          "id": "SYNTHETIC:contract-demo",
+          "dataset_group_id": "SYNTHETIC",
+          "conversation_id": "contract-demo",
+          "channel": "agent chat",
+          "language": "EN",
+          "messages": [
+            {
+              "id": "m0001",
+              "timestamp": "00:00",
+              "speaker": "client",
+              "text": "What time does support open?"
+            },
+            {
+              "id": "m0002",
+              "timestamp": "00:01",
+              "speaker": "bot",
+              "text": "Hello! An operator will join."
+            },
+            {
+              "id": "m0003",
+              "timestamp": "00:05",
+              "speaker": "operator",
+              "text": "Hello, I'm Ada. Support opens at 09:00."
+            },
+            {
+              "id": "m0004",
+              "timestamp": "00:10",
+              "speaker": "client",
+              "text": "Thank you."
+            },
+            {
+              "id": "m0005",
+              "timestamp": "00:12",
+              "speaker": "operator",
+              "text": "Happy to help. Goodbye."
+            }
+          ]
+        },
+        "checklist": {
+          "key": "synthetic-contract",
+          "version": 2,
+          "title": "Synthetic contract example",
+          "description": "Own fixture, not official rubric and not a model evaluation.",
+          "sections": [
+            {
+              "id": "service",
+              "title": "Service"
+            },
+            {
+              "id": "critical",
+              "title": "Critical"
+            }
+          ],
+          "criteria": [
+            {
+              "id": "S_HELLO",
+              "section_id": "service",
+              "title": "Operator introduction",
+              "instruction": "Yes if the first operator response greets and introduces the operator. Bot greetings do not count.",
+              "kind": "binary",
+              "weight": 25,
+              "allow_na": false,
+              "na_rule": null,
+              "levels": []
+            },
+            {
+              "id": "S_CLARITY",
+              "section_id": "service",
+              "title": "Clear response",
+              "instruction": "Choose the configured clarity level. Assess clarity, not external factual correctness of opening hours.",
+              "kind": "scale",
+              "weight": 75,
+              "allow_na": false,
+              "na_rule": null,
+              "levels": [
+                {
+                  "value": 0,
+                  "description": "No understandable response."
+                },
+                {
+                  "value": 4,
+                  "description": "Several unclear statements."
+                },
+                {
+                  "value": 7,
+                  "description": "One noticeable ambiguity."
+                },
+                {
+                  "value": 10,
+                  "description": "Clear and coherent response."
+                }
+              ]
+            },
+            {
+              "id": "S_ID",
+              "section_id": "service",
+              "title": "Identity verification",
+              "instruction": "Yes if required identity verification precedes a protected account action.",
+              "kind": "binary",
+              "weight": 20,
+              "allow_na": true,
+              "na_rule": "The customer asks only a general public question; no protected account action is requested.",
+              "levels": []
+            },
+            {
+              "id": "S_FLAG",
+              "section_id": "critical",
+              "title": "Explicit insult",
+              "instruction": "Yes if the operator explicitly insults the customer. This is a separate flag, not a numeric penalty.",
+              "kind": "flag",
+              "weight": 0,
+              "allow_na": false,
+              "na_rule": null,
+              "levels": []
+            }
+          ]
+        },
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "result": {
+        "contract_version": "2.0.0",
+        "conversation_id": "SYNTHETIC:contract-demo",
+        "checklist_key": "synthetic-contract",
+        "checklist_version": 2,
+        "answers": [
+          {
+            "criterion_id": "S_HELLO",
+            "answer": "yes",
+            "value": null,
+            "explanation": "The first operator turn greets and introduces Ada; the bot greeting was not counted.",
+            "evidence": [
+              {
+                "message_id": "m0003",
+                "quote": "Hello, I'm Ada."
+              }
+            ]
+          },
+          {
+            "criterion_id": "S_CLARITY",
+            "answer": "scale",
+            "value": 10,
+            "explanation": "The operator gives one clear, coherent sentence answering the question. This fixture does not verify company opening hours.",
+            "evidence": [
+              {
+                "message_id": "m0003",
+                "quote": "Support opens at 09:00."
+              }
+            ]
+          },
+          {
+            "criterion_id": "S_ID",
+            "answer": "na",
+            "value": null,
+            "explanation": "Only general opening hours are requested; no protected account action requires identification.",
+            "evidence": [
+              {
+                "message_id": "m0001",
+                "quote": "What time does support open?"
+              }
+            ]
+          },
+          {
+            "criterion_id": "S_FLAG",
+            "answer": "no",
+            "value": null,
+            "explanation": "Both operator turns were checked and neither contains an insult. These are real checked turns, not an invented absence quote.",
+            "evidence": [
+              {
+                "message_id": "m0003",
+                "quote": "Hello, I'm Ada. Support opens at 09:00."
+              },
+              {
+                "message_id": "m0005",
+                "quote": "Happy to help. Goodbye."
+              }
+            ]
+          }
+        ],
+        "diagnostics": {
+          "provider": "synthetic-contract-fixture",
+          "model": "not-a-model",
+          "prompt_version": "example-only",
+          "attempt_count": 0,
+          "input_tokens": null,
+          "output_tokens": null,
+          "estimated_cost_usd": null,
+          "latency_ms": null,
+          "warnings": []
+        },
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "purpose": "Manually authored synthetic schema/validator fixture; never actual model evidence or a production evaluation."
+    },
+    "json_schemas": {
+      "provider_output": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/$defs/criterion_answer"
+            }
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "message_id": {
+                "type": "string",
+                "pattern": "^m[0-9]{4,}$"
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "message_id",
+              "quote"
+            ]
+          },
+          "criterion_answer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "criterion_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "answer": {
+                "enum": [
+                  "yes",
+                  "no",
+                  "na",
+                  "scale"
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "explanation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "evidence": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/evidence"
+                }
+              }
+            },
+            "required": [
+              "criterion_id",
+              "answer",
+              "value",
+              "explanation",
+              "evidence"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "answer": {
+                      "const": "scale"
+                    }
+                  },
+                  "required": [
+                    "answer"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "value": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "diagnostics": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "prompt_version": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "attempt_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "input_tokens": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "estimated_cost_usd": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "latency_ms": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "warnings": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "DOMAIN_FACT_UNVERIFIED",
+                    "TRANSCRIPTION_AMBIGUOUS",
+                    "AUDIO_NOT_ASSESSED",
+                    "MODEL_UNCERTAINTY"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "prompt_version",
+              "attempt_count",
+              "input_tokens",
+              "output_tokens",
+              "estimated_cost_usd",
+              "latency_ms",
+              "warnings"
+            ]
+          }
+        }
+      },
+      "evaluation_result": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "conversation_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "checklist_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "checklist_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "answers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/$defs/criterion_answer"
+            }
+          },
+          "diagnostics": {
+            "$ref": "#/$defs/diagnostics"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        },
+        "required": [
+          "contract_version",
+          "request_id",
+          "conversation_id",
+          "checklist_key",
+          "checklist_version",
+          "answers",
+          "diagnostics"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "message_id": {
+                "type": "string",
+                "pattern": "^m[0-9]{4,}$"
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "message_id",
+              "quote"
+            ]
+          },
+          "criterion_answer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "criterion_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "answer": {
+                "enum": [
+                  "yes",
+                  "no",
+                  "na",
+                  "scale"
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "explanation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "evidence": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/evidence"
+                }
+              }
+            },
+            "required": [
+              "criterion_id",
+              "answer",
+              "value",
+              "explanation",
+              "evidence"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "answer": {
+                      "const": "scale"
+                    }
+                  },
+                  "required": [
+                    "answer"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "value": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "diagnostics": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "prompt_version": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "attempt_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "input_tokens": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "estimated_cost_usd": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "latency_ms": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "warnings": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "DOMAIN_FACT_UNVERIFIED",
+                    "TRANSCRIPTION_AMBIGUOUS",
+                    "AUDIO_NOT_ASSESSED",
+                    "MODEL_UNCERTAINTY"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "provider",
+              "model",
+              "prompt_version",
+              "attempt_count",
+              "input_tokens",
+              "output_tokens",
+              "estimated_cost_usd",
+              "latency_ms",
+              "warnings"
+            ]
+          }
+        }
+      },
+      "evaluation_request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "2.0.0"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "conversation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "dataset_group_id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "conversation_id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "channel": {
+                "enum": [
+                  "agent chat",
+                  "voice call"
+                ]
+              },
+              "language": {
+                "enum": [
+                  "RU",
+                  "KZ",
+                  "EN"
+                ]
+              },
+              "messages": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^m[0-9]{4,}$"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    "speaker": {
+                      "enum": [
+                        "operator",
+                        "client",
+                        "bot",
+                        "system"
+                      ]
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "timestamp",
+                    "speaker",
+                    "text"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "dataset_group_id",
+              "conversation_id",
+              "channel",
+              "language",
+              "messages"
+            ]
+          },
+          "checklist": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S",
+                "maxLength": 80
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "description": {
+                "type": "string"
+              },
+              "sections": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "maxLength": 40
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "maxLength": 180
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title"
+                  ]
+                }
+              },
+              "criteria": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "maxLength": 40
+                    },
+                    "section_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    "instruction": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    "kind": {
+                      "enum": [
+                        "binary",
+                        "scale",
+                        "flag"
+                      ]
+                    },
+                    "weight": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "allow_na": {
+                      "type": "boolean"
+                    },
+                    "na_rule": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "levels": {
+                      "type": "array",
+                      "minItems": 0,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "description": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S"
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "description"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "section_id",
+                    "title",
+                    "instruction",
+                    "kind",
+                    "weight",
+                    "allow_na",
+                    "na_rule",
+                    "levels"
+                  ]
+                },
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "key",
+              "version",
+              "title",
+              "description",
+              "sections",
+              "criteria"
+            ]
+          }
+        },
+        "required": [
+          "contract_version",
+          "request_id",
+          "conversation",
+          "checklist"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable",
+              "request_id"
+            ]
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
+    },
+    "schema_context_checks": [
+      "Strict parser rejects duplicate keys, nonfinite floats including exponent overflow.",
+      "Existing message ID and exact nonblank source quote.",
+      "Full configured criterion set/kind/levels/NA.",
+      "Result conversation/checklist identity equals pinned input.",
+      "attempt_count>=1 for real production adapter; 0 only offline fixture.",
+      "SDK diagnostics only; unknown cost/usage null.",
+      "Checklist unique section/criterion IDs; referenced section exists; at least one positive-weight criterion. Weighted binary/scale weight>0; flag weight0/noNA/no levels.",
+      "Scale has unique finite values, minimum0 and maximum>0, at least2 levels; non-scale levels empty. allow_na implies nonblank na_rule.",
+      "Unique ordered message IDs exactly derived from1-based position; preserve source timestamps/text, conversation identity must match Java pinned request.",
+      "Request ID echo exact; exact supported contract2.0.0; reject unknown/extra fields at all nesting levels.",
+      "No decimal coercion from strings/bools. JSON numeric equality (7 and7.0 equivalent) is used for levels, not lexical equality. Whitespace validation agreed by fixtures including Unicode.",
+      "Error codes/status pairs must belong to the documented failure_policy; error.message is safe nonblank text, never raw provider body. Request status.error contains the same detail object, not another nested detail envelope."
+    ],
+    "scoring_version": "cqa-score/1",
+    "transport": {
+      "method": "POST",
+      "endpoint": "/v1/evaluate",
+      "base_url": "http://127.0.0.1:8001",
+      "content_type": "application/json",
+      "encoding": "UTF-8",
+      "success_status": 200,
+      "health_endpoint": "GET /health",
+      "health_policy": "No paid probe. Report configured/model/contract_version readiness without secrets; readiness unavailable is explicit.",
+      "deployment": "Localhost only. Browser calls Java8080; only Java calls Python8001. ML transport FastAPI allowed under Nurtas ownership."
+    },
+    "request_lifecycle": {
+      "owner": "Java only",
+      "public_auto_request": {
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "conversation_id": "SYNTHETIC:contract-demo",
+        "checklist_key": "synthetic-contract",
+        "checklist_version": 2
+      },
+      "status_endpoint": "GET /api/evaluation-requests/{request_id}",
+      "states": [
+        "pending",
+        "succeeded",
+        "failed",
+        "unknown"
+      ],
+      "status_response_fields": [
+        "request_id",
+        "status",
+        "evaluation_id",
+        "error"
+      ],
+      "rules": [
+        "Persist unique request_id + immutable payload identity before HTTP; no DB transaction while waiting.",
+        "Same ID/different payload409; same ID pending202 with status URL; succeeded returns existing evaluation200.",
+        "Terminal failed returns recorded safe error; no implicit new provider call. Explicit retry uses new request_id and shows potential extra cost.",
+        "Startup marks interrupted pending as unknown. Network ambiguity can be unknown; UI polls status first and never silently replays POST.",
+        "status response: evaluation_id nonnull only succeeded; error nonnull failed/unknown, otherwise null. Missing request404.",
+        "Bounded1 in-flight ML; no automatic Java retries. Exactly-once provider billing is NOT guaranteed after timeout/crash; duplicate persistence is prevented.",
+        "Batch snapshot key/version and IDs; keep minimal run manifest locally (IDs/status only), reconcile persisted Java request results after reload. No private transcript in browser localStorage."
+      ]
+    },
+    "error_example": {
+      "detail": {
+        "code": "EVALUATOR_TIMEOUT",
+        "message": "Evaluation deadline exceeded. Check request status before retrying.",
+        "retryable": true,
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      }
+    },
+    "error_semantics": "ML uses422/413 input,501 configuration,502 invalid/provider,503 busy/rate/auth/policy,504 timeout; Java adds404/409 domain errors. retryable=true means an explicit later attempt may work, never automatic replay. request_id null only if invalid request could not supply valid UUID. Java validates envelope, otherwise maps to safe502; do not forward provider bodies."
+  },
+  "team_workflow": {
+    "branches": {
+      "base": "main",
+      "fullstack": "codex/fs-Txx-short-name",
+      "ml": "codex/ml-Txx-short-name",
+      "integration": "codex/integration-Txx"
+    },
+    "workspaces": "Отдельный clone/worktree и локальная БД каждого; не переключать branch и не править общие файлы в одном каталоге параллельно.",
+    "ownership": {
+      "Farhat": [
+        "server/**",
+        "plan.json",
+        "README.md",
+        "AGENTS.md",
+        ".github/**"
+      ],
+      "Nurtas": [
+        "ml-service/**"
+      ],
+      "Joint_approval_Farhat_edits": [
+        "contracts/**",
+        "docs/INTEGRATION_CONTRACT.md",
+        "docs/api-contract.md",
+        "docs/ml-contract.md",
+        "backend/app/seed/chat_quality.json"
+      ]
+    },
+    "contract_lock": "Любое изменение JSON, API endpoints, названий полей, семантики оценок, message IDs или validation согласуют Farhat и Nurtas ДО реализации. Один language-neutral JSON Schema; Java DTO и Python schemas — две проверяемые реализации.",
+    "merge_order": [
+      "T02 shared schema/fixtures contract lock",
+      "T03 Java+Vanilla foundation; parallel T08/T09",
+      "T04/T05 Java scorer/DTO/storage; parallel T10/T11 Python HTTP",
+      "T12 UI then T13 real integration",
+      "T06/T14 review+criterion",
+      "T07/T21 P0 batch",
+      "T15/T16/T17 quality/regression/DEV",
+      "T18/T19 release rehearsal; T20 CONTROL"
+    ],
+    "pr_policy": "Small PR per task, second-person review, checks before merge. No force-push/reset of others; no automatic commit/push in planning.",
+    "required_checks": [
+      "./server/mvnw -f server/pom.xml verify",
+      "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+      "Shared JSON fixtures + two-service HTTP tests + browser workflow"
+    ],
+    "dependencies": "Farhat owns Java/Maven manifests; Nurtas Python constraints; both review shared schema changes. No required npm build/runtime for Vanilla UI.",
+    "conflicts": "Stop conflicting merge, ask file owner, resolve narrowly, rerun contracts/API/E2E; coordinate ordinary revert of bad integration, never discard uncommitted work.",
+    "joint_tasks": [
+      "T02",
+      "T13",
+      "T14",
+      "T19",
+      "T20"
+    ],
+    "status_updates": "Farhat updates plan.json from executor AC/test evidence; done only on completed DoD.",
+    "parallel_after_T02": {
+      "Farhat": [
+        "T03",
+        "T04",
+        "T05",
+        "T12"
+      ],
+      "Nurtas": [
+        "T08",
+        "T09",
+        "T10",
+        "T11"
+      ],
+      "rendezvous": "T13; neither side waits for the other language DTO implementation to start. Shared frozen fixtures first."
+    }
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Contract/Java foundation/scoring/storage",
+      "target": "T0+7h; mount by2.5h, math by4.5h; official G1 blocked without rubric",
+      "task_ids": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "gate_ids": [
+        "G1"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Real Java↔Python AI E2E",
+      "target": "T0+10.75h",
+      "task_ids": [
+        "T13"
+      ],
+      "gate_ids": [
+        "G2",
+        "G3"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Appeal + changed criterion",
+      "target": "T0+13.25h",
+      "task_ids": [
+        "T14"
+      ],
+      "gate_ids": [
+        "G4",
+        "G5"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Batch/quality/regression/release",
+      "target": "T0+17h; batch by15h",
+      "task_ids": [
+        "T15",
+        "T21",
+        "T16",
+        "T17",
+        "T18"
+      ],
+      "gate_ids": [
+        "G6"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Rehearsal + recovery reserve",
+      "target": "T0+17.5h; reserve3h до20.5h; beforeH23",
+      "task_ids": [
+        "T19"
+      ],
+      "gate_ids": [
+        "G7"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "CONTROL/freeze",
+      "target": "Official H23–H24; no inferred calendar start",
+      "task_ids": [
+        "T20"
+      ],
+      "gate_ids": [
+        "G7"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "Сверить недостающий rubric и официальный тайминг",
+      "description": "Сверить8 criteria/levels/NA с отсутствующим PDF; пока недоступен — G1 blocked, seed provisional. Установить H0/H23/H24, audio applicability и источник фактов C04; не выдумывать ответы.",
+      "priority": "P0",
+      "owner": "Joint",
+      "depends_on": [],
+      "files": [
+        "data/official/chat_quality_checklist.pdf",
+        "docs/requirements.md"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings"
+      ],
+      "expected_outputs": [
+        "Сверить недостающий rubric и официальный тайминг с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Сверить8 criteria/levels/NA с отсутствующим PDF; пока недоступен — G1 blocked, seed provisional.",
+        "Установить H0/H23/H24, audio applicability и источник фактов C04; не выдумывать ответы."
+      ],
+      "verification": [
+        "Ручная проверка перечисленных acceptance criteria; зафиксировать evidence в plan.json."
+      ],
+      "estimate_hours": 0.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "blocked",
+      "risks_and_blockers": [
+        "Внешнее ожидание PDF/H0 не ограничено оценкой .5ч; G1 нельзя закрыть provisional seed.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации.",
+        "Недоступный rubric блокирует полную официальную сверку."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R02",
+        "R24"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 0.5,
+        "end_hours_after_T0": 1,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T02",
+      "title": "Зафиксировать JSON HTTP contract и владение",
+      "description": "Оба приняли contract2.0.0, endpoint/request/response/errors/validation и breaking changes ДО реализации. Framework/version, JSON Schema и одинаковые positive/negative fixtures согласованы; один контракт, две реализации.",
+      "priority": "P0",
+      "owner": "Joint",
+      "depends_on": [],
+      "files": [
+        "contracts/",
+        "docs/INTEGRATION_CONTRACT.md",
+        "plan.json"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings"
+      ],
+      "expected_outputs": [
+        "Зафиксировать JSON HTTP contract и владение с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Оба приняли contract2.0.0, endpoint/request/response/errors/validation и breaking changes ДО реализации.",
+        "Framework/version, JSON Schema и одинаковые positive/negative fixtures согласованы; один контракт, две реализации."
+      ],
+      "verification": [
+        "Ручная проверка перечисленных acceptance criteria; зафиксировать evidence в plan.json."
+      ],
+      "estimate_hours": 0.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "ready",
+      "risks_and_blockers": [
+        "Два независимых JSON нарушат интеграцию; фактическое согласие обоих ещё не получено.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [],
+      "baseline_window": {
+        "start_hours_after_T0": 0,
+        "end_hours_after_T0": 0.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T03",
+      "title": "Создать Java backend и Vanilla frontend foundation",
+      "description": "Java21 wrapper build/test/start проходит; GET /api/health и HTML/ES module открываются на8080. Pinned Spring Boot MVC/JDBC/SQLite dependencies; legacy source не удаляется; no React/JSX/Vite Fullstack target.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T02"
+      ],
+      "files": [
+        "server/pom.xml",
+        "server/mvnw",
+        "server/.mvn/",
+        "server/src/main/java/cqa/Application.java",
+        "server/src/main/resources/static/index.html",
+        "server/src/main/resources/static/styles.css",
+        "server/src/main/resources/static/js/app.js"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T02"
+      ],
+      "expected_outputs": [
+        "Создать Java backend и Vanilla frontend foundation с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Java21 wrapper build/test/start проходит; GET /api/health и HTML/ES module открываются на8080.",
+        "Pinned Spring Boot MVC/JDBC/SQLite dependencies; legacy source не удаляется; no React/JSX/Vite Fullstack target."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Нет mvn/gradle; dependency downloads и незнакомый wrapper могут сорвать ранний рубеж.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R01",
+        "R20"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 1,
+        "end_hours_after_T0": 2.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T04",
+      "title": "Перенести DTO validation и deterministic scoring в Java",
+      "description": "BigDecimal port сохраняет5184 эталонных комбинации, HALF_UP только на итоговом округлении; no binary double arithmetic. N/A/scale/flag/section/all-NA и finite/blank/duplicate validation проверены; нет доверия model totals. Java DTO/Python schemas принимают одинаковые synthetic fixtures, numeric strings/bools rejected.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T02",
+        "T03"
+      ],
+      "files": [
+        "server/src/main/java/cqa/dto/",
+        "server/src/main/java/cqa/scoring/",
+        "server/src/test/java/cqa/scoring/",
+        "contracts/fixtures/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T02",
+        "T03"
+      ],
+      "expected_outputs": [
+        "Перенести DTO validation и deterministic scoring в Java с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "BigDecimal port сохраняет5184 эталонных комбинации, HALF_UP только на итоговом округлении; no binary double arithmetic.",
+        "N/A/scale/flag/section/all-NA и finite/blank/duplicate validation проверены; нет доверия model totals.",
+        "Java DTO/Python schemas принимают одинаковые synthetic fixtures, numeric strings/bools rejected."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 2,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Decimal coercion/rounding и custom scales могут расходиться между языками; проверить parity, не копировать double.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R08",
+        "R11",
+        "R12"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 2.5,
+        "end_hours_after_T0": 4.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T05",
+      "title": "Перенести REST import, checklist versions и evaluation storage",
+      "description": "REST controllers/SQLite repositories покрывают импорт, list/detail, checklist CRUD/version history и manual/auto lifecycle. Atomic/idempotent import сохраняет все роли/строки/timestamps и positional IDs; duplicate timestamps не объединяются. Pin explicit checklist_version до HTTP; no latest reread; expected_version conflict409; transaction не держится при inference. Java единственный DB writer; required endpoints из endpoints_current имеют parity tests; ML endpoint может оставаться truthful501 доT13.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T04"
+      ],
+      "files": [
+        "server/src/main/java/cqa/api/",
+        "server/src/main/java/cqa/service/",
+        "server/src/main/java/cqa/repository/",
+        "server/src/main/resources/db/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T04"
+      ],
+      "expected_outputs": [
+        "Перенести REST import, checklist versions и evaluation storage с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "REST controllers/SQLite repositories покрывают импорт, list/detail, checklist CRUD/version history и manual/auto lifecycle.",
+        "Atomic/idempotent import сохраняет все роли/строки/timestamps и positional IDs; duplicate timestamps не объединяются.",
+        "Pin explicit checklist_version до HTTP; no latest reread; expected_version conflict409; transaction не держится при inference.",
+        "Java единственный DB writer; required endpoints из endpoints_current имеют parity tests; ML endpoint может оставаться truthful501 доT13."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 2.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Потеря исходных IDs/строк/version history или latest reread; весь legacy API переносится, а не уже работает в Java.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R03"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 4.5,
+        "end_hours_after_T0": 7,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T06",
+      "title": "Перенести immutable snapshots и atomic appeals/review",
+      "description": "Original answers/score/scoring_version неизменны; reviewer reason/replacement отдельны; final derived из pinned version. Concurrent create/resolve защищены SQL constraint + revision/transaction; stale409 не переписывает решение. File DB restart сохраняет результаты; legacy DB не меняется. Если нужен перенос старой истории — counts/IDs/versions сверены и reconstructed scores явно помечены.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T05"
+      ],
+      "files": [
+        "server/src/main/java/cqa/review/",
+        "server/src/main/java/cqa/repository/",
+        "server/src/main/resources/db/",
+        "server/src/test/java/cqa/review/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T05"
+      ],
+      "expected_outputs": [
+        "Перенести immutable snapshots и atomic appeals/review с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Original answers/score/scoring_version неизменны; reviewer reason/replacement отдельны; final derived из pinned version.",
+        "Concurrent create/resolve защищены SQL constraint + revision/transaction; stale409 не переписывает решение.",
+        "File DB restart сохраняет результаты; legacy DB не меняется. Если нужен перенос старой истории — counts/IDs/versions сверены и reconstructed scores явно помечены."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Concurrent decision overwrite/duplicate open appeal; история из старой DB не переносится автоматически.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R03",
+        "R15",
+        "R16"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 10.75,
+        "end_hours_after_T0": 12.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T07",
+      "title": "Добавить Java organizer adapter и group_id UI",
+      "description": "POST /api/datasets/fetch {group_id} сохраняет upstream signature params; URL/secret только Java env. Envelope validation/atomic import общий с upload; safe errors, no secret in browser/logs.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T03",
+        "T05"
+      ],
+      "files": [
+        "server/src/main/java/cqa/dataset/",
+        "server/src/main/resources/static/js/datasets.js"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T03",
+        "T05"
+      ],
+      "expected_outputs": [
+        "Добавить Java organizer adapter и group_id UI с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "POST /api/datasets/fetch {group_id} сохраняет upstream signature params; URL/secret только Java env.",
+        "Envelope validation/atomic import общий с upload; safe errors, no secret in browser/logs."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Signed URL params/expiry/HTTP errors; реальный organizer network GET ещё не проверен.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R04",
+        "R23"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 13.25,
+        "end_hours_after_T0": 14,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T08",
+      "title": "Выбрать ML provider, бюджет и data policy",
+      "description": "Provider/model выбран по structured-output/KZ/context smoke; бюджет и actual price source заданы. Real data external inference только в согласованном режиме; до этого own synthetic.",
+      "priority": "P0",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T02"
+      ],
+      "files": [
+        "ml-service/config/",
+        "docs/ml-contract.md"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T02"
+      ],
+      "expected_outputs": [
+        "Выбрать ML provider, бюджет и data policy с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Provider/model выбран по structured-output/KZ/context smoke; бюджет и actual price source заданы.",
+        "Real data external inference только в согласованном режиме; до этого own synthetic."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Неизвестны бюджет/provider/data authorization; real data нельзя отправлять до решения.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R05",
+        "R21",
+        "R23"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 1,
+        "end_hours_after_T0": 1.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T09",
+      "title": "Перенести synthetic gold и dynamic prompts в ML service",
+      "description": "Минимум2 own synthetic cases на RU/KZ/EN + voice/bot/NA/omission/changed criterion; ожидаемые labels размечены человеком. Prompt собирается из полного checklist, без hardcoded8 IDs; C04 factual uncertainty не превращается в NA.",
+      "priority": "P0",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T02"
+      ],
+      "files": [
+        "ml-service/prompts/",
+        "ml-service/tests/fixtures/",
+        "contracts/fixtures/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T02"
+      ],
+      "expected_outputs": [
+        "Перенести synthetic gold и dynamic prompts в ML service с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Минимум2 own synthetic cases на RU/KZ/EN + voice/bot/NA/omission/changed criterion; ожидаемые labels размечены человеком.",
+        "Prompt собирается из полного checklist, без hardcoded8 IDs; C04 factual uncertainty не превращается в NA."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Малая gold suite не доказывает общую accuracy; нет нормативной company KB для C04.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R02",
+        "R06",
+        "R07",
+        "R11",
+        "R14"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 1.5,
+        "end_hours_after_T0": 2.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T10",
+      "title": "Реализовать отдельный Python ML HTTP service",
+      "description": "POST /v1/evaluate и GET /health на127.0.0.1:8001; strict request/response contract2.0.0. Real provider returns answers only; metadata из SDK; no DB/scoring dependency on legacy backend. Две provider attempts максимум внутри65s; actual usage всех попыток; configured model/cost, unknown=null.",
+      "priority": "P0",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T08",
+        "T09"
+      ],
+      "files": [
+        "ml-service/app/",
+        "ml-service/requirements.txt",
+        "ml-service/tests/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T08",
+        "T09"
+      ],
+      "expected_outputs": [
+        "Реализовать отдельный Python ML HTTP service с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "POST /v1/evaluate и GET /health на127.0.0.1:8001; strict request/response contract2.0.0.",
+        "Real provider returns answers only; metadata из SDK; no DB/scoring dependency on legacy backend.",
+        "Две provider attempts максимум внутри65s; actual usage всех попыток; configured model/cost, unknown=null."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 2,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Provider schema/rate/latency и bootstrap второго процесса; SDK retries могут удвоить budget.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R05",
+        "R07",
+        "R17",
+        "R21"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 2.5,
+        "end_hours_after_T0": 4.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T11",
+      "title": "Проверить сетевой контракт, grounding и ML errors",
+      "description": "Missing/unknown/duplicate criterion, forged/blank quotes, extra fields, duplicate JSON keys/nonfinite отвергаются. Общие fixtures проходят Python transport и Java-facing JSON tests; invalid output never converted to fabricated NA. Timeout/429/auth/wrong version/oversize дают согласованные safe errors и request_id.",
+      "priority": "P0",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T10"
+      ],
+      "files": [
+        "ml-service/app/validation.py",
+        "ml-service/tests/",
+        "contracts/fixtures/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T10"
+      ],
+      "expected_outputs": [
+        "Проверить сетевой контракт, grounding и ML errors с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Missing/unknown/duplicate criterion, forged/blank quotes, extra fields, duplicate JSON keys/nonfinite отвергаются.",
+        "Общие fixtures проходят Python transport и Java-facing JSON tests; invalid output never converted to fabricated NA.",
+        "Timeout/429/auth/wrong version/oversize дают согласованные safe errors и request_id."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Exact substring не гарантирует relevance; Unicode/coercion/extra fields должны совпадать с Java.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R05",
+        "R11",
+        "R23"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 4.5,
+        "end_hours_after_T0": 5.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T12",
+      "title": "Перенести checklist, results и review UI на Vanilla JS",
+      "description": "Выбор key/version, редактор wording/weight/type/levels/NA/sections и произвольного criterion; UI не hardcodes IDs. Result: answer/raw/weight/effective weight/normalized contribution/sections/explanation/NA; original/final и appeals/review forms. Exact message jump + player/link; роли/timestamps сохранены; textContent защищает от transcript HTML. Native ES modules + fetch, pending/error/retry states; базовая защита stale responses/draft leakage/duplicate submits входитP0. Review forms integrated окончательноT14.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T03",
+        "T05"
+      ],
+      "files": [
+        "server/src/main/resources/static/index.html",
+        "server/src/main/resources/static/styles.css",
+        "server/src/main/resources/static/js/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T03",
+        "T05"
+      ],
+      "expected_outputs": [
+        "Перенести checklist, results и review UI на Vanilla JS с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Выбор key/version, редактор wording/weight/type/levels/NA/sections и произвольного criterion; UI не hardcodes IDs.",
+        "Result: answer/raw/weight/effective weight/normalized contribution/sections/explanation/NA; original/final и appeals/review forms.",
+        "Exact message jump + player/link; роли/timestamps сохранены; textContent защищает от transcript HTML.",
+        "Native ES modules + fetch, pending/error/retry states; базовая защита stale responses/draft leakage/duplicate submits входитP0. Review forms integrated окончательноT14."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 3,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Переписывание UI и drafts стоит времени; XSS из source text и stale selection нужно закрыть сразу.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R01",
+        "R05",
+        "R09",
+        "R10",
+        "R11",
+        "R13",
+        "R16",
+        "R20"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 7,
+        "end_hours_after_T0": 10,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T13",
+      "title": "Пройти настоящий Java↔Python AI E2E",
+      "description": "UI → Java → Python HTTP → real model → validated answers → Java score → SQLite → UI на own synthetic. Java проверяет contract/request/conversation/checklist identity, complete answers и exact quotes независимо отPython. GET request status, timeouts и отсутствие автоматического POST replay проверены; fixture явно не выдаётся за real model.",
+      "priority": "P0",
+      "owner": "Joint",
+      "depends_on": [
+        "T05",
+        "T10",
+        "T11",
+        "T12"
+      ],
+      "files": [
+        "server/src/main/java/cqa/ml/",
+        "server/src/main/resources/static/js/api.js",
+        "server/src/test/java/cqa/integration/",
+        "ml-service/tests/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T05",
+        "T10",
+        "T11",
+        "T12"
+      ],
+      "expected_outputs": [
+        "Пройти настоящий Java↔Python AI E2E с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "UI → Java → Python HTTP → real model → validated answers → Java score → SQLite → UI на own synthetic.",
+        "Java проверяет contract/request/conversation/checklist identity, complete answers и exact quotes независимо отPython.",
+        "GET request status, timeouts и отсутствие автоматического POST replay проверены; fixture явно не выдаётся за real model."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "HTTP timeout не означает отмену paid inference; duplicate charge и wrong identity echo требуют явной обработки.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R05",
+        "R09"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 10,
+        "end_hours_after_T0": 10.75,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T14",
+      "title": "Пройти AI appeal/review и замену criterion через UI",
+      "description": "Real AI→appeal→confirm/change с reason работает; original immutable, final пересчитанJava. Новый arbitrary criterion и version2 оцениваются без code/prompt edits; historyv1 остаётсяv1.",
+      "priority": "P0",
+      "owner": "Joint",
+      "depends_on": [
+        "T06",
+        "T13"
+      ],
+      "files": [
+        "server/src/test/java/cqa/integration/",
+        "server/src/main/resources/static/js/review.js",
+        "server/src/main/resources/static/js/checklist.js",
+        "ml-service/tests/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T06",
+        "T13"
+      ],
+      "expected_outputs": [
+        "Пройти AI appeal/review и замену criterion через UI с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Real AI→appeal→confirm/change с reason работает; original immutable, final пересчитанJava.",
+        "Новый arbitrary criterion и version2 оцениваются без code/prompt edits; historyv1 остаётсяv1."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Review должен использовать pinned scorer/version; новый criterion не должен требовать hardcoded prompt edits.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R01",
+        "R14",
+        "R15",
+        "R16",
+        "R17"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 12.5,
+        "end_hours_after_T0": 13.25,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T15",
+      "title": "Проверить RU/KZ/EN и calls quality",
+      "description": "Human labels/safety/role/NA gold assertions проверены; exact substring не считается semantic quality. Voice ISO timestamps/long contexts/audio playback проверены; без звука нет выводов о дикции/интонации.",
+      "priority": "P0",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T14",
+        "T09"
+      ],
+      "files": [
+        "ml-service/tests/",
+        "docs/ml-contract.md"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T14",
+        "T09"
+      ],
+      "expected_outputs": [
+        "Проверить RU/KZ/EN и calls quality с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Human labels/safety/role/NA gold assertions проверены; exact substring не считается semantic quality.",
+        "Voice ISO timestamps/long contexts/audio playback проверены; без звука нет выводов о дикции/интонации."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "KZ semantic review и реальные audio access пока не проверены; transcription ambiguity не доказывает нарушение.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R06",
+        "R07",
+        "R10",
+        "R11",
+        "R18"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 13.25,
+        "end_hours_after_T0": 14.25,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T16",
+      "title": "Проверить Java regression, contracts, restart и browser flows",
+      "description": "JUnit/Maven checks + общие JSON fixtures + two-service E2E и реальный browser workflow проходят. SQLite file restart/concurrent version/review/timeout safe errors и batch resume не теряют original/results. Python legacy tests только reference; отдельно зафиксированы Java/Python/browser результаты.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T07",
+        "T14",
+        "T04",
+        "T21"
+      ],
+      "files": [
+        "server/src/test/",
+        "contracts/fixtures/",
+        "docs/api-contract.md"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T07",
+        "T14",
+        "T04",
+        "T21"
+      ],
+      "expected_outputs": [
+        "Проверить Java regression, contracts, restart и browser flows с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "JUnit/Maven checks + общие JSON fixtures + two-service E2E и реальный browser workflow проходят.",
+        "SQLite file restart/concurrent version/review/timeout safe errors и batch resume не теряют original/results.",
+        "Python legacy tests только reference; отдельно зафиксированы Java/Python/browser результаты."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1.25,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Legacy tests не заменяют Java/browser tests; real file DB restart/concurrency требуют отдельных сценариев.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R08",
+        "R10",
+        "R12",
+        "R14"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 15,
+        "end_hours_after_T0": 16.25,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T17",
+      "title": "Обработать65 DEV и измерить CONTROL capacity",
+      "description": "Все65 DEV учтены: result/error/pending без silent skips; required failures не маскируются как complete. Measured seconds/item × CONTROL size и worst-case65s/item, retries/cost budget проверены; inference wall time сверх active estimate учитывается.",
+      "priority": "P0",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T15",
+        "T08",
+        "T01",
+        "T21"
+      ],
+      "files": [
+        "docs/ml-contract.md",
+        "plan.json"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T15",
+        "T08",
+        "T01",
+        "T21"
+      ],
+      "expected_outputs": [
+        "Обработать65 DEV и измерить CONTROL capacity с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Все65 DEV учтены: result/error/pending без silent skips; required failures не маскируются как complete.",
+        "Measured seconds/item × CONTROL size и worst-case65s/item, retries/cost budget проверены; inference wall time сверх active estimate учитывается."
+      ],
+      "verification": [
+        "Ручная проверка перечисленных acceptance criteria; зафиксировать evidence в plan.json."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "65×65s≈70.4min без overhead; .75ч только active analysis, CONTROL size/rate неизвестны.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R04",
+        "R21",
+        "R22"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 15,
+        "end_hours_after_T0": 15.75,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T18",
+      "title": "Подготовить воспроизводимый Java+ML release",
+      "description": "Fresh checkout: Java wrapper package/start + ML start + static UI доступны по инструкции; pinned deps, env paths. Старые README/AGENTS architecture согласованно обновлены во время реализации; сейчас не изменяются. Public release privacy scan без PDF signature/transcripts/audio/DB/.env; remote visibility проверяется участником.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T16"
+      ],
+      "files": [
+        "README.md",
+        "AGENTS.md",
+        "docs/architecture.md",
+        ".github/",
+        "server/pom.xml",
+        "ml-service/requirements.txt"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T16"
+      ],
+      "expected_outputs": [
+        "Подготовить воспроизводимый Java+ML release с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Fresh checkout: Java wrapper package/start + ML start + static UI доступны по инструкции; pinned deps, env paths.",
+        "Старые README/AGENTS architecture согласованно обновлены во время реализации; сейчас не изменяются.",
+        "Public release privacy scan без PDF signature/transcripts/audio/DB/.env; remote visibility проверяется участником."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Clean checkout/dependency downloads/два процесса; старые AGENTS/README commands ещё несовместимы с target.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R19",
+        "R23"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 16.25,
+        "end_hours_after_T0": 17,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T19",
+      "title": "Пройти G1–G7 pre-CONTROL и пятиминутную защиту",
+      "description": "G1–G6 фактически passed; pre-CONTROL частьG7 пройдена; post-CONTROL не выдаётся за готовую заранее. Rehearsal≤300s: dialogue1min, results/evidence/NA2min, appeal1min, criterion1min; model/cost disclosure.",
+      "priority": "P0",
+      "owner": "Joint",
+      "depends_on": [
+        "T01",
+        "T17",
+        "T18",
+        "T14"
+      ],
+      "files": [
+        "docs/IMPLEMENTATION_PLAN.md",
+        "plan.json"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T01",
+        "T17",
+        "T18",
+        "T14"
+      ],
+      "expected_outputs": [
+        "Пройти G1–G7 pre-CONTROL и пятиминутную защиту с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "G1–G6 фактически passed; pre-CONTROL частьG7 пройдена; post-CONTROL не выдаётся за готовую заранее.",
+        "Rehearsal≤300s: dialogue1min, results/evidence/NA2min, appeal1min, criterion1min; model/cost disclosure."
+      ],
+      "verification": [
+        "Ручная проверка перечисленных acceptance criteria; зафиксировать evidence в plan.json."
+      ],
+      "estimate_hours": 0.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Без rubric/privacy/runtime evidence gates не пройдены; model latency может сорвать5min demo.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R20",
+        "R21",
+        "R22"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 17,
+        "end_hours_after_T0": 17.5,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T20",
+      "title": "Выполнить CONTROL batch и стоп-код",
+      "description": "НаH23 actual CONTROL/group_id, новая checklist version через UI, batch records без silent skips. НаH24 freeze согласно правилам, дальнейшие действия через UI; если CONTROL не помещается, сообщить фактический статус. Commit/push только в отдельно разрешённом этапе, не сейчас.",
+      "priority": "P0",
+      "owner": "Joint",
+      "depends_on": [
+        "T19"
+      ],
+      "files": [
+        "plan.json"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T19"
+      ],
+      "expected_outputs": [
+        "Выполнить CONTROL batch и стоп-код с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "НаH23 actual CONTROL/group_id, новая checklist version через UI, batch records без silent skips.",
+        "НаH24 freeze согласно правилам, дальнейшие действия через UI; если CONTROL не помещается, сообщить фактический статус. Commit/push только в отдельно разрешённом этапе, не сейчас."
+      ],
+      "verification": [
+        "Ручная проверка перечисленных acceptance criteria; зафиксировать evidence в plan.json."
+      ],
+      "estimate_hours": 1,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Неизвестен H0/CONTROL size; окно1ч не гарантирует все inference; после freeze нельзя менять код.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R04",
+        "R17",
+        "R22",
+        "R23"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 20.5,
+        "end_hours_after_T0": 21.5,
+        "conditional_on_external_inputs": true,
+        "note": "T20 фактически привязан кH23–H24; здесь условное окно для расчёта необходимого остатка."
+      }
+    },
+    {
+      "id": "T21",
+      "title": "Минимальный последовательный DEV/CONTROL batch",
+      "description": "P0: snapshot списка conversation IDs и checklist key/version; один in-flight single-item request, progress/success/error/pending. Pause/resume между items, continue после явной ошибки, явный retry failed; reload сверяется с persisted request/results, pending/unknown не запускается повторно молча. Нет отдельной очереди/Redis/workers; batch frontend orchestration надJava single-item API с persisted request ledger.",
+      "priority": "P0",
+      "owner": "Farhat",
+      "depends_on": [
+        "T13",
+        "T07"
+      ],
+      "files": [
+        "server/src/main/resources/static/js/batch.js",
+        "server/src/main/java/cqa/evaluation/",
+        "server/src/test/java/cqa/batch/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T13",
+        "T07"
+      ],
+      "expected_outputs": [
+        "Минимальный последовательный DEV/CONTROL batch с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "P0: snapshot списка conversation IDs и checklist key/version; один in-flight single-item request, progress/success/error/pending.",
+        "Pause/resume между items, continue после явной ошибки, явный retry failed; reload сверяется с persisted request/results, pending/unknown не запускается повторно молча.",
+        "Нет отдельной очереди/Redis/workers; batch frontend orchestration надJava single-item API с persisted request ledger."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Browser close/Java crash оставляют unknown request; нельзя молча повторить оплату или пропустить item.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R04",
+        "R22"
+      ],
+      "baseline_window": {
+        "start_hours_after_T0": 14,
+        "end_hours_after_T0": 15,
+        "conditional_on_external_inputs": true,
+        "note": "Не календарное обещание."
+      }
+    },
+    {
+      "id": "T22",
+      "title": "Расширить human gold/holdout quality analysis",
+      "description": "Раздельные development/holdout own synthetic cases и criterion-level ошибки; не подменятьP0 smoke.",
+      "priority": "P1",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T15"
+      ],
+      "files": [
+        "ml-service/tests/fixtures/",
+        "docs/ml-contract.md"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T15"
+      ],
+      "expected_outputs": [
+        "Расширить human gold/holdout quality analysis с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Раздельные development/holdout own synthetic cases и criterion-level ошибки; не подменятьP0 smoke."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Дополнительная разметка забирает резерв; выполнять только после обязательной quality suite.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": []
+    },
+    {
+      "id": "T23",
+      "title": "Улучшить Vanilla drafts и навигацию",
+      "description": "Дополнительное восстановление несекретных drafts/keyboard usability; базовые race protections ужеP0 вT12.",
+      "priority": "P1",
+      "owner": "Farhat",
+      "depends_on": [
+        "T12"
+      ],
+      "files": [
+        "server/src/main/resources/static/js/state.js",
+        "server/src/main/resources/static/js/checklist.js",
+        "server/src/main/resources/static/js/review.js"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T12"
+      ],
+      "expected_outputs": [
+        "Улучшить Vanilla drafts и навигацию с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Дополнительное восстановление несекретных drafts/keyboard usability; базовые race protections ужеP0 вT12."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Расширение UI-state scope не должно вытеснитьP0; private text не сохранять в localStorage.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": []
+    },
+    {
+      "id": "T24",
+      "title": "Обновлять audio locator без смены source identity",
+      "description": "URI-only refresh не меняет message IDs/evaluation history; semantic content conflict остаётся409.",
+      "priority": "P1",
+      "owner": "Farhat",
+      "depends_on": [
+        "T07",
+        "T05"
+      ],
+      "files": [
+        "server/src/main/java/cqa/dataset/",
+        "server/src/main/java/cqa/repository/",
+        "server/src/main/resources/static/js/datasets.js"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T07",
+        "T05"
+      ],
+      "expected_outputs": [
+        "Обновлять audio locator без смены source identity с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "URI-only refresh не меняет message IDs/evaluation history; semantic content conflict остаётся409."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Source identity нельзя менять при URI rotation; сравнение transcript строгое.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": []
+    },
+    {
+      "id": "T25",
+      "title": "Расширить adversarial ML cases",
+      "description": "Transcript prompt injection/semantic misuse probes; strict contract и grounding остаются обязательнымиP0.",
+      "priority": "P1",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T11",
+        "T15"
+      ],
+      "files": [
+        "ml-service/tests/"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T11",
+        "T15"
+      ],
+      "expected_outputs": [
+        "Расширить adversarial ML cases с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Transcript prompt injection/semantic misuse probes; strict contract и grounding остаются обязательнымиP0."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 0.75,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "planned",
+      "risks_and_blockers": [
+        "Adversarial examples не дают гарантии отсутствия prompt injection; не менять baseline контракт без согласия.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": []
+    },
+    {
+      "id": "T26",
+      "title": "Уточнённые audio segments/prosody при обязательности",
+      "description": "Только после ответаQ02; если обязательны — повыситьpriority и пересчитать сроки; новый evidence формат согласуют оба.",
+      "priority": "P2",
+      "owner": "Nurtas",
+      "depends_on": [
+        "T15",
+        "T01"
+      ],
+      "files": [
+        "ml-service/audio/",
+        "contracts/",
+        "docs/INTEGRATION_CONTRACT.md"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T15",
+        "T01"
+      ],
+      "expected_outputs": [
+        "Уточнённые audio segments/prosody при обязательности с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Только после ответаQ02; если обязательны — повыситьpriority и пересчитать сроки; новый evidence формат согласуют оба."
+      ],
+      "verification": [
+        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 3,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "deferred",
+      "risks_and_blockers": [
+        "Обязательность audio analysis неизвестна; при подтверждении текущая time baseline недействительна.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": [
+        "R24"
+      ]
+    },
+    {
+      "id": "T27",
+      "title": "Pagination по результатам измерений",
+      "description": "Все записи доступны без потерь; оптимизация только после подтверждённого ограничения, не blocker малогоDEV.",
+      "priority": "P2",
+      "owner": "Farhat",
+      "depends_on": [
+        "T21"
+      ],
+      "files": [
+        "server/src/main/java/cqa/repository/",
+        "server/src/main/java/cqa/api/",
+        "server/src/main/resources/static/js/datasets.js"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T21"
+      ],
+      "expected_outputs": [
+        "Pagination по результатам измерений с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Все записи доступны без потерь; оптимизация только после подтверждённого ограничения, не blocker малогоDEV."
+      ],
+      "verification": [
+        "./server/mvnw -f server/pom.xml verify",
+        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+      ],
+      "estimate_hours": 1.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "deferred",
+      "risks_and_blockers": [
+        "CONTROL может превысить legacy list caps; проверка доступности всех записей ужеP0, оптимизация необязательна.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": []
+    },
+    {
+      "id": "T28",
+      "title": "Необязательная полировка доступности demo",
+      "description": "Только послеP0/gates и при свободном времени: focus/labels/контраст; никаких production инфраструктурных задач.",
+      "priority": "P2",
+      "owner": "Farhat",
+      "depends_on": [
+        "T19"
+      ],
+      "files": [
+        "server/src/main/resources/static/styles.css",
+        "server/src/main/resources/static/index.html"
+      ],
+      "inputs": [
+        "Согласованный contract2.0.0; сохранённые требования/audit findings",
+        "T19"
+      ],
+      "expected_outputs": [
+        "Необязательная полировка доступности demo с проверяемыми acceptance criteria"
+      ],
+      "acceptance_criteria": [
+        "Только послеP0/gates и при свободном времени: focus/labels/контраст; никаких production инфраструктурных задач."
+      ],
+      "verification": [
+        "Ручная проверка перечисленных acceptance criteria; зафиксировать evidence в plan.json."
+      ],
+      "estimate_hours": 0.5,
+      "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
+      "status": "deferred",
+      "risks_and_blockers": [
+        "Только после gates и если есть время; не превращать в production scope.",
+        "Java target пока не реализован; новые пути обозначают будущие файлы.",
+        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+      ],
+      "definition_of_done": [
+        "Все acceptance_criteria выполнены с перечисленными verification.",
+        "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
+        "Diff без private data/secrets; completion evidence записан в plan.json."
+      ],
+      "completion_evidence": [],
+      "requirement_ids": []
+    }
+  ],
+  "quality_gates": [
+    {
+      "id": "G1",
+      "title": "Фундамент и контракт",
+      "task_ids": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "pass_conditions": [
+        "Original rubric сверён; безPDF gate не закрывать.",
+        "Java Maven/JUnit tests и Vanilla browser mount passed; legacy tests не заменяют их.",
+        "Farhat/Nurtas приняли один JSON HTTP contract и одинаковые fixtures."
+      ],
+      "current_evidence": "Java target не создан; rubric PDF отсутствует.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    },
+    {
+      "id": "G2",
+      "title": "Один настоящий автоматический результат",
+      "task_ids": [
+        "T13"
+      ],
+      "pass_conditions": [
+        "Own synthetic через UI→real provider→validation→score→persist→UI.",
+        "Origin=model только для настоящего adapter, не fixture."
+      ],
+      "current_evidence": "Current auto501.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    },
+    {
+      "id": "G3",
+      "title": "Evidence/scoring/NA",
+      "task_ids": [
+        "T04",
+        "T11",
+        "T13"
+      ],
+      "pass_conditions": [
+        "100% принятых IDs/quotes существуют, criterion set complete.",
+        "Allowed/forbidden NA, omissions, scale/flag проверены.",
+        "Pinned scoring; invalid response не сохраняется."
+      ],
+      "current_evidence": "Math проверена; ML пока нет.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    },
+    {
+      "id": "G4",
+      "title": "Appeal после AI",
+      "task_ids": [
+        "T06",
+        "T14"
+      ],
+      "pass_conditions": [
+        "Confirm/change с reason и immutable original.",
+        "Concurrent resolve не перезаписывает decision, final пересчитан верно."
+      ],
+      "current_evidence": "Sequential manual flow есть, AI/concurrency нет.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    },
+    {
+      "id": "G5",
+      "title": "Новый criterion через UI",
+      "task_ids": [
+        "T14"
+      ],
+      "pass_conditions": [
+        "Arbitrary ID/type/levels/NA получает model output v2 без code/prompt edits.",
+        "v1 history неизменна."
+      ],
+      "current_evidence": "Manual added-criterion test не заменяет real model gate.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    },
+    {
+      "id": "G6",
+      "title": "RU/KZ/EN/calls",
+      "task_ids": [
+        "T15"
+      ],
+      "pass_conditions": [
+        "Minimum labelled suite и human checks прошли.",
+        "Voice timestamps/long context/audio access проверены; no prosody claims без звука.",
+        "Data policy соблюдена, unresolved voice requirements disclosed."
+      ],
+      "current_evidence": "Model quality не измерена.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    },
+    {
+      "id": "G7",
+      "title": "DEV/CONTROL/защита",
+      "task_ids": [
+        "T17",
+        "T18",
+        "T19",
+        "T20",
+        "T21"
+      ],
+      "pass_conditions": [
+        "P0 batch: progress/errors/pause/resume/reconciliation после reload; unknown не повторяется автоматически.",
+        "Pre-H23: все65 DEV учтены; обязательные оценки получены, оставшиеся failed/blocked items не маскируются и мешают полной приёмке.",
+        "Measured cost/capacity и fresh launch; rehearsal≤300s.",
+        "Post-H23: actual CONTROL imported, требуемые результаты готовы, no silent skips.",
+        "H24 frozen commit; после только UI data/config."
+      ],
+      "current_evidence": "Нельзя пройти до выдачи CONTROL.",
+      "assessment": "not_passed",
+      "threshold_source": "Engineering acceptance; official rules cited separately. No invented jury weighting."
+    }
+  ],
+  "risks": [
+    {
+      "id": "K01",
+      "risk": "Missing rubric",
+      "severity": "HIGH",
+      "task_ids": [
+        "T01"
+      ],
+      "mitigation": "Source verification blocked; provisional seed clearly marked."
+    },
+    {
+      "id": "K02",
+      "risk": "Unknown remaining time",
+      "severity": "HIGH",
+      "task_ids": [
+        "T01",
+        "T19"
+      ],
+      "mitigation": "Set H0; cut optional work first, do not silently omit mandatory flows."
+    },
+    {
+      "id": "K03",
+      "risk": "Provider/data privacy/budget",
+      "severity": "HIGH",
+      "task_ids": [
+        "T08",
+        "T10",
+        "T17"
+      ],
+      "mitigation": "Own synthetic until authorized; permitted local inference if feasible, no fake fallback."
+    },
+    {
+      "id": "K04",
+      "risk": "Contract drift",
+      "severity": "HIGH",
+      "task_ids": [
+        "T02",
+        "T05",
+        "T13"
+      ],
+      "mitigation": "One shared schema owner, exact pinned version, joint merge."
+    },
+    {
+      "id": "K05",
+      "risk": "Semantic hallucination despite exact quote",
+      "severity": "HIGH",
+      "task_ids": [
+        "T09",
+        "T15",
+        "T22"
+      ],
+      "mitigation": "Gold labels and human review; substring necessary not sufficient."
+    },
+    {
+      "id": "K06",
+      "risk": "KZ/call ambiguity",
+      "severity": "HIGH",
+      "task_ids": [
+        "T15",
+        "T22"
+      ],
+      "mitigation": "Language-capable review; ASR errors not automatic misconduct."
+    },
+    {
+      "id": "K07",
+      "risk": "Upstream signatures/rate limits",
+      "severity": "MEDIUM",
+      "task_ids": [
+        "T07",
+        "T17",
+        "T24"
+      ],
+      "mitigation": "Env-only URI, safe import fallback and measured capacity."
+    },
+    {
+      "id": "K08",
+      "risk": "Public leak of private data",
+      "severity": "HIGH",
+      "task_ids": [
+        "T18",
+        "T20"
+      ],
+      "mitigation": "Guide PDF also contains sig; inspect staged diff/logs, synthetic fixtures only."
+    },
+    {
+      "id": "K09",
+      "risk": "Review/UI concurrency",
+      "severity": "HIGH",
+      "task_ids": [
+        "T06",
+        "T23"
+      ],
+      "mitigation": "Atomic DB operations and request identity; separate worktrees."
+    },
+    {
+      "id": "K10",
+      "risk": "Live demo latency",
+      "severity": "HIGH",
+      "task_ids": [
+        "T17",
+        "T19"
+      ],
+      "mitigation": "Measure, prepare actual prior results; changed criterion still real call or visible error."
+    },
+    {
+      "id": "K11",
+      "risk": "Java/Vanilla reimplementation schedule",
+      "severity": "HIGH",
+      "task_ids": [
+        "T03",
+        "T04",
+        "T05",
+        "T12",
+        "T19"
+      ],
+      "mitigation": "17.5ч rehearsal optimistic conditional;3чbuffer+1чCONTROL. UnknownH0; FS bottleneck. No full readiness promise."
+    },
+    {
+      "id": "K12",
+      "risk": "Cross-language JSON/rounding/HTTP drift",
+      "severity": "HIGH",
+      "task_ids": [
+        "T02",
+        "T04",
+        "T11",
+        "T13"
+      ],
+      "mitigation": "Single schema, strict parsers, shared negative fixtures, BigDecimal parity, identity echo checks."
+    },
+    {
+      "id": "K13",
+      "risk": "Timeout/duplicate paid request/SQLite migration",
+      "severity": "HIGH",
+      "task_ids": [
+        "T05",
+        "T06",
+        "T13",
+        "T21"
+      ],
+      "mitigation": "No Java POST auto retry; persisted request_id status/reconciliation; separate DB; no transactions during HTTP. Exactly-once provider billing not promised."
+    },
+    {
+      "id": "K14",
+      "risk": "Maven bootstrap and dependency availability",
+      "severity": "HIGH",
+      "task_ids": [
+        "T02",
+        "T03"
+      ],
+      "mitigation": "Java21 present but mvn/gradle absent; wrapper/package smoke first, pinned working version. No installation performed in planning."
+    }
+  ],
+  "demo_plan": {
+    "max_seconds": 300,
+    "source": "S1:p4",
+    "segments": [
+      {
+        "start": 0,
+        "seconds": 60,
+        "action": "Выбранный диалог, язык/канал, роли, checklist version."
+      },
+      {
+        "start": 60,
+        "seconds": 120,
+        "action": "Настоящая AI-оценка, evidence jump, NA с причиной, weights/sections/total, модель и стоимость."
+      },
+      {
+        "start": 180,
+        "seconds": 60,
+        "action": "Апелляция → reviewer reason/decision → original/final."
+      },
+      {
+        "start": 240,
+        "seconds": 60,
+        "action": "UI заменяет criterion → v2 → реальная переоценка без кода; v1 history сохранена."
+      }
+    ],
+    "preparation": "Заранее реальные DEV/CONTROL results и измеренная latency. Последний segment остаётся настоящим вызовом; при outage показать ошибку, не выдуманный результат. Собственный synthetic fallback не выдавать за CONTROL.",
+    "freeze": "После H24 только UI data/config/evaluation on frozen commit; исходники, prompt files, scoring и зависимости не менять."
+  },
+  "release_checklist": [
+    {
+      "id": "REL01",
+      "check": "G1–G6 реально пройдены, source/privacy blockers не скрыты.",
+      "task_ids": [
+        "T19"
+      ]
+    },
+    {
+      "id": "REL02",
+      "check": "DEV/CONTROL учтены, no silent skips, конфигурация закреплена.",
+      "task_ids": [
+        "T17",
+        "T20"
+      ]
+    },
+    {
+      "id": "REL03",
+      "check": "AI review/new criterion/v1 history работают.",
+      "task_ids": [
+        "T14",
+        "T16"
+      ]
+    },
+    {
+      "id": "REL04",
+      "check": "Clean launch, lock/constraints, public repo; ссылку отправляет участник.",
+      "task_ids": [
+        "T18"
+      ]
+    },
+    {
+      "id": "REL05",
+      "check": "Staged diff без real data/audio/URLs/PDF sig/.env/SQLite.",
+      "task_ids": [
+        "T18",
+        "T20"
+      ]
+    },
+    {
+      "id": "REL06",
+      "check": "H23 CONTROL, H24 final commit; далее только UI.",
+      "task_ids": [
+        "T20"
+      ]
+    },
+    {
+      "id": "REL07",
+      "check": "Timed rehearsal≤300s, model/cost honest, no fake fallback.",
+      "task_ids": [
+        "T19",
+        "T20"
+      ]
+    }
+  ],
+  "dataset_summary": {
+    "records": 65,
+    "languages": {
+      "RU": 35,
+      "KZ": 15,
+      "EN": 15
+    },
+    "channels": {
+      "agent chat": 60,
+      "voice call": 5
+    },
+    "call_language": "RU",
+    "messages": 1268,
+    "roles": {
+      "client": 505,
+      "bot": 315,
+      "system": 109,
+      "operator": 339
+    },
+    "message_count_min_median_max": [
+      11,
+      14,
+      115
+    ],
+    "text_characters_total": 84054,
+    "conversation_characters_min_median_max": [
+      769,
+      990,
+      5089
+    ],
+    "duplicate_conversation_ids": 0,
+    "records_with_repeated_timestamps": 41,
+    "exact_duplicate_turns": 1,
+    "blank_texts": 0,
+    "invalid_timestamp_formats": 0,
+    "nonmonotonic_records": 0,
+    "signed_audio_urls": 5,
+    "longest_record_ordinal": 65,
+    "limits": "Characters not tokens; audio not verified; candidate scenarios not gold labels."
+  },
+  "scoring": {
+    "basis": "S5, provisional until S2 supplied",
+    "formula": "raw_i=w_i*r_i; W=sum(applicable weights); total=round_half_up(100*sum(raw_i)/W,2) if W>0 else null",
+    "ratio": "yes1/no0/scale(value/max levels); NA excluded; flags excluded",
+    "flag": "yes marks gross violation, no numeric penalty",
+    "sections": "100*sum(raw in section)/sum(applicable weights in section), else null. Section percentages are not contributions to total.",
+    "rounding": "Use unrounded values internally; sum of displayed rounded rows can differ by .01. HALF_UP is implementation assumption.",
+    "independent_check": {
+      "combinations": 5184,
+      "reference": "fractions.Fraction + independent integer half-up",
+      "result": "all_match"
+    }
+  },
+  "verification": {
+    "scope": "Historical results retained below; NO Java/Python-service/browser target implementation or tests executed in this migration.",
+    "legacy_foundation": {
+      "backend": "13 passed,1 Starlette deprecation warning; unchanged tests via pytest.main(-q,-p no:cacheprovider) with isolated SQLite memory fixture and no pyc. TestClient hung in sandbox; outside sandbox passed. Disk persistence not tested.",
+      "frontend": "Vite7.3.7 production build write:false passed(28 modules); executing compiled App via SSR failed ReferenceError React is not defined. No browser E2E, no dist created.",
+      "method_limit": "Exact standard commands that create test databases/dist were not run because only four artifacts allowed. Equivalent build and existing test assertions executed in memory; no installs.",
+      "runtime": {
+        "python": "3.14.7",
+        "node": "22.22.2",
+        "fastapi": "0.162.0",
+        "pydantic": "2.14.3",
+        "pytest": "9.2.0"
+      },
+      "not_performed": [
+        "External LLM",
+        "Upstream organizer network GET",
+        "Audio playback/download",
+        "File DB restart",
+        "Browser E2E",
+        "Remote GitHub visibility/CI checks"
+      ]
+    },
+    "target_java": "not_implemented_not_tested",
+    "target_python_http": "not_implemented_not_tested",
+    "target_vanilla_browser": "not_implemented_not_tested",
+    "local_read_only_environment": "Java/javac21 present; mvn/gradle absent; dependencies not installed."
+  },
+  "audit_findings": [
+    {
+      "id": "F01",
+      "severity": "BLOCKER",
+      "title": "React is not defined",
+      "location": "frontend/src/App.jsx:1; ChecklistEditor.jsx:1; ManualEvaluation.jsx:1; ReviewWorkspace.jsx:1",
+      "cause": "Classic JSX требует React binding; imported только hooks.",
+      "evidence": "Production build passed; compiled App render failed.",
+      "impact": "Все UI workflows недоступны.",
+      "recommended_fix": "Automatic runtime либо imports + browser smoke.",
+      "task_ids": [
+        "T03",
+        "T16"
+      ]
+    },
+    {
+      "id": "F02",
+      "severity": "BLOCKER",
+      "title": "AI отсутствует",
+      "location": "backend/app/evaluator.py:13; main.py:96",
+      "cause": "UnconfiguredEvaluator намеренная заглушка.",
+      "evidence": "Existing API test501.",
+      "impact": "Нет обязательной auto evaluation.",
+      "recommended_fix": "Настоящий adapter с dynamic checklist/validation/cost.",
+      "task_ids": [
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T13"
+      ]
+    },
+    {
+      "id": "F03",
+      "severity": "HIGH",
+      "title": "Version race при сохранении evaluation",
+      "location": "schemas.py:116; storage.py:180; main.py:96; ManualEvaluation.jsx:41",
+      "cause": "No version in request; save читает latest повторно.",
+      "evidence": "Synthetic v1/90 сохранён по v2/90.91; auto выбирает latest после evaluate.",
+      "impact": "Тихая подмена rubric/weights.",
+      "recommended_fix": "Explicit required version, pinned snapshot throughout.",
+      "task_ids": [
+        "T05"
+      ]
+    },
+    {
+      "id": "F04",
+      "severity": "BLOCKER",
+      "title": "Неполный UI checklist/result",
+      "location": "frontend/src/App.jsx:61; ReviewWorkspace.jsx:64",
+      "cause": "Hardcoded key; no section/earned/effective weights rendering.",
+      "evidence": "Статический просмотр, backend fields существуют.",
+      "impact": "Невыполнены Guide p2 select checklist/criterion points/sections.",
+      "recommended_fix": "Selector/create-copy и полный output backend scoring.",
+      "task_ids": [
+        "T12"
+      ]
+    },
+    {
+      "id": "F05",
+      "severity": "HIGH",
+      "title": "Нет group_id backend fetch",
+      "location": "backend/app/main.py:33; frontend/src/App.jsx:69",
+      "cause": "Only uploaded envelope.",
+      "evidence": "Нет upstream route в коде.",
+      "impact": "CONTROL нельзя получить через UI; JSON fallback есть.",
+      "recommended_fix": "Backend GET adapter с env URL; UI group_id. Guide описывает GET, встроенный fetch — выбранное полное решение.",
+      "task_ids": [
+        "T07"
+      ]
+    },
+    {
+      "id": "F06",
+      "severity": "HIGH",
+      "title": "Перезапись reviewer decision",
+      "location": "backend/app/storage.py:250,269",
+      "cause": "Non-atomic read/status check; нет UNIQUE open-appeal index.",
+      "evidence": "Контролируемое чередование: B resolved, stale A перезаписал reason; duplicate create risk по коду.",
+      "impact": "Нарушена история решения при двух запросах.",
+      "recommended_fix": "Short BEGIN IMMEDIATE, conditional update+revision+unique open.",
+      "task_ids": [
+        "T06"
+      ]
+    },
+    {
+      "id": "F07",
+      "severity": "HIGH",
+      "title": "Original score не сохранён",
+      "location": "backend/app/storage.py:59,211",
+      "cause": "GET пересчитывает original текущим calculate.",
+      "evidence": "Схема/код подтверждают; историческую смену scorer не запускали.",
+      "impact": "Будущая math edit меняет исторический original.",
+      "recommended_fix": "Snapshot + scoring_version; marked backfill, pinned review calculator.",
+      "task_ids": [
+        "T06"
+      ]
+    },
+    {
+      "id": "F08",
+      "severity": "MEDIUM",
+      "title": "Слабая finite/text validation",
+      "location": "backend/app/schemas.py:12,103,108",
+      "cause": "Infinity разрешён для levels; пробелы проходят min_length.",
+      "evidence": "Infinity принят, calculate→Decimal InvalidOperation; blank explanation принят.",
+      "impact": "Некорректная конфигурация/ML output дают500 или пустое обоснование.",
+      "recommended_fix": "Finite fields, nonblank semantic text, strict ML shape/bounds; quotes не нормализовать.",
+      "task_ids": [
+        "T04",
+        "T11"
+      ]
+    },
+    {
+      "id": "F09",
+      "severity": "HIGH",
+      "title": "Build-only CI",
+      "location": "frontend/package.json; .github/workflows/ci.yml:19",
+      "cause": "Нет frontend mount/E2E tests.",
+      "evidence": "Build зелёный при runtime crash.",
+      "impact": "Ложное ощущение готовности demo.",
+      "recommended_fix": "Browser smoke + contracts/API regression.",
+      "task_ids": [
+        "T03",
+        "T16",
+        "T18"
+      ]
+    },
+    {
+      "id": "F10",
+      "severity": "MEDIUM",
+      "title": "Dependencies/env воспроизводимость",
+      "location": "frontend/package-lock.json; backend/requirements*.txt; .env.example; scripts/run-backend.sh",
+      "cause": "Lock untracked; широкие ranges; root .env явно не загружается, relative DB path зависит от cwd.",
+      "evidence": "Git/scripts inspected; local Python3.14 vs CI3.12.",
+      "impact": "Свежая установка/DB location могут отличаться.",
+      "recommended_fix": "Pinned tested versions, explicit env loading/absolute DB path, clean launch.",
+      "task_ids": [
+        "T18"
+      ]
+    },
+    {
+      "id": "F11",
+      "severity": "MEDIUM",
+      "title": "Audio URL rotation конфликтует с import",
+      "location": "backend/app/storage.py:127",
+      "cause": "Hash включает audio_url.",
+      "evidence": "Только synthetic URL изменён→StorageConflict.",
+      "impact": "Expired signature невозможно обновить обычным import.",
+      "recommended_fix": "Semantic transcript hash отдельно от locator.",
+      "task_ids": [
+        "T24"
+      ]
+    },
+    {
+      "id": "F12",
+      "severity": "HIGH",
+      "title": "ML error/readiness boundary не готова",
+      "location": "backend/app/main.py:28,102; evaluator.py",
+      "cause": "Только NotImplementedError caught; health hardcoded, no deadline/retry/cost.",
+      "evidence": "Статический факт, real calls не выполнялись.",
+      "impact": "После интеграции500/hangs/unknown cost.",
+      "recommended_fix": "Typed errors/result/diagnostics, bounded retries, actual health.",
+      "task_ids": [
+        "T08",
+        "T10",
+        "T11",
+        "T13"
+      ]
+    },
+    {
+      "id": "F13",
+      "severity": "MEDIUM",
+      "title": "UI async/draft risks",
+      "location": "frontend/src/App.jsx:46; ReviewWorkspace.jsx:21; ChecklistEditor.jsx:48",
+      "cause": "Out-of-order requests не защищены; review state не сброшен; editable ID as React key; tabs unmount drafts.",
+      "evidence": "Статический риск, browser race не воспроизведена.",
+      "impact": "Чужой transcript/result/comment, потеря focus/draft.",
+      "recommended_fix": "Request identity, keyed/reset state, stable local key/draft warning.",
+      "task_ids": [
+        "T23"
+      ]
+    },
+    {
+      "id": "F14",
+      "severity": "MEDIUM",
+      "title": "Тесты не измеряют semantic quality",
+      "location": "backend/tests/conftest.py:47; test_api.py",
+      "cause": "Одинаковая цитата используется для всех answers.",
+      "evidence": "13 tests cover API/math, not relevance.",
+      "impact": "Exact quote не гарантирует правильный вывод.",
+      "recommended_fix": "Independent synthetic gold and human review by language/criterion.",
+      "task_ids": [
+        "T09",
+        "T15",
+        "T22"
+      ]
+    },
+    {
+      "id": "F15",
+      "severity": "LOW",
+      "title": "List limits/read overhead",
+      "location": "backend/app/storage.py:148,241,36",
+      "cause": "LIMIT2000/200 без pagination; full score recalc; init/seed per connection.",
+      "evidence": "Код; нагрузка не измерялась.",
+      "impact": "Рост datasets скрывает историю/увеличивает latency.",
+      "recommended_fix": "После MVP pagination/summary и startup migrations.",
+      "task_ids": [
+        "T27"
+      ]
+    },
+    {
+      "id": "F16",
+      "severity": "HIGH",
+      "title": "Нет original checklist PDF",
+      "location": "data/official/chat_quality_checklist.pdf",
+      "cause": "В official только Guide.",
+      "evidence": "Filesystem inspection.",
+      "impact": "Exact rubric compliance не подтверждён.",
+      "recommended_fix": "Получить original/diff, не придумывать правила.",
+      "task_ids": [
+        "T01"
+      ]
+    },
+    {
+      "id": "F17",
+      "severity": "HIGH",
+      "title": "Official PDF содержит credential",
+      "location": "data/official/student_guide_v3.pdf:p3 annotation",
+      "cause": "Signed URI has sig/service params.",
+      "evidence": "Только имена query params проверены, значения не выводились.",
+      "impact": "Публикация PDF раскрывает credential.",
+      "recommended_fix": "Keep official data ignored; backend env; sanitized errors/URLs.",
+      "task_ids": [
+        "T07",
+        "T18"
+      ]
+    }
+  ],
+  "endpoints_current": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "state": "Hardcoded unconfigured"
+    },
+    {
+      "method": "POST",
+      "path": "/api/datasets/import",
+      "state": "Atomic JSON import"
+    },
+    {
+      "method": "GET",
+      "path": "/api/conversations",
+      "state": "Max2000"
+    },
+    {
+      "method": "GET",
+      "path": "/api/conversations/{id}",
+      "state": "Original + positional messages"
+    },
+    {
+      "method": "GET",
+      "path": "/api/checklists",
+      "state": "Latest per key"
+    },
+    {
+      "method": "GET",
+      "path": "/api/checklists/{key}?version=N",
+      "state": "Current/historical"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checklists/{key}",
+      "state": "Create, reserved default key"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/checklists/{key}",
+      "state": "Append version, no expected_version"
+    },
+    {
+      "method": "POST",
+      "path": "/api/evaluations/manual",
+      "state": "Implemented, latest version"
+    },
+    {
+      "method": "POST",
+      "path": "/api/evaluations/auto",
+      "state": "501"
+    },
+    {
+      "method": "GET",
+      "path": "/api/evaluations?conversation_id=...",
+      "state": "Global max200, full recalculation"
+    },
+    {
+      "method": "GET",
+      "path": "/api/evaluations/{id}",
+      "state": "Original/final calculated at read"
+    },
+    {
+      "method": "POST",
+      "path": "/api/evaluations/{id}/appeals",
+      "state": "Non-atomic duplicate check"
+    },
+    {
+      "method": "POST",
+      "path": "/api/appeals/{id}/resolve",
+      "state": "Non-atomic status check"
+    }
+  ],
+  "planning_validation": {
+    "state": "passed_document_consistency_checks",
+    "json_syntax": "passed",
+    "task_counts": {
+      "P0": 21,
+      "P1": 4,
+      "P2": 3
+    },
+    "unique_task_ids_and_references": "passed: T01–T28",
+    "dependency_dag": "passed",
+    "p0_requirement_task_coverage": "passed: all P0 requirements have P0 tasks; T21 batch P0",
+    "baseline_dependency_and_two_person_resource_constraints": "passed: no owner/Joint overlaps;17.5h rehearsal;13.75h dependency-only lower bound",
+    "legacy_fullstack_target_paths": "none in active task files; historical references and seed ownership retained",
+    "preserved_historical_findings": "17; source/code explanations retained",
+    "contract_examples_and_embedded_schemas": "passed: complete request/result/provider/error, shared IDs/version2.0.0, exact grounding and synthetic score100",
+    "negative_schema_context_cases_rejected": 20,
+    "validator_limit": "In-memory checker covers used JSON Schema keywords plus documented identity/answer/evidence checks. Full third-party metaschema validator not run; implementation validators/HTTP semantics not tested.",
+    "markdown_json_blocks_links_task_refs": "passed; request/result/error/public auto examples equal plan.json",
+    "privacy_check": "No new real data copied; no signed URL sig values in Markdown; prior private-source audit retained. Not a universal secret scanner.",
+    "target_java_tests": "NOT RUN: Java target not implemented",
+    "target_python_http_tests": "NOT RUN: service target not implemented",
+    "target_browser_tests": "NOT RUN: Vanilla target not implemented",
+    "scope": "Only plan.json and three requested docs edited. App/tests/AGENTS and pre-existing package-lock untouched; no commit/push."
+  },
+  "migration_audit": {
+    "basis": "Existing audit and existing28 tasks; no repeated full source audit. Historical paths below are not implementation targets.",
+    "previous_task_plan": [
+      {
+        "id": "T01",
+        "old_title": "Сверить первоисточники и расписание",
+        "old_files": [
+          "data/official/ (private)",
+          "docs/requirements.md",
+          "backend/app/seed/chat_quality.json",
+          "plan.json"
+        ],
+        "old_estimate_hours": 0.5,
+        "dependency_on_old_stack": [
+          "Stack-neutral requirements/release coordination"
+        ],
+        "action": "Retain purpose, adapt checks/dependencies"
+      },
+      {
+        "id": "T02",
+        "old_title": "Принять единый контракт и владение файлами",
+        "old_files": [
+          "docs/INTEGRATION_CONTRACT.md",
+          "docs/api-contract.md",
+          "docs/ml-contract.md",
+          "plan.json"
+        ],
+        "old_estimate_hours": 0.5,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T03",
+        "old_title": "Исправить JSX runtime и mount smoke",
+        "old_files": [
+          "frontend/src/*.jsx",
+          "frontend/vite.config.* if needed",
+          "frontend/package.json",
+          "frontend/tests/smoke.*"
+        ],
+        "old_estimate_hours": 0.5,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T04",
+        "old_title": "Усилить схемы и scoring edge cases",
+        "old_files": [
+          "backend/app/schemas.py",
+          "backend/app/scoring.py (validation only)",
+          "backend/tests/test_scoring.py",
+          "backend/tests/test_api.py"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T05",
+        "old_title": "Закрепить checklist version во всём lifecycle",
+        "old_files": [
+          "backend/app/main.py",
+          "backend/app/storage.py",
+          "backend/app/schemas.py",
+          "backend/tests/test_api.py",
+          "docs/api-contract.md"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T06",
+        "old_title": "Сохранить score snapshots и атомарный review",
+        "old_files": [
+          "backend/app/storage.py",
+          "backend/app/main.py",
+          "backend/app/schemas.py",
+          "backend/tests/test_api.py"
+        ],
+        "old_estimate_hours": 1.25,
+        "dependency_on_old_stack": [
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T07",
+        "old_title": "Добавить backend fetch по group_id",
+        "old_files": [
+          "backend/app/main.py",
+          "backend/app/dataset_client.py",
+          "backend/app/schemas.py",
+          "frontend/src/App.jsx",
+          ".env.example",
+          "backend/tests/test_api.py"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T08",
+        "old_title": "Выбрать provider и разрешённый data режим",
+        "old_files": [
+          "backend/app/ml/provider_config.py",
+          "docs/ml-contract.md",
+          "plan.json"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T09",
+        "old_title": "Создать synthetic gold и dynamic prompt",
+        "old_files": [
+          "backend/tests/fixtures/synthetic_ml/**",
+          "backend/tests/test_ml_contract.py",
+          "backend/app/ml/prompts.py"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T10",
+        "old_title": "Реализовать настоящий adapter",
+        "old_files": [
+          "backend/app/evaluator.py",
+          "backend/app/ml/**",
+          "backend/tests/test_ml_provider.py"
+        ],
+        "old_estimate_hours": 2,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T11",
+        "old_title": "Проверять ML response и exact evidence",
+        "old_files": [
+          "backend/app/ml/validation.py",
+          "backend/app/ml/errors.py",
+          "backend/tests/test_ml_contract.py"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T12",
+        "old_title": "Завершить checklist selection и result UI",
+        "old_files": [
+          "frontend/src/App.jsx",
+          "frontend/src/ChecklistEditor.jsx",
+          "frontend/src/ManualEvaluation.jsx",
+          "frontend/src/ReviewWorkspace.jsx",
+          "frontend/src/api.js"
+        ],
+        "old_estimate_hours": 1.5,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T13",
+        "old_title": "Интегрировать первый настоящий ML E2E",
+        "old_files": [
+          "backend/app/main.py",
+          "backend/app/evaluator.py",
+          "frontend/src/ManualEvaluation.jsx",
+          "frontend/src/api.js",
+          "backend/tests/test_api.py"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "FastAPI/Python fullstack implementation or tests",
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T14",
+        "old_title": "Проверить AI review и замену criterion",
+        "old_files": [
+          "backend/tests/test_api.py",
+          "backend/tests/test_ml_contract.py",
+          "frontend/tests/e2e/**"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T15",
+        "old_title": "Пройти минимальный RU/KZ/EN и calls quality",
+        "old_files": [
+          "backend/tests/test_ml_quality.py",
+          "backend/tests/fixtures/synthetic_ml/**",
+          "data/local-eval/ (private; future only)"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T16",
+        "old_title": "Пройти regression, restart и safe-error checks",
+        "old_files": [
+          "backend/tests/** (FS owned)",
+          "frontend/tests/e2e/**",
+          ".github/workflows/ci.yml"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T17",
+        "old_title": "Обработать DEV и измерить capacity",
+        "old_files": [
+          "data/local-eval/ (private; future only)",
+          "plan.json",
+          "docs/ml-contract.md"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T18",
+        "old_title": "Обеспечить воспроизводимый release",
+        "old_files": [
+          "README.md",
+          "frontend/package-lock.json",
+          "backend/requirements*.txt",
+          ".env.example",
+          "scripts/**",
+          ".github/workflows/ci.yml",
+          ".gitignore"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T19",
+        "old_title": "Пройти gates и пятиминутную репетицию",
+        "old_files": [
+          "plan.json",
+          "docs/IMPLEMENTATION_PLAN.md",
+          "README.md"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "Stack-neutral requirements/release coordination"
+        ],
+        "action": "Retain purpose, adapt checks/dependencies"
+      },
+      {
+        "id": "T20",
+        "old_title": "CONTROL и стоп-код",
+        "old_files": [
+          "plan.json",
+          "Private SQLite/data",
+          "Release commit metadata"
+        ],
+        "old_estimate_hours": 1,
+        "dependency_on_old_stack": [
+          "Stack-neutral requirements/release coordination"
+        ],
+        "action": "Retain purpose, adapt checks/dependencies"
+      },
+      {
+        "id": "T21",
+        "old_title": "Простая последовательная batch очередь",
+        "old_files": [
+          "frontend/src/BatchEvaluation.jsx",
+          "frontend/src/App.jsx",
+          "backend/app/main.py if required",
+          "backend/tests/test_api.py"
+        ],
+        "old_estimate_hours": 1.25,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T22",
+        "old_title": "Расширить gold/holdout quality analysis",
+        "old_files": [
+          "backend/tests/test_ml_quality.py",
+          "backend/app/ml/prompts.py",
+          "Private eval report"
+        ],
+        "old_estimate_hours": 1.5,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T23",
+        "old_title": "Устранить UI races и draft loss",
+        "old_files": [
+          "frontend/src/App.jsx",
+          "frontend/src/ReviewWorkspace.jsx",
+          "frontend/src/ChecklistEditor.jsx",
+          "frontend/src/ManualEvaluation.jsx",
+          "frontend/tests/e2e/**"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T24",
+        "old_title": "Обновление audio locator без изменения source",
+        "old_files": [
+          "backend/app/storage.py",
+          "backend/app/dataset_client.py",
+          "backend/tests/test_api.py",
+          "frontend/src/App.jsx"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T25",
+        "old_title": "Расширить adversarial ML checks",
+        "old_files": [
+          "backend/tests/fixtures/synthetic_ml/**",
+          "backend/tests/test_ml_quality.py",
+          "backend/app/ml/prompts.py"
+        ],
+        "old_estimate_hours": 0.75,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T26",
+        "old_title": "Audio segments/prosody только после уточнения",
+        "old_files": [
+          "backend/app/ml/audio.py",
+          "backend/app/schemas.py (Farhat)",
+          "frontend/src/AudioEvidence.jsx (Farhat)"
+        ],
+        "old_estimate_hours": 3,
+        "dependency_on_old_stack": [
+          "In-process Python/shared-Pydantic boundary or ML integration"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T27",
+        "old_title": "Pagination и SQLite read optimization",
+        "old_files": [
+          "backend/app/storage.py",
+          "backend/app/main.py",
+          "frontend/src/App.jsx",
+          "backend/tests/test_api.py"
+        ],
+        "old_estimate_hours": 1.5,
+        "dependency_on_old_stack": [
+          "React/JSX/Vite directly or workflow integration",
+          "FastAPI/Python fullstack implementation or tests"
+        ],
+        "action": "Replace legacy implementation boundary; preserve domain acceptance"
+      },
+      {
+        "id": "T28",
+        "old_title": "Production design после хакатона",
+        "old_files": [
+          "docs/architecture.md",
+          "Future deployment/security docs"
+        ],
+        "old_estimate_hours": 4,
+        "dependency_on_old_stack": [
+          "Stack-neutral requirements/release coordination"
+        ],
+        "action": "Replace unnecessary production design with deferred demo accessibility polish; retain T28 ID."
+      }
+    ],
+    "legacy_schedule": {
+      "origin": "T0 — начало реализации после планирования; H0 — неизвестный официальный старт.",
+      "hours_to_rehearsal": 11.25,
+      "recovery_buffer_hours": 3,
+      "control_freeze_window_hours": 1,
+      "minimum_remaining_to_H23_hours": 14.25,
+      "minimum_remaining_to_H24_hours": 15.25,
+      "assumptions": "Источники, разрешения и модель доступны. Внешнее ожидание не входит в оценки; P1/P2 не входят в базовый график.",
+      "compression_rule": "Если остаток меньше — убрать P1/P2, один provider, переиспользовать scoring/import/review; сохранить минимум 2 часа на regression/integration и окно H23–H24. Не объявлять полный MVP готовым с непройденными gates."
+    },
+    "legacy_verification": {
+      "backend": "13 passed,1 Starlette deprecation warning; unchanged tests via pytest.main(-q,-p no:cacheprovider) with isolated SQLite memory fixture and no pyc. TestClient hung in sandbox; outside sandbox passed. Disk persistence not tested.",
+      "frontend": "Vite7.3.7 production build write:false passed(28 modules); executing compiled App via SSR failed ReferenceError React is not defined. No browser E2E, no dist created.",
+      "method_limit": "Exact standard commands that create test databases/dist were not run because only four artifacts allowed. Equivalent build and existing test assertions executed in memory; no installs.",
+      "runtime": {
+        "python": "3.14.7",
+        "node": "22.22.2",
+        "fastapi": "0.162.0",
+        "pydantic": "2.14.3",
+        "pytest": "9.2.0"
+      },
+      "not_performed": [
+        "External LLM",
+        "Upstream organizer network GET",
+        "Audio playback/download",
+        "File DB restart",
+        "Browser E2E",
+        "Remote GitHub visibility/CI checks"
+      ]
+    },
+    "preserved_findings": 17,
+    "preserved_tasks": 28
+  },
+  "breaking_changes": [
+    {
+      "id": "BC01",
+      "change": "Fullstack runtime/launch changes to Java21/Maven/8080 + Python ML8001 + Vanilla static assets; old npm/uvicorn fullstack commands are legacy.",
+      "tasks": [
+        "T02",
+        "T03",
+        "T18"
+      ],
+      "agreement": "Farhat + Nurtas: ports, env names, framework version, start order."
+    },
+    {
+      "id": "BC02",
+      "change": "In-process Python evaluator/shared Pydantic replaced by HTTP POST /v1/evaluate with contract2.0.0, request_id/full checklist and identity echoes.",
+      "tasks": [
+        "T02",
+        "T10",
+        "T11",
+        "T13"
+      ],
+      "agreement": "Both approve exact request/response/error schema and shared fixtures before implementation."
+    },
+    {
+      "id": "BC03",
+      "change": "Public API requires explicit checklist_version, expected_version on edit and request_id on auto; adds request-status and dataset-fetch endpoints.",
+      "tasks": [
+        "T02",
+        "T05",
+        "T07",
+        "T12",
+        "T21"
+      ],
+      "agreement": "Both approve fields/endpoints/status codes; Java and UI merged together."
+    },
+    {
+      "id": "BC04",
+      "change": "Strict no-coercion/extra-field/nonfinite/blank validation rejects previously accepted invalid payloads.",
+      "tasks": [
+        "T02",
+        "T04",
+        "T11"
+      ],
+      "agreement": "Both approve validators/negative fixtures; no silent repair."
+    },
+    {
+      "id": "BC05",
+      "change": "Java-owned SQLite schema + immutable snapshots + atomic review revisions; no assumed drop-in compatibility with legacy DB.",
+      "tasks": [
+        "T05",
+        "T06"
+      ],
+      "agreement": "Both approve source/history preservation and migration approach; default new target DB, old untouched."
+    },
+    {
+      "id": "BC06",
+      "change": "Java BigDecimal scorer is authoritative; Python math retained only as reference. Semantics/IDs/criteria remain unchanged.",
+      "tasks": [
+        "T02",
+        "T04",
+        "T16"
+      ],
+      "agreement": "Both approve parity evidence and rounding convention; any scoring/message-ID semantic change requires new agreement."
+    },
+    {
+      "id": "BC07",
+      "change": "Network timeout/unknown result handling and no automatic Java POST retry; batch reconciles persisted request state.",
+      "tasks": [
+        "T02",
+        "T13",
+        "T21"
+      ],
+      "agreement": "Both approve deadlines/retry ownership/error codes and duplicate-charge limitation."
+    }
+  ],
+  "migration_cost": {
+    "fullstack_reimplementation_task_ids": [
+      "T03",
+      "T04",
+      "T05",
+      "T06",
+      "T12"
+    ],
+    "active_hours_included_in_total": 10.75,
+    "not_additional_to_schedule": true,
+    "reuse": "Reuse requirements, seed JSON, algorithm/test vectors, synthetic fixtures, API behavior and audit evidence; Java/Vanilla implementations themselves must be written.",
+    "increment_to_previous_rehearsal_hours": 6.25,
+    "uncertainty": "Nominal17.5h is optimistic; up to24h rehearsal plus3hbuffer+1hCONTROL =>28h. Neither estimate is measured team velocity."
+  },
+  "audit_findings_scope": "F01–F17 preserved verbatim as historical findings of legacy commit a8261f5; recommended fixes in those records are superseded by current tasks/architecture."
+}
