@@ -2712,13 +2712,13 @@
         "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
         "python3 -B server/src/test/python/review_smoke.py",
         "python3 -B server/src/test/python/storage_smoke.py",
-        "Second participant peer review of Java-only review API/revisions, additive persistence and test evidence is still required; no acknowledgment recorded."
+        "Peer review: Nurtas, 2026-11-07, APPROVED Java Review API/expected_revision, SQLite transactions/CAS/immutable original and unchanged contract2.0.0. Acknowledgment supplied by Farhat in the T06 closure request; Nurtas did not independently run tests."
       ],
       "estimate_hours": 1.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "in_progress",
+      "status": "done",
       "risks_and_blockers": [
-        "Technical implementation and automated verification completed; mandatory second-participant peer review remains outstanding. T06 is not formally done.",
+        "Peer-review blocker closed2026-11-07: Nurtas approved the listed boundaries with no blocking comments, as reported by Farhat. Historical test results and remaining limitations below are retained.",
         "Resolve requires expected_revision query from EvaluationView; clients must reload and reconsider after409. Existing legacy JSON body shapes are preserved, but old callers without this query receive422.",
         "Consistent GET projections use the existing SQLite IMMEDIATE transaction template and briefly reserve the writer; large histories can limit throughput. No performance/load-test claim.",
         "Only cqa-score/1 is supported. Unknown stored scorer returns explicit409 REVIEW_CONFLICT; no algorithm fallback. Exact grounding does not prove semantic relevance.",
@@ -2842,7 +2842,28 @@
             "Review additive SQLite schema, CAS/transactions, immutable originals and scorer/version pinning.",
             "Review5841 JUnit, migration/concurrency, packaged HTTP restart and unchanged-contract evidence."
           ],
-          "details": "No peer review or joint approval is claimed. Mandatory definition_of_done remains unsatisfied until an actual participant acknowledgment."
+          "details": "No peer review or joint approval is claimed. Mandatory definition_of_done remains unsatisfied until an actual participant acknowledgment.",
+          "blocker_status": "closed",
+          "closed_date": "2026-11-07",
+          "resolution": "Superseded by the peer_review_approval evidence below. Original pending-state details retained as history."
+        },
+        {
+          "date": "2026-11-07",
+          "kind": "peer_review_approval",
+          "reviewer": "Nurtas",
+          "source": "Farhat explicit T06 closure request in this conversation, 2026-11-07",
+          "approvals": {
+            "Java Review API / expected_revision": "APPROVED",
+            "SQLite transactions / CAS / immutable original": "APPROVED",
+            "contract 2.0.0": "APPROVED"
+          },
+          "blocking_comments": [],
+          "tests": "5841 JUnit PASS according to the Farhat/Codex report; Nurtas did not independently run the tests.",
+          "pr": "https://github.com/Pandaman-8/freedom-cqa-datathon/pull/4",
+          "merge_commit": "de281b5e601312b2a17fa288f68394fdb8b42d90",
+          "merge_verification": "GitHub PR metadata confirms merged into main; local main contains the same merge commit.",
+          "formal_status": "done",
+          "scope": "Closes T06 only; does not change T02 status or claim approval of other tasks."
         }
       ],
       "requirement_ids": [
