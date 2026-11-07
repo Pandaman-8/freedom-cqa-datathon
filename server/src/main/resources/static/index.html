@@ -8,6 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23163e32'/%3E%3Cpath d='M10 24V8h13v4h-9v3h7v4h-7v5z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/styles.css">
   <script type="module" src="/js/app.js"></script>
+  <script type="module" src="/js/datasets.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Перейти к содержимому</a>
@@ -25,7 +26,7 @@
         <p class="section-label">Рабочее пространство / Обзор</p>
         <h1 id="page-title">Качество диалогов.<br><span>Внимание к деталям.</span></h1>
         <p class="intro-copy">Будущее рабочее место для оценки общения с клиентами — с прозрачными критериями, доказательствами и пересмотром решений.</p>
-        <div class="stage-note"><span class="stage-line" aria-hidden="true"></span><p>Сейчас доступна проверка подключения.<br>Оценивание диалогов ещё не реализовано.</p></div>
+        <div class="stage-note"><span class="stage-line" aria-hidden="true"></span><p>Доступны проверка подключения и загрузка набора по group_id.<br>Интерфейс оценивания появится на следующем этапе.</p></div>
       </section>
       <section class="connection-card" aria-labelledby="connection-title" data-state="checking" id="connection">
         <div class="card-top"><span class="connection-icon" aria-hidden="true">↗</span><span class="card-caption">СОСТОЯНИЕ СИСТЕМЫ</span></div>
@@ -39,10 +40,26 @@
         <noscript><p class="noscript">Включите JavaScript, чтобы проверить подключение к серверу.</p></noscript>
       </section>
     </div>
+    <section class="dataset-card" aria-labelledby="dataset-title">
+      <div class="section-heading"><h2 id="dataset-title">Загрузить диалоги</h2><span>Набор организаторов</span></div>
+      <p class="dataset-help" id="group-help">Укажите group_id, полученный от организаторов. Например, DEV.</p>
+      <form id="dataset-form">
+        <label for="group-id">group_id</label>
+        <div class="dataset-controls">
+          <input id="group-id" name="group_id" required maxlength="200" autocomplete="off" placeholder="DEV" aria-describedby="group-help">
+          <button type="submit" id="fetch-dataset">Fetch dataset</button>
+        </div>
+      </form>
+      <p id="dataset-result" class="dataset-message" role="status" aria-live="polite" aria-atomic="true">Набор ещё не запрошен.</p>
+      <div class="dataset-summary"><p>Сохранено диалогов: <output id="conversation-count">—</output></p><button type="button" id="refresh-datasets">Обновить список</button></div>
+      <p id="dataset-list-status" class="dataset-help" role="status"></p>
+      <ul id="dataset-groups" aria-label="Сохранённые группы диалогов"></ul>
+      <noscript><p class="noscript">Включите JavaScript для загрузки набора.</p></noscript>
+    </section>
     <section class="upcoming" aria-labelledby="upcoming-title">
       <div class="section-heading"><h2 id="upcoming-title">Следующие возможности</h2><span>Появятся на следующих этапах</span></div>
       <div class="feature-grid">
-        <article><span class="feature-number">01</span><span class="planned">В разработке</span><h3>Диалоги</h3><p>Загрузка разговоров с сохранением реплик, ролей и времени.</p></article>
+        <article><span class="feature-number">01</span><span class="planned">В разработке</span><h3>Просмотр диалогов</h3><p>Чтение реплик с ролями, временем и переходом к доказательствам.</p></article>
         <article><span class="feature-number">02</span><span class="planned">В разработке</span><h3>Чек-листы</h3><p>Настройка критериев и весов с историей изменений.</p></article>
         <article><span class="feature-number">03</span><span class="planned">В разработке</span><h3>Оценка и пересмотр</h3><p>Обоснованные результаты, точные цитаты и апелляции.</p></article>
       </div>
