@@ -201,8 +201,14 @@ def main():
                             data = json.dumps(state).encode()
                         elif self.path == '/__tests/fixture.json':
                             data = json.dumps(FIXTURE).encode()
-                        elif self.path in ('/__tests/', '/__tests/auto-tests.js'):
-                            name = 'auto-index.html' if self.path.endswith('/') else 'auto-tests.js'
+                        elif self.path == '/__tests/restart' and self.command == 'POST':
+                            before = originals()
+                            stop()
+                            start()
+                            assert originals() == before, 'Restart changed immutable evaluation rows'
+                            data = json.dumps({'status': 'restarted', 'originals_unchanged': True}).encode()
+                        elif self.path in ('/__tests/', '/__tests/auto-tests.js', '/__tests/model-review.html', '/__tests/model-review-tests.js'):
+                            name = 'auto-index.html' if self.path.endswith('/') else self.path.rsplit('/', 1)[1]
                             data = (ROOT / 'server/src/test/browser' / name).read_bytes()
                             content_type = 'text/html' if name.endswith('html') else 'text/javascript'
                         else:
@@ -226,6 +232,7 @@ def main():
                 proxy = ThreadingHTTPServer(('127.0.0.1', 0), Proxy)
                 threading.Thread(target=proxy.serve_forever, daemon=True).start()
                 print(f'BROWSER TESTS http://127.0.0.1:{proxy.server_port}/__tests/', flush=True)
+                print(f'T14 BROWSER TESTS http://127.0.0.1:{proxy.server_port}/__tests/model-review.html', flush=True)
                 print('Enter to stop own synthetic fixture server.', flush=True)
                 input()
         finally:

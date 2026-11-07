@@ -7,8 +7,10 @@ immutable evaluations and atomic appeals/review (T06), and organizer dataset fet
 with a Vanilla group_id form (T07, closed after peer approval), plus the T12 Vanilla
 workspace for conversations, versioned checklists, manual evaluations and T06 review.
 T12 is closed after peer approval. T13 implements the Java ML HTTP client, durable request
-ledger and AI UI for verified own synthetic fixtures. Real Python/provider E2E has NOT RUN;
-T13 remains in_progress until joint live verification and review.
+ledger and AI UI for verified own synthetic fixtures. T13 is closed after the live Groq
+E2E and peer approval reported by Farhat; the saved kz_public_na ledger corroborates that
+run (details in plan.json). T14 remains in_progress: model review/manual v2 are verified,
+but dynamic v2 AI requires a separately approved fixture and live-run agreement.
 The legacy backend/frontend and shared contract2.0.0 are unchanged.
 
 ## Requirements and pinned versions
@@ -481,7 +483,7 @@ Real Organizer GET, real DEV/CONTROL→Groq, audio playback against external pro
 real AI→review were **NOT RUN**. This scope tests manual Java workflows; it does not close
 T13/T14 or establish full official checklist-PDF verification.
 
-## T13 Java ML integration (live E2E pending)
+## T13 Java ML integration
 
 The Java part uses the existing `EvaluationRequest`, `EvaluationResult`, `ContractError`,
 `AutoRequest` and evaluation view shapes. The shared contract remains **2.0.0**, Python's
@@ -586,9 +588,15 @@ starts Python ML, reads provider secrets or calls Groq. Browser harness/control 
 only in the test proxy, outside production static resources. CI runs the same synthetic
 packaged smoke; browser runs are local and are reported separately.
 
-### First live E2E handoff to Nurtas
+### Further live runs require separate agreement
 
-Before any live call Nurtas must explicitly confirm service readiness, selected provider/model,
+The first Java live E2E is complete: the saved own-synthetic kz_public_na request has
+provider groq, model openai/gpt-oss-20b, prompt cqa-dynamic/3, attempt_count1 and Java
+original score100. Farhat reported peer approval; this is chat evidence, not a claimed
+GitHub Review. PR #8 was merged as ee63dc9f60362570048e398884e61c37ea4bc904.
+The T14 run inspected this ledger read-only and did not make another live call.
+
+Before any further live call Nurtas must explicitly confirm service readiness, selected provider/model,
 synthetic-only policy, quota/budget/free-plan settings and the allowed attempt count. Secrets
 stay exclusively in Python; do not paste or commit them. Start one Python worker according
 to ml-service/README.md and confirm `/health` configuration without a model probe. Agree on
@@ -596,6 +604,66 @@ one exact published fixture (start with en_public_na), inspect its source and ch
 import those exact values into a separate temporary Java SQLite. Then configure Java's
 CQA_ML_URL to the loopback8001 route and explicitly authorize one UI request/new UUID.
 Check real diagnostics, answers/evidence relevance, Java score and persisted snapshot together.
-Record that run separately from fake-server results. T13 remains in_progress until this actual
-Python/provider E2E and peer review are complete; T14 is not started. Real DEV/CONTROL and
-external audio remain out of scope and have not been sent to any provider.
+Record every authorized run separately from fake-server results. The completed T13 run
+does not authorize new Groq calls or expand SyntheticPolicy. Real DEV/CONTROL and external
+audio remain out of scope for this workflow.
+
+## T14 model appeals and dynamic manual checklist regression
+
+The existing Java review engine and Vanilla UI support model-origin evaluations without
+new endpoints or production-code changes. T14 adds ModelReviewApiTest (10 cases) and a
+seven-scenario browser regression. The original evaluation row and successful request
+ledger stay unchanged; final answers replay resolved decisions using the pinned v1
+checklist and cqa-score/1. Confirm records a reason without replacing the current answer.
+Change requires a complete, grounded replacement of the appealed criterion. Re-appeals
+preserve earlier decisions. A stale expected_revision returns409 without any write;
+the UI retains the draft and requires an explicit retry after rereading the revision.
+
+Covered workflow: original100 → clarity change to level4 → final60, with N/A excluded
+and applicable_weight75. Changing the separate critical flag does not change that total.
+The flag toggles and reduced clarity answer are deliberate workflow probes, not human
+gold labels or claims about the model's semantic accuracy. Invalid reason, forged quote,
+unknown message, wrong criterion, unsupported level/N/A and invalid flag value fail
+atomically. Competing reviewers produce exactly one winner for a shared revision.
+
+Through the UI, append JURY_EXTRA_42 (binary, weight25) to synthetic-local as v2. A manual
+v2 evaluation with that answer=no scores75; the reviewed model v1 keeps original100/final60
+and four criteria. Historical v1 and both evaluations survive a JVM restart. Source text,
+reason and criterion title remain plain text; original and replacement evidence jump to
+the exact message ID. No checklist, source fixture, scoring rule or ML prompt is changed.
+
+Reproduce on a **fresh** temporary fixture server for each browser suite:
+
+```bash
+./server/mvnw -f server/pom.xml clean verify
+node --experimental-default-type=module server/src/test/js/workspace.test.mjs
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+python3 server/src/test/python/scoring_reference.py --check
+GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false PYTHONPATH=ml-service \
+  ml-service/.venv/bin/python -B -m pytest -q -p no:cacheprovider ml-service/tests
+python3 -B server/src/test/python/auto_smoke.py --serve
+```
+
+Open its printed **T14 BROWSER TESTS** URL and click **Run T14 browser regression**.
+It drives actual Vanilla forms and Java APIs, with fake ML used only to prepare a saved
+model evaluation. The test proxy provides a restart control for its own disposable JVM;
+none of these routes are packaged in production. Expect seven PASS lines. The suite
+changes its temporary v1 evaluation and appends v2, so restart the fixture server before
+rerunning it or running the separate T13 browser suite. Press Enter in the terminal to
+remove the temporary database and close the owned processes. Existing T12 regressions
+remain available through workspace_smoke.py --serve.
+
+On 2026-11-08 the same seven browser scenarios also passed against an isolated SQLite
+backup of the existing **real Groq kz_public_na evaluation**, after exact fixture matching.
+The original database was opened read-only and its SHA256 remained unchanged. No new
+ML HTTP call occurred; the copied evaluation/ledger retained the original live provenance.
+This verifies review of a real saved AI result, not a new live model E2E. Only sanitized
+identity/diagnostic evidence is recorded in plan.json; no database or raw model output is
+committed. Automated Java/CI tests remain synthetic and provider-free.
+
+**Remaining T14 blocker:** arbitrary v2 AI returns503 PRIVACY_POLICY_UNCONFIGURED before
+any ML request or ledger claim. This is verified, not bypassed. To complete dynamic ML
+acceptance, Farhat and Nurtas must agree a new own-synthetic conversation+checklist fixture,
+review its exact contents and permission to expand the fixture set, and separately approve
+the provider/model, attempt budget and live run. Existing fixtures and SyntheticPolicy are
+unchanged. T14 stays in_progress until that scenario and peer review are complete.

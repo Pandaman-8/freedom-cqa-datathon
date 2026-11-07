@@ -3580,18 +3580,17 @@
         "python3 -B server/src/test/python/organizer_smoke.py",
         "python3 -B server/src/test/python/review_smoke.py",
         "Actual browser via auto_smoke.py --serve and workspace_smoke.py --serve; test harnesses use temporary SQLite and fake ML only.",
-        "Nurtas readiness/provider/budget/synthetic-policy confirmation, actual Python/provider E2E and peer review remain required; NOT RUN in this implementation."
+        "Live Groq E2E and peer approval reported by Farhat in the T14 task; independently inspected persisted own-synthetic kz_public_na ledger/result on 2026-11-08. No additional live call during T14."
       ],
       "estimate_hours": 0.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "in_progress",
+      "status": "done",
       "risks_and_blockers": [
-        "Java implementation and fake-server/browser verification do not close the real Python/provider E2E acceptance criterion. Await Nurtas readiness, explicit live authorization and peer review.",
         "Only exact conversation+checklist pairs bundled from the six existing own ML fixtures are allowed by Java; edited checklist versions remain available for manual evaluation but are rejected for inference until separately reviewed policy expansion.",
         "One Java application process owns an ML database. Startup changes interrupted pending requests to unknown; multiple concurrent Java processes sharing that ML database are unsupported.",
         "Timeout/crash does not cancel paid inference or guarantee exactly-once billing. Unknown is terminal for that UUID; Python contract2.0.0 has no result lookup endpoint. An explicit new UUID may incur another charge.",
         "Only the last UUID is retained in browser sessionStorage, without source text; copy the visible UUID when storage is unavailable. The status API is authoritative. Health remains Java liveness, not ML/provider readiness.",
-        "Shared contract2.0.0, ML files, scoring math and T06/T07/T12 domain semantics remain unchanged. No real DEV/CONTROL/Organizer/Groq/audio calls; T14 not started."
+        "Further Groq calls and fixture-set changes require separate agreement. Shared contract2.0.0 and SyntheticPolicy remain unchanged; real DEV/CONTROL are not authorized for external inference."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
@@ -3631,6 +3630,51 @@
           "date": "2026-11-08",
           "kind": "handoff",
           "details": "Nurtas must confirm local service readiness, provider/model, synthetic-only policy, quota/budget/free-plan and attempt budget before one explicitly authorized live run on an inspected existing fixture. Secrets remain Python-only. Verify real diagnostics, answer relevance and Java persisted score together; T13 stays in_progress until live E2E and peer approval. T14 not started."
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "live_e2e_closure",
+          "pr": "https://github.com/Pandaman-8/freedom-cqa-datathon/pull/8",
+          "merge_commit": "ee63dc9f60362570048e398884e61c37ea4bc904",
+          "approval": {
+            "source": "Farhat current T14 task message (chat, not a claimed GitHub Review)",
+            "statement": "T13 already passed actual Groq E2E and received peer approval.",
+            "exact_review_timestamp": "not supplied"
+          },
+          "observed_persisted_evidence": {
+            "source": "Read-only inspection of the existing temporary T13 SQLite; database and raw answers are not committed.",
+            "source_database_sha256": "d2d8c534fde8d396125038932c9d4cb9e57383581300de055e6a8af892d46e3f",
+            "fixture": "kz_public_na",
+            "request_id": "9a801126-182c-4f94-98c0-2d528aea353d",
+            "evaluation_id": "b6c8e531-3dff-46e5-b0d5-0bf65af42a6e",
+            "created_at_utc": "2026-11-07T19:50:05.901609424Z",
+            "completed_at_utc": "2026-11-07T19:50:08.048179753Z",
+            "status": "succeeded",
+            "origin": "model",
+            "contract_version": "2.0.0",
+            "scoring_version": "cqa-score/1",
+            "original_score": 100,
+            "review_revision_before_T14": 0,
+            "diagnostics": {
+              "provider": "groq",
+              "model": "openai/gpt-oss-20b",
+              "prompt_version": "cqa-dynamic/3",
+              "attempt_count": 1,
+              "input_tokens": 2921,
+              "output_tokens": 583,
+              "estimated_cost_usd": 0,
+              "latency_ms": 1803,
+              "warnings": [
+                "DOMAIN_FACT_UNVERIFIED"
+              ]
+            },
+            "checks": [
+              "Full pinned conversation and checklist exactly equal unchanged kz_public_na fixture; stored source transcript and checklist independently match.",
+              "One saved model evaluation links to the succeeded request ledger; recorded provider groq/model openai/gpt-oss-20b/prompt cqa-dynamic/3, one attempt.",
+              "PR #8 merged state and merge SHA checked through GitHub. Live run and peer approval corroborated by Farhat; current inspection does not reproduce a new provider request."
+            ]
+          },
+          "limits": "No new Groq calls in T14. Persisted estimated_cost_usd=0 is service diagnostics, not independent billing verification. Original live UI interaction/peer approval are reported by Farhat, not reconstructed from SQLite alone."
         }
       ],
       "requirement_ids": [
@@ -3655,10 +3699,13 @@
         "T13"
       ],
       "files": [
-        "server/src/test/java/cqa/integration/",
-        "server/src/main/resources/static/js/review.js",
-        "server/src/main/resources/static/js/checklist.js",
-        "ml-service/tests/"
+        "server/src/test/java/cqa/ModelReviewApiTest.java",
+        "server/src/test/browser/model-review.html",
+        "server/src/test/browser/model-review-tests.js",
+        "server/src/test/python/auto_smoke.py",
+        "server/README.md",
+        "README.md",
+        "plan.json"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -3673,24 +3720,61 @@
         "Новый arbitrary criterion и version2 оцениваются без code/prompt edits; historyv1 остаётсяv1."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "./server/mvnw -f server/pom.xml clean verify",
+        "node --experimental-default-type=module server/src/test/js/workspace.test.mjs",
+        "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+        "python3 server/src/test/python/scoring_reference.py --check",
+        "GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false PYTHONPATH=ml-service ml-service/.venv/bin/python -B -m pytest -q -p no:cacheprovider ml-service/tests",
+        "python3 -B server/src/test/python/auto_smoke.py --serve; fresh server, open printed T14 browser URL and run seven scenarios.",
+        "python3 -B server/src/test/python/workspace_smoke.py --serve; existing 11 browser scenarios.",
+        "python3 -B server/src/test/python/organizer_smoke.py",
+        "python3 -B server/src/test/python/review_smoke.py",
+        "Separate existing live-result review: read-only verified own-synthetic T13 database backed up to disposable SQLite; same browser suite, ML calls forbidden, original source SHA256 checked after cleanup. This is saved live-result review, not a new live E2E."
       ],
       "estimate_hours": 0.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "Review должен использовать pinned scorer/version; новый criterion не должен требовать hardcoded prompt edits.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "BLOCKER: new arbitrary criterion/v2 AI is not approved by SyntheticPolicy. Java returns503 PRIVACY_POLICY_UNCONFIGURED before ML HTTP and ledger claim. Farhat/Nurtas must agree a new exact own-synthetic fixture, reviewed fixture-set expansion and separate provider/budget/live-run authorization. No weakening of policy or existing fixture changes in T14.",
+        "Peer review of T14 and dynamic-criterion live AI acceptance remain outstanding; T14 must not be marked done.",
+        "Workflow tests intentionally change clarity/flag answers to exercise review and scoring. Exact evidence grounding does not establish semantic relevance or model accuracy.",
+        "No new Groq/Organizer/real DEV/CONTROL/audio requests. Shared contract, scoring, ML prompt, fixtures and production Java/Vanilla implementation are unchanged."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-08",
+          "kind": "implementation_and_saved_model_review",
+          "branch": "codex/T14-appeals",
+          "base_commit": "ee63dc9f60362570048e398884e61c37ea4bc904",
+          "details": [
+            "Existing ReviewService/Vanilla forms already implement origin=model review. Added regression coverage instead of altering T13 integration or domain API.",
+            "ModelReviewApiTest:10 HTTP/SQLite cases cover model creation through fake HTTP, original/ledger byte stability, final100→60, confirm, critical flag toggles without numeric penalty, N/A denominator75, re-appeal history, invalid replacements, concurrent CAS200/409, restart and duplicate request replay without inference.",
+            "V2 adds arbitrary JURY_EXTRA_42 binary weight25 via existing checklist APIs/UI. Manual v2 score75 and five answers; model v1 original100/final60 and four answers remain pinned; historical checklist unchanged.",
+            "Added seven real-browser scenarios including local/server evidence rejection,409 with retained reason/answer/evidence and explicit new revision, exact message jumps, safe text rendering, dynamic policy503, actual JVM restart and reload.",
+            "Actual saved Groq kz_public_na evaluation b6c8e531-3dff-46e5-b0d5-0bf65af42a6e reviewed in isolated backup:7/7 browser scenarios PASS, final review_revision8/four decisions, original100/final60. Source DB SHA256 unchanged after cleanup; zero ML HTTP calls."
+          ]
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "verification",
+          "results": [
+            "BUILD SUCCESS:5963 JUnit tests,0 failures/errors/skipped, including10 new ModelReviewApiTest cases.",
+            "PASS:8 JavaScript unit tests;4 Draft2020-12 schemas/72 contract fixtures;5184 exact Fraction scoring references.",
+            "PASS:326 offline ML tests,1 existing Starlette TestClient/httpx deprecation warning. No provider calls; conftest forbids real HTTP. Initial sandbox invocation stalled and was stopped; completed rerun used the same unchanged tests outside the sandbox.",
+            "PASS:11 existing T12 browser scenarios against packaged Java and disposable SQLite.",
+            "PASS:packaged auto_smoke and workspace_smoke on synthetic temporary databases; no real provider or organizer calls.",
+            "PASS:7/7 new T14 browser scenarios on a fresh fake-HTTP fixture database; separate7/7 on the preserved real Groq result in a disposable copy. Both runs include actual JVM restart and no ML calls during review/v2 workflow.",
+            "PASS:packaged organizer_smoke.py and review_smoke.py, synthetic only; source immutability, version pinning, CAS and restart.",
+            "PASS:4/4 existing T13 AI browser scenarios on a fresh fixture server after the test-proxy extension; no changes to production integration."
+          ],
+          "limits": "New dynamic-criterion ML E2E NOT RUN/BLOCKED pending joint fixture and live authorization. Browser checks are local, not claimed as CI browser coverage; no new responsive/cross-browser matrix. Remote CI result will be checked after push."
+        }
+      ],
       "requirement_ids": [
         "R01",
         "R14",
