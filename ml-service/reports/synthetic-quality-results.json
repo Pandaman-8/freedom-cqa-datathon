@@ -1,0 +1,1198 @@
+{
+  "date": "2026-11-07",
+  "model": "openai/gpt-oss-20b",
+  "prompt_version": "cqa-dynamic/2",
+  "contract_version": "2.0.0",
+  "baseline_commit": "b214cb9",
+  "review_status": "assistant-reviewed baseline; human confirmation pending",
+  "human_gold_accuracy": null,
+  "run_scope": "One pass of the six already authorized synthetic fixtures; no DEV or audio sent.",
+  "runtime_changed": false,
+  "expected_labels_changed": false,
+  "offline_tests_before_live": {
+    "existing_suite_passed": 304,
+    "runner_tests_passed": 4,
+    "contract_fixtures_passed": 72
+  },
+  "offline_tests_final": {
+    "passed": 308,
+    "failed": 0,
+    "warnings": 1,
+    "elapsed_seconds": 13.75,
+    "warning": "Starlette TestClient httpx deprecation",
+    "contract_fixtures_passed": 72,
+    "schema_drift": false
+  },
+  "recorded_quality_acceptance_tests": {
+    "passed": 3,
+    "failed": 9,
+    "elapsed_seconds": 0.07,
+    "scope": "Separate recorded-output quality assertions; no network, no xfail or skip; failures document known model defects, not offline implementation regressions."
+  },
+  "by_language": {
+    "RU": {
+      "scenarios": 2,
+      "correct_labels": 8,
+      "incorrect_labels": 0,
+      "missing_labels": 0,
+      "evidence_supported": 7,
+      "evidence_incomplete_scope": 1,
+      "evidence_irrelevant": 0,
+      "evidence_contradicts_judgment": 0,
+      "exact_quotes": 9,
+      "explanation_language_errors": 8
+    },
+    "KZ": {
+      "scenarios": 2,
+      "correct_labels": 7,
+      "incorrect_labels": 1,
+      "missing_labels": 0,
+      "evidence_supported": 5,
+      "evidence_incomplete_scope": 1,
+      "evidence_irrelevant": 1,
+      "evidence_contradicts_judgment": 1,
+      "exact_quotes": 8,
+      "explanation_language_errors": 8
+    },
+    "EN": {
+      "scenarios": 2,
+      "correct_labels": 7,
+      "incorrect_labels": 1,
+      "missing_labels": 0,
+      "evidence_supported": 7,
+      "evidence_incomplete_scope": 0,
+      "evidence_irrelevant": 0,
+      "evidence_contradicts_judgment": 1,
+      "exact_quotes": 10,
+      "explanation_language_errors": 0
+    }
+  },
+  "metrics": [
+    {
+      "scenario_id": "ru_public_na",
+      "language": "RU",
+      "http_status": 200,
+      "attempts": 1,
+      "http_latency_ms": 1094,
+      "service_latency_ms": 1079,
+      "input_tokens": 2456,
+      "output_tokens": 426,
+      "estimated_cost_usd": 0.0
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "language": "RU",
+      "http_status": 200,
+      "attempts": 1,
+      "http_latency_ms": 1324,
+      "service_latency_ms": 1309,
+      "input_tokens": 2571,
+      "output_tokens": 338,
+      "estimated_cost_usd": 0.0
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "language": "KZ",
+      "http_status": 200,
+      "attempts": 1,
+      "http_latency_ms": 1376,
+      "service_latency_ms": 1369,
+      "input_tokens": 2485,
+      "output_tokens": 456,
+      "estimated_cost_usd": 0.0
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "language": "KZ",
+      "http_status": 200,
+      "attempts": 1,
+      "http_latency_ms": 1330,
+      "service_latency_ms": 1317,
+      "input_tokens": 2498,
+      "output_tokens": 462,
+      "estimated_cost_usd": 0.0
+    },
+    {
+      "scenario_id": "en_public_na",
+      "language": "EN",
+      "http_status": 200,
+      "attempts": 1,
+      "http_latency_ms": 1305,
+      "service_latency_ms": 1293,
+      "input_tokens": 2450,
+      "output_tokens": 461,
+      "estimated_cost_usd": 0.0
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "language": "EN",
+      "http_status": 200,
+      "attempts": 1,
+      "http_latency_ms": 1252,
+      "service_latency_ms": 1238,
+      "input_tokens": 2457,
+      "output_tokens": 306,
+      "estimated_cost_usd": 0.0
+    }
+  ],
+  "totals": {
+    "http_200": 6,
+    "provider_attempts": 6,
+    "input_tokens": 14917,
+    "output_tokens": 2449,
+    "estimated_cost_usd": 0.0,
+    "service_latency_ms_mean": 1267.5,
+    "service_latency_ms_min": 1079,
+    "service_latency_ms_max": 1369,
+    "intentional_spacing_seconds": 35,
+    "correct_labels": 22,
+    "incorrect_labels": 2,
+    "exact_quotes": 27,
+    "evidence_supported": 19,
+    "evidence_problems": 5,
+    "na_label_errors": 0,
+    "na_expected_and_correct": 3,
+    "critical_flag_false_positives": 0,
+    "critical_flag_false_negatives": 0,
+    "critical_flag_correct": 6,
+    "protected_identity_false_compliance": 1,
+    "invalid_discrete_scale_values": 0,
+    "wrong_scale_judgments": 1,
+    "bot_operator_mixing_observed": 0,
+    "changed_criterion_label_correct": 1,
+    "explanation_language_errors": 16
+  },
+  "criterion_reviews": [
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "RU",
+      "expected": {
+        "answer": "yes",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 61,
+          "quote_sha256": "d04e704d70501a131ae220d5bd2e1a03fd7a631d14587d8260859c2c65611aff",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "RU",
+      "expected": {
+        "answer": "na",
+        "value": null
+      },
+      "actual": {
+        "answer": "na",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0001",
+          "speaker": "client",
+          "start_character": 0,
+          "end_character": 28,
+          "quote_sha256": "e027cf7b09b82e6224fc0fb8730c62f172ed8253ffe46762936bf9e9a5847c3d",
+          "exact": true
+        },
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 31,
+          "end_character": 61,
+          "quote_sha256": "f459280fbe6286a90d84a8eb1d0a281a8041b1359f5f00e49a326b5930312a1d",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "RU",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 10
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 31,
+          "end_character": 61,
+          "quote_sha256": "f459280fbe6286a90d84a8eb1d0a281a8041b1359f5f00e49a326b5930312a1d",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "RU",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 25,
+          "quote_sha256": "2ce5f724d4685b26e1911a770c6b3d59acb010101f192f8a1dfa3c53cc3d3504",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "incomplete_scope",
+      "semantic_reason": "Цитируется только прощание m0004. Оно не подтверждает отсутствие оскорбления в первом операторском сообщении m0002.",
+      "recommended_fix": "Для этого короткого диалога привести m0002 и m0004 и обозначить проверенный диапазон.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "RU",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 54,
+          "quote_sha256": "9cfd9dcc372b67179222aaf011a3be2ceeecbf0930f5562ba81ad75a50c27ea4",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "RU",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 54,
+          "quote_sha256": "9cfd9dcc372b67179222aaf011a3be2ceeecbf0930f5562ba81ad75a50c27ea4",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "RU",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 10
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 54,
+          "quote_sha256": "9cfd9dcc372b67179222aaf011a3be2ceeecbf0930f5562ba81ad75a50c27ea4",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "RU",
+      "expected": {
+        "answer": "yes",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 54,
+          "quote_sha256": "9cfd9dcc372b67179222aaf011a3be2ceeecbf0930f5562ba81ad75a50c27ea4",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "RU",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "KZ",
+      "expected": {
+        "answer": "yes",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 31,
+          "quote_sha256": "7f9898e88026bf2336445ded4acfb0970abccb31cd92d825bdf369477aa69a56",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "KZ",
+      "expected": {
+        "answer": "na",
+        "value": null
+      },
+      "actual": {
+        "answer": "na",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 31,
+          "quote_sha256": "7f9898e88026bf2336445ded4acfb0970abccb31cd92d825bdf369477aa69a56",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "irrelevant",
+      "semantic_reason": "Приветствие и представление в m0002 не показывают, что клиент задал только общий вопрос без защищённого действия.",
+      "recommended_fix": "Цитировать публичный вопрос клиента m0001, непосредственно обосновывающий na_rule.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "KZ",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 10
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 70,
+          "quote_sha256": "1ecd4aef02cd16570636f3639a66d7509cdb3ca4735040a98b96dfbca26913ca",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "KZ",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 40,
+          "quote_sha256": "a7f4b1eb2b4e1ffcc02fc91c6167745b2e4aee3c4b430960f4ce2f35125fa1a9",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "incomplete_scope",
+      "semantic_reason": "Цитата m0004 охватывает лишь прощание, а вывод no относится ко всем операторским сообщениям.",
+      "recommended_fix": "Для этого короткого диалога включить m0002 и m0004; не обосновывать отсутствие нарушения только финальной вежливой фразой.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "KZ",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 66,
+          "quote_sha256": "cb65ad3935134c3dad41712ec59411d0dd7d2a78f1208a9513afcea223048229",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "KZ",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 66,
+          "quote_sha256": "cb65ad3935134c3dad41712ec59411d0dd7d2a78f1208a9513afcea223048229",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "KZ",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 0
+      },
+      "label_correct": false,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 66,
+          "quote_sha256": "cb65ad3935134c3dad41712ec59411d0dd7d2a78f1208a9513afcea223048229",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "contradicts_judgment",
+      "semantic_reason": "Цитата релевантна оценке понятности, но содержит ясное сообщение о выполненном действии. Объяснение модели снижает оценку из-за оскорбления вопреки явной независимости критериев.",
+      "recommended_fix": "Оценивать каждый критерий отдельно; выбирать уровень по его описанию, без переноса нарушения в независимую шкалу.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "KZ",
+      "expected": {
+        "answer": "yes",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 66,
+          "quote_sha256": "cb65ad3935134c3dad41712ec59411d0dd7d2a78f1208a9513afcea223048229",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "KZ",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": false,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "EN",
+      "expected": {
+        "answer": "yes",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 40,
+          "quote_sha256": "4d3c6c65a6cf3b1e9d158a3cdff165c0dedae25ac341ad8d8daec1dfc3697b88",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "EN",
+      "expected": {
+        "answer": "na",
+        "value": null
+      },
+      "actual": {
+        "answer": "na",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0001",
+          "speaker": "client",
+          "start_character": 0,
+          "end_character": 28,
+          "quote_sha256": "e6f74c8e082b4daaa758a09a13970faa12c6094ebcea9b07f424191423e0d684",
+          "exact": true
+        },
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 40,
+          "quote_sha256": "4d3c6c65a6cf3b1e9d158a3cdff165c0dedae25ac341ad8d8daec1dfc3697b88",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "EN",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 10
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 40,
+          "quote_sha256": "4d3c6c65a6cf3b1e9d158a3cdff165c0dedae25ac341ad8d8daec1dfc3697b88",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "EN",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 40,
+          "quote_sha256": "4d3c6c65a6cf3b1e9d158a3cdff165c0dedae25ac341ad8d8daec1dfc3697b88",
+          "exact": true
+        },
+        {
+          "message_id": "m0004",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 23,
+          "quote_sha256": "f23883c497b26d39b2cdf4471725a67d007bafa849058367e3d1ed835d09cf05",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_CLOSING",
+      "language": "EN",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "no",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 79,
+          "quote_sha256": "1f3ff1fe469728941f0bb603036d90f8bfd1f30c411e72832ac76ad82778040f",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "EN",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": false,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 18,
+          "end_character": 79,
+          "quote_sha256": "1a2b88c2ef52137b9fb8594a2d3bdec08093588aeb96df72b90b720ea0a77906",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "contradicts_judgment",
+      "semantic_reason": "Цитата и объяснение прямо говорят об отсутствии проверки до действия. Они поддерживают no и противоречат выданному yes.",
+      "recommended_fix": "Проверять полярность yes/no и согласованность выбранного ответа с условием, объяснением и evidence.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "EN",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 10
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 79,
+          "quote_sha256": "1f3ff1fe469728941f0bb603036d90f8bfd1f30c411e72832ac76ad82778040f",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "EN",
+      "expected": {
+        "answer": "yes",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "label_correct": true,
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "speaker": "operator",
+          "start_character": 0,
+          "end_character": 17,
+          "quote_sha256": "a3f064f3daba00519d6ffd4de8a56c507a19e5373c164d543800f558ad7429d6",
+          "exact": true
+        }
+      ],
+      "semantic_evidence_assessment": "supported",
+      "semantic_reason": "Цитата соответствует проверяемому поведению/условию критерия; оценка согласуется с контекстом.",
+      "recommended_fix": "Изменение не требуется.",
+      "expected_explanation_language": "EN",
+      "actual_explanation_language": "EN",
+      "explanation_language_correct": true,
+      "reviewer": "Codex assistant",
+      "human_review_status": "pending"
+    }
+  ],
+  "discrepancies": [
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "evidence",
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "expected": "Evidence relevant to and sufficient for the stated criterion judgment",
+      "actual": "incomplete_scope",
+      "reason": "Цитируется только прощание m0004. Оно не подтверждает отсутствие оскорбления в первом операторском сообщении m0002.",
+      "recommended_fix": "Для этого короткого диалога привести m0002 и m0004 и обозначить проверенный диапазон."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_GREETING",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "expected": "RU",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "evidence",
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": "Evidence relevant to and sufficient for the stated criterion judgment",
+      "actual": "irrelevant",
+      "reason": "Приветствие и представление в m0002 не показывают, что клиент задал только общий вопрос без защищённого действия.",
+      "recommended_fix": "Цитировать публичный вопрос клиента m0001, непосредственно обосновывающий na_rule."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "evidence",
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "expected": "Evidence relevant to and sufficient for the stated criterion judgment",
+      "actual": "incomplete_scope",
+      "reason": "Цитата m0004 охватывает лишь прощание, а вывод no относится ко всем операторским сообщениям.",
+      "recommended_fix": "Для этого короткого диалога включить m0002 и m0004; не обосновывать отсутствие нарушения только финальной вежливой фразой."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_GREETING",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "label",
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "expected": {
+        "answer": "scale",
+        "value": 10
+      },
+      "actual": {
+        "answer": "scale",
+        "value": 0
+      },
+      "reason": "Цитата релевантна оценке понятности, но содержит ясное сообщение о выполненном действии. Объяснение модели снижает оценку из-за оскорбления вопреки явной независимости критериев.",
+      "recommended_fix": "Оценивать каждый критерий отдельно; выбирать уровень по его описанию, без переноса нарушения в независимую шкалу."
+    },
+    {
+      "kind": "evidence",
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "expected": "Evidence relevant to and sufficient for the stated criterion judgment",
+      "actual": "contradicts_judgment",
+      "reason": "Цитата релевантна оценке понятности, но содержит ясное сообщение о выполненном действии. Объяснение модели снижает оценку из-за оскорбления вопреки явной независимости критериев.",
+      "recommended_fix": "Оценивать каждый критерий отдельно; выбирать уровень по его описанию, без переноса нарушения в независимую шкалу."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "explanation_language",
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "expected": "KZ",
+      "actual": "EN",
+      "reason": "Объяснение написано по-английски вопреки указанию использовать язык диалога.",
+      "recommended_fix": "Передавать явный язык объяснений рядом с заданием и повторить требование перед генерацией; enum-токены оставить неизменными."
+    },
+    {
+      "kind": "label",
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": {
+        "answer": "no",
+        "value": null
+      },
+      "actual": {
+        "answer": "yes",
+        "value": null
+      },
+      "reason": "Цитата и объяснение прямо говорят об отсутствии проверки до действия. Они поддерживают no и противоречат выданному yes.",
+      "recommended_fix": "Проверять полярность yes/no и согласованность выбранного ответа с условием, объяснением и evidence."
+    },
+    {
+      "kind": "evidence",
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "expected": "Evidence relevant to and sufficient for the stated criterion judgment",
+      "actual": "contradicts_judgment",
+      "reason": "Цитата и объяснение прямо говорят об отсутствии проверки до действия. Они поддерживают no и противоречат выданному yes.",
+      "recommended_fix": "Проверять полярность yes/no и согласованность выбранного ответа с условием, объяснением и evidence."
+    }
+  ],
+  "limitations": [
+    "Six short scenarios with four criteria each are not representative of the official eight-criterion rubric.",
+    "No successful verification before a protected action; no subtle violations or protected-action sequencing contrast.",
+    "All clarity labels are 10: levels 0/4 are untested.",
+    "The changed EN criterion and the old greeting criterion would both yield no; explanation review is essential and contrastive coverage is missing.",
+    "RU voice case is fictional text only, not audio evidence.",
+    "No external company knowledge is supplied; opening-hour truth is not assessed.",
+    "The accuracy counts are agreement with a pre-live assistant-reviewed baseline; no independent human gold confirmation was received.",
+    "Model output is stochastic: one pass cannot estimate stability or population accuracy.",
+    "Substring validity does not guarantee relevance, coverage, or logical support.",
+    "Evidence scope policy for short absence cases is a review convention, not a newly verified organizer rule.",
+    "Free Plan and zero-cost estimate rely on the existing local confirmation, not a billing API audit."
+  ],
+  "t13_assessment": {
+    "transport_ready": true,
+    "quality_acceptance_ready": false,
+    "reason": "Two substantive criterion errors, five evidence-support problems and missing independent human-gold confirmation. A joint technical E2E may proceed with known defects, but this run cannot justify quality acceptance."
+  }
+}
