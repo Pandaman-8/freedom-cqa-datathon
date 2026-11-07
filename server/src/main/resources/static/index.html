@@ -1,70 +1,50 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#163e32">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#163e32"><meta name="referrer" content="no-referrer">
   <title>Freedom CQA — рабочее пространство</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23163e32'/%3E%3Cpath d='M10 24V8h13v4h-9v3h7v4h-7v5z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/styles.css">
-  <script type="module" src="/js/app.js"></script>
-  <script type="module" src="/js/datasets.js"></script>
+  <link rel="stylesheet" href="/styles.css"><script type="module" src="/js/app.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Перейти к содержимому</a>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Freedom CQA — главная">
-      <span class="brand-mark" aria-hidden="true">F</span>
-      <span>Freedom <strong>CQA</strong></span>
-    </a>
-    <span class="environment"><span class="environment-dot" aria-hidden="true"></span>Локальное пространство</span>
-  </header>
-  <main id="main">
-    <p class="eyebrow">CONVERSATION QUALITY ANALYTICS</p>
-    <div class="overview">
-      <section class="intro" aria-labelledby="page-title">
-        <p class="section-label">Рабочее пространство / Обзор</p>
-        <h1 id="page-title">Качество диалогов.<br><span>Внимание к деталям.</span></h1>
-        <p class="intro-copy">Будущее рабочее место для оценки общения с клиентами — с прозрачными критериями, доказательствами и пересмотром решений.</p>
-        <div class="stage-note"><span class="stage-line" aria-hidden="true"></span><p>Доступны проверка подключения и загрузка набора по group_id.<br>Интерфейс оценивания появится на следующем этапе.</p></div>
-      </section>
-      <section class="connection-card" aria-labelledby="connection-title" data-state="checking" id="connection">
-        <div class="card-top"><span class="connection-icon" aria-hidden="true">↗</span><span class="card-caption">СОСТОЯНИЕ СИСТЕМЫ</span></div>
-        <h2 id="connection-title">Подключение к серверу</h2>
-        <div role="status" aria-live="polite" aria-atomic="true">
-          <p class="status-label"><span class="status-dot" aria-hidden="true"></span><span id="connection-status">Проверяем подключение…</span></p>
-          <p id="connection-detail" class="connection-detail">Ожидаем ответ Java Backend.</p>
-        </div>
-        <dl class="service-info"><div><dt>Сервис</dt><dd>Java Backend</dd></div><div><dt>Версия</dt><dd id="service-version">—</dd></div></dl>
-        <button type="button" id="check-connection" disabled>Проверяем…</button>
-        <noscript><p class="noscript">Включите JavaScript, чтобы проверить подключение к серверу.</p></noscript>
-      </section>
-    </div>
-    <section class="dataset-card" aria-labelledby="dataset-title">
-      <div class="section-heading"><h2 id="dataset-title">Загрузить диалоги</h2><span>Набор организаторов</span></div>
-      <p class="dataset-help" id="group-help">Укажите group_id, полученный от организаторов. Например, DEV.</p>
-      <form id="dataset-form">
-        <label for="group-id">group_id</label>
-        <div class="dataset-controls">
-          <input id="group-id" name="group_id" required maxlength="200" autocomplete="off" placeholder="DEV" aria-describedby="group-help">
-          <button type="submit" id="fetch-dataset">Fetch dataset</button>
-        </div>
-      </form>
-      <p id="dataset-result" class="dataset-message" role="status" aria-live="polite" aria-atomic="true">Набор ещё не запрошен.</p>
-      <div class="dataset-summary"><p>Сохранено диалогов: <output id="conversation-count">—</output></p><button type="button" id="refresh-datasets">Обновить список</button></div>
-      <p id="dataset-list-status" class="dataset-help" role="status"></p>
-      <ul id="dataset-groups" aria-label="Сохранённые группы диалогов"></ul>
-      <noscript><p class="noscript">Включите JavaScript для загрузки набора.</p></noscript>
+  <a class="skip-link" href="#workspace">К содержимому</a>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">F</span><span>Freedom <strong>CQA</strong></span></a>
+    <p class="eyebrow">QUALITY WORKSPACE</p>
+    <nav aria-label="Основная навигация">
+      <button type="button" data-view="overview" aria-current="page"><span>01</span> Обзор</button>
+      <button type="button" data-view="conversations"><span>02</span> Диалоги</button>
+      <button type="button" data-view="checklists"><span>03</span> Чек-листы</button>
+      <button type="button" data-view="results"><span>04</span> Результаты и review</button>
+      <button type="button" data-view="datasets"><span>05</span> Загрузка данных</button>
+    </nav>
+    <div class="sidebar-bottom"><span class="badge">LOCAL WORKSPACE</span><p>Прозрачная оценка.<br>Проверяемое решение.</p></div>
+  </aside>
+  <main id="workspace">
+    <header class="topbar"><div><p class="eyebrow">CONVERSATION QUALITY ANALYTICS</p><h1 id="page-title">Обзор</h1></div>
+      <div id="connection" data-state="checking"><span id="connection-status" role="status">Проверяем подключение…</span><span id="service-version"></span><button id="check-connection" type="button" class="quiet">Проверить подключение</button></div>
+    </header>
+    <p id="connection-detail" class="muted"></p>
+    <p id="draft-status" class="draft-notice" role="status">Черновики хранятся только до закрытия страницы.</p>
+    <div id="checklist-picker" class="panel compact" aria-label="Активный чек-лист"></div>
+    <section data-panel="overview" id="overview">
+      <div class="hero"><div><p class="eyebrow">КАЧЕСТВО В ДЕТАЛЯХ</p><h2>От диалога<br>к обоснованной оценке.</h2><p>Читайте исходные реплики, связывайте выводы с цитатами<br>и сохраняйте историю каждого решения.</p></div><div class="hero-mark" aria-hidden="true">CQA<span>human review</span></div></div>
+      <div id="overview-counts" class="metrics"></div>
+      <div class="panel"><h2>Рабочий процесс</h2><ol class="steps"><li>Загрузите набор и выберите диалог.</li><li>Выберите версию чек-листа и заполните ручную оценку.</li><li>Проверьте результат и точные цитаты.</li><li>Создайте апелляцию и подтвердите или измените ответ.</li></ol><p class="notice">AI evaluation будет доступна после T13. Сейчас оценки создаёт человек; итог вычисляет Java.</p></div>
     </section>
-    <section class="upcoming" aria-labelledby="upcoming-title">
-      <div class="section-heading"><h2 id="upcoming-title">Следующие возможности</h2><span>Появятся на следующих этапах</span></div>
-      <div class="feature-grid">
-        <article><span class="feature-number">01</span><span class="planned">В разработке</span><h3>Просмотр диалогов</h3><p>Чтение реплик с ролями, временем и переходом к доказательствам.</p></article>
-        <article><span class="feature-number">02</span><span class="planned">В разработке</span><h3>Чек-листы</h3><p>Настройка критериев и весов с историей изменений.</p></article>
-        <article><span class="feature-number">03</span><span class="planned">В разработке</span><h3>Оценка и пересмотр</h3><p>Обоснованные результаты, точные цитаты и апелляции.</p></article>
+    <section data-panel="conversations" hidden><div id="conversation-workspace"></div><div id="manual-workspace" class="panel"></div></section>
+    <section data-panel="checklists" hidden><div id="checklist-editor" class="panel"></div></section>
+    <section data-panel="results" hidden><div id="evaluation-workspace"></div></section>
+    <section data-panel="datasets" hidden>
+      <div class="panel"><p class="eyebrow">ИМПОРТ</p><h2>Загрузить диалоги</h2><p class="muted" id="group-help">group_id из набора организаторов. Адрес подключения задаётся только на сервере.</p>
+        <form id="dataset-form"><fieldset><label class="field" for="group-id">group_id<input id="group-id" name="group_id" required autocomplete="off" placeholder="DEV" aria-describedby="group-help"></label><button type="submit" id="fetch-dataset">Fetch dataset</button></fieldset></form>
+        <p id="dataset-result" class="notice" role="status" aria-live="polite">Набор ещё не запрошен.</p>
+        <div class="section-heading"><h3>Сохранено диалогов: <output id="conversation-count">—</output></h3><button type="button" id="refresh-datasets" class="secondary">Обновить список</button></div>
+        <p id="dataset-list-status" class="muted" role="status"></p><ul id="dataset-groups" class="group-list" aria-label="Сохранённые группы диалогов"></ul>
       </div>
+      <div class="panel"><h2>Импорт JSON-файла</h2><p class="muted">Исходный organizer envelope; максимум 16 MiB. Данные сохраняются в Java SQLite.</p><form id="upload-form"><fieldset><label class="field">JSON-файл<input type="file" id="dataset-file" accept=".json,application/json" required></label><button type="submit">Импортировать JSON</button></fieldset><p class="notice" id="upload-result" role="status"></p></form></div>
     </section>
+    <noscript><p class="notice">Для работы с Java API включите JavaScript.</p></noscript>
+    <footer>Freedom CQA <span>Original → evidence → review</span></footer>
   </main>
-  <footer><span>Freedom CQA</span><span>От диалога — к пониманию качества.</span></footer>
-</body>
-</html>
+</body></html>
