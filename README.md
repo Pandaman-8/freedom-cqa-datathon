@@ -2,8 +2,10 @@
 
 The approved application is **Java21 + Spring Boot + SQLite**, serving HTML/CSS/Vanilla JS
 ES modules at localhost:8080. T07 organizer fetch is closed; T12 provides conversations,
-versioned checklist editing, manual evaluations, evidence, original/final scores and review,
-pending acceptance/peer review. AI integration remains T13.
+versioned checklist editing, manual evaluations, evidence, original/final scores and review
+(T12 closed after peer approval). T13 adds the Java ML HTTP client, durable request ledger
+and AI UI for exact own synthetic fixtures. Live Python/provider E2E is still pending
+Nurtas's readiness confirmation; local fake-server verification is not live inference.
 
 Start and verify using [server/README.md](server/README.md), including an isolated synthetic
 browser walkthrough. No Node build is required for the target application. The Python ML

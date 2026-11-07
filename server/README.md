@@ -6,8 +6,9 @@ JSON import, versioned checklist REST and manual evaluation/history (T05), plus
 immutable evaluations and atomic appeals/review (T06), and organizer dataset fetching
 with a Vanilla group_id form (T07, closed after peer approval), plus the T12 Vanilla
 workspace for conversations, versioned checklists, manual evaluations and T06 review.
-T12 remains in_progress pending acceptance and peer review.
-Java-to-ML HTTP integration is not implemented.
+T12 is closed after peer approval. T13 implements the Java ML HTTP client, durable request
+ledger and AI UI for verified own synthetic fixtures. Real Python/provider E2E has NOT RUN;
+T13 remains in_progress until joint live verification and review.
 The legacy backend/frontend and shared contract2.0.0 are unchanged.
 
 ## Requirements and pinned versions
@@ -77,7 +78,7 @@ protected against UPDATE/DELETE; later reviews must use separate records.
 `src/main/resources/static/` is a native ES-module application, served by Java without
 npm, a bundler, external fonts/CDNs or authentication. Overview counts come from Java;
 conversations, checklists, manual results and appeals use the existing same-origin APIs.
-Health indicates Java liveness; AI is explicitly unavailable until T13. Detailed T12
+Health indicates Java liveness; AI requires explicit local ML configuration. Detailed T12
 architecture, verification and a synthetic manual walkthrough are below.
 
 `FoundationTest` starts a real embedded server on a random port and checks application
@@ -479,3 +480,122 @@ Manual walkthrough:
 Real Organizer GET, real DEV/CONTROL→Groq, audio playback against external providers and
 real AI→review were **NOT RUN**. This scope tests manual Java workflows; it does not close
 T13/T14 or establish full official checklist-PDF verification.
+
+## T13 Java ML integration (live E2E pending)
+
+The Java part uses the existing `EvaluationRequest`, `EvaluationResult`, `ContractError`,
+`AutoRequest` and evaluation view shapes. The shared contract remains **2.0.0**, Python's
+route remains **POST /v1/evaluate**, and Java alone scores/persists. No ML source, schemas,
+fixtures, seed or scoring math changed. Local fake HTTP tests establish transport and
+persistence behavior, not real model quality or successful Python/provider integration.
+The T12 instructions above describe the manual baseline; the AI panel now supplements it.
+
+Java configuration (no provider credentials):
+
+| Variable / Spring property | Default / bounds |
+|---|---|
+| `CQA_ML_URL` / `cqa.ml-url` | Empty:501; intended value `http://127.0.0.1:8001/v1/evaluate` |
+| `CQA_ML_CONNECT_TIMEOUT_MS` / `cqa.ml-connect-timeout-ms` | 3000; clamped1..3000ms |
+| `CQA_ML_RESPONSE_TIMEOUT_MS` / `cqa.ml-response-timeout-ms` | 70000; clamped1..70000ms, headers plus entire body |
+
+The first release accepts only explicit HTTP loopback127.0.0.1 URLs with a port and exact
+`/v1/evaluate` path; no credentials, query, fragment, redirects or proxy. Startup/health
+make no network requests. Missing/invalid URL returns501 without a ledger entry or inference.
+Connect refusal maps to503 EVALUATOR_BUSY; connection loss after sending is conservatively
+unknown502; deadline is unknown504. Java makes one POST, with no application retry. Python
+continues to own its maximum two provider attempts. Browser timeout is75s and never replays.
+Request/response bounds are1MiB/256KiB, including streamed bodies and strict UTF-8 decoding.
+
+**First live phase safety gate:** Maven packages the six existing
+`ml-service/tests/fixtures/*/request.json` inputs into the JAR. Java compares the entire
+conversation projection AND checklist to a bundled fixture pair, excluding only request_id.
+The SYNTHETIC group label alone grants nothing. IDs, original text/order/roles/timestamps,
+language/channel, checklist wording/weights/levels/version must match. Modified checklist
+versions still work in the manual T12 workflow; automatic evaluation rejects them with503
+PRIVACY_POLICY_UNCONFIGURED until a separately reviewed policy expansion. This intentionally
+stricter Java policy also prevents sending arbitrary private text through checklist fields.
+No configurable file path or environment flag can turn the gate into a group-name allowlist.
+Audio URLs, import metadata and credentials are absent from the DTO projection.
+
+`POST /api/evaluations/auto` takes the existing four fields: UUID request_id, conversation_id,
+checklist_key, checklist_version. It pins immutable source/checklist before HTTP. After strict
+shape, identity, complete answers/kind/levels/NA and exact-substring evidence validation
+(PRODUCTION mode, attempt_count>=1), Java calculates `cqa-score/1` and writes `origin=model`.
+Original answers/score are immutable and remain compatible with existing T06 review. SDK
+allowlisted diagnostics and the full pinned request are stored in the private ledger;
+the existing public evaluation view shape is preserved. Java does not trust upstream error
+messages: it validates status/code/UUID, then returns a fixed safe message.
+
+### Durable request lifecycle
+
+`GET /api/evaluation-requests/{request_id}` returns the already documented four fields:
+request_id, status, evaluation_id, error. Unknown IDs404; malformed UUID422. Errors contain
+only the fixed safe code/message/retryable/request_id detail. Status reads never call Python.
+
+| Stored status | Repeated POST with identical payload | New inference |
+|---|---|---|
+| pending | 202 + Location status URL | Never |
+| succeeded | 200 + saved evaluation (current review projection, immutable original) | Never |
+| failed | Original safe error/status | Never |
+| unknown | Recorded safe error/status | Never |
+
+A reused UUID with a different conversation/key/version returns409 REQUEST_ID_CONFLICT,
+even if that different context does not exist. A short SQLite IMMEDIATE transaction claims
+one unique UUID before any HTTP. Network wait holds no transaction/connection. Success
+inserts the evaluation and terminal ledger state atomically; an injected finalization error
+rolls back both and records unknown. Ledger identity/context and terminal states cannot be
+updated or deleted. Preflight shape/context/privacy/configuration errors occur before claim,
+so their UUID status is404 and no network request took place.
+
+**One Java application process owns an ML database.** On startup, previously pending ledger
+entries become unknown; they are never submitted again. Do not run multiple Java instances
+against an active ML database: a second startup cannot distinguish another process's active
+work from a crash. No distributed lease/queue is introduced. Timeout/crash can leave Python
+or the provider running; exactly-once billing is not promised. A new UUID is a deliberate
+new attempt and can incur another charge. Python has no result lookup endpoint in2.0.0,
+so an unknown result cannot automatically be recovered from that service.
+
+The AI panel keeps manual drafts intact. It shows request_id before POST, loading/error/status
+and the saved result. After any uncertain response use **Проверить AI статус**; after reload
+use **Восстановить последний AI запрос**, or paste a saved UUID. Only the last opaque UUID
+is stored in sessionStorage, with no transcript, checklist or credentials. If browser storage
+is unavailable, copy the visible UUID. GET reconciliation, reload and context changes never
+start inference. A new attempt requires a checked status and acknowledgment of possible
+repeat cost, then an explicit new-UUID action and an explicit AI click. Pending IDs cannot
+start a new attempt through that control. A new tab does not have the previous tab's UUID;
+use the visible ID or stored evaluation history for reconciliation.
+
+### Reproducible isolated verification
+
+```bash
+./server/mvnw -f server/pom.xml clean verify
+node --experimental-default-type=module server/src/test/js/workspace.test.mjs
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+python3 -B server/src/test/python/auto_smoke.py
+# Optional actual browser: open the printed BROWSER TESTS URL and click Run AI browser regression.
+python3 -B server/src/test/python/auto_smoke.py --serve
+# Existing manual workspace regression remains separate:
+python3 -B server/src/test/python/workspace_smoke.py --serve
+```
+
+The auto smoke starts only its own fake ML server and packaged JAR with a temporary SQLite,
+imports the unchanged `en_public_na` fixture via the real Java APIs, checks model-origin
+score100, invalid evidence, duplicate/conflicting UUIDs and unknown timeout, then kills its
+own Java while a POST is pending and verifies recovery/no replay after restart. It never
+starts Python ML, reads provider secrets or calls Groq. Browser harness/control routes exist
+only in the test proxy, outside production static resources. CI runs the same synthetic
+packaged smoke; browser runs are local and are reported separately.
+
+### First live E2E handoff to Nurtas
+
+Before any live call Nurtas must explicitly confirm service readiness, selected provider/model,
+synthetic-only policy, quota/budget/free-plan settings and the allowed attempt count. Secrets
+stay exclusively in Python; do not paste or commit them. Start one Python worker according
+to ml-service/README.md and confirm `/health` configuration without a model probe. Agree on
+one exact published fixture (start with en_public_na), inspect its source and checklist, and
+import those exact values into a separate temporary Java SQLite. Then configure Java's
+CQA_ML_URL to the loopback8001 route and explicitly authorize one UI request/new UUID.
+Check real diagnostics, answers/evidence relevance, Java score and persisted snapshot together.
+Record that run separately from fake-server results. T13 remains in_progress until this actual
+Python/provider E2E and peer review are complete; T14 is not started. Real DEV/CONTROL and
+external audio remain out of scope and have not been sent to any provider.

@@ -35,8 +35,6 @@ public class ResourceController {
     }
     @PostMapping(value="/evaluations/manual", consumes="application/json") @ResponseStatus(HttpStatus.CREATED)
     public EvaluationView manual(HttpServletRequest request) { return evaluations.manual(bodies.read(request, ManualRequest.class)); }
-    @PostMapping(value="/evaluations/auto", consumes="application/json")
-    public void auto(HttpServletRequest request) { evaluations.auto(bodies.read(request, AutoRequest.class)); }
     @GetMapping("/evaluations") public List<EvaluationView> evaluations(@RequestParam(name="conversation_id",required=false) String conversation) { return evaluations.list(conversation); }
     @GetMapping("/evaluations/{id}") public EvaluationView evaluation(@PathVariable String id) { return evaluations.get(id); }
 }

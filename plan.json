@@ -3537,9 +3537,23 @@
       ],
       "files": [
         "server/src/main/java/cqa/ml/",
+        "server/src/main/java/cqa/api/ResourceController.java",
+        "server/src/main/java/cqa/service/EvaluationService.java",
+        "server/src/main/resources/db/schema.sql",
+        "server/src/main/resources/application.properties",
+        "server/src/main/resources/static/js/auto.js",
         "server/src/main/resources/static/js/api.js",
-        "server/src/test/java/cqa/integration/",
-        "ml-service/tests/"
+        "server/src/main/resources/static/js/evaluations.js",
+        "server/src/main/resources/static/js/app.js",
+        "server/src/main/resources/static/index.html",
+        "server/src/test/java/cqa/AutoEvaluationApiTest.java",
+        "server/src/test/java/cqa/MlConfigurationTest.java",
+        "server/src/test/browser/",
+        "server/src/test/python/auto_smoke.py",
+        "server/pom.xml",
+        "server/README.md",
+        "README.md",
+        ".github/workflows/ci.yml"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -3557,24 +3571,68 @@
         "GET request status, timeouts и отсутствие автоматического POST replay проверены; fixture явно не выдаётся за real model."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "PYTHONPATH=ml-service python -m pytest -q ml-service/tests",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "./server/mvnw -f server/pom.xml clean verify",
+        "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+        "python3 server/src/test/python/scoring_reference.py --check",
+        "node --experimental-default-type=module server/src/test/js/workspace.test.mjs",
+        "python3 -B server/src/test/python/auto_smoke.py",
+        "python3 -B server/src/test/python/workspace_smoke.py",
+        "python3 -B server/src/test/python/organizer_smoke.py",
+        "python3 -B server/src/test/python/review_smoke.py",
+        "Actual browser via auto_smoke.py --serve and workspace_smoke.py --serve; test harnesses use temporary SQLite and fake ML only.",
+        "Nurtas readiness/provider/budget/synthetic-policy confirmation, actual Python/provider E2E and peer review remain required; NOT RUN in this implementation."
       ],
       "estimate_hours": 0.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "HTTP timeout не означает отмену paid inference; duplicate charge и wrong identity echo требуют явной обработки.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "Java implementation and fake-server/browser verification do not close the real Python/provider E2E acceptance criterion. Await Nurtas readiness, explicit live authorization and peer review.",
+        "Only exact conversation+checklist pairs bundled from the six existing own ML fixtures are allowed by Java; edited checklist versions remain available for manual evaluation but are rejected for inference until separately reviewed policy expansion.",
+        "One Java application process owns an ML database. Startup changes interrupted pending requests to unknown; multiple concurrent Java processes sharing that ML database are unsupported.",
+        "Timeout/crash does not cancel paid inference or guarantee exactly-once billing. Unknown is terminal for that UUID; Python contract2.0.0 has no result lookup endpoint. An explicit new UUID may incur another charge.",
+        "Only the last UUID is retained in browser sessionStorage, without source text; copy the visible UUID when storage is unavailable. The status API is authoritative. Health remains Java liveness, not ML/provider readiness.",
+        "Shared contract2.0.0, ML files, scoring math and T06/T07/T12 domain semantics remain unchanged. No real DEV/CONTROL/Organizer/Groq/audio calls; T14 not started."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-07",
+          "kind": "java_implementation",
+          "branch": "codex/integration-T13-e2e",
+          "base_commit": "bf37bcecdba99a39ecfd40a870b6869973384860",
+          "details": [
+            "Existing AutoRequest POST /api/evaluations/auto now calls configured loopback /v1/evaluate; absent/invalid config still501. Java reuses ContractJson/ContractValidation in PRODUCTION mode; identity, full answer set, kinds/levels/NA and exact evidence checked independently.",
+            "One bounded HTTP POST, no proxy/redirect/application replay; connect<=3s,total body<=70s,request1MiB/response256KiB. Safe strict error-envelope validation; transport loss/timeout recorded as unknown.",
+            "Additive SQLite evaluation_requests ledger claims unique UUID+payload and pins full request before HTTP; pending202,success200 replay,terminal errors replay,changed payload409. Evaluation origin=model and deterministic original score are inserted atomically with terminal ledger/diagnostics; original/source/checklist triggers unchanged.",
+            "Startup reconciles interrupted pending to unknown without inference replay. Error/status endpoint uses documented request_id/status/evaluation_id/error shape; existing evaluation DTO shape retained.",
+            "Java checks entire conversation and checklist against exact pairs from six unchanged ML request fixtures packaged at build. Group name alone is insufficient; audio URLs/import metadata are not projected.",
+            "Vanilla AI panel adds loading/error/result, visible UUID, status lookup, last-UUID recovery across reload, no automatic replay, and explicit acknowledged new UUID. Manual drafts remain intact."
+          ]
+        },
+        {
+          "date": "2026-11-07",
+          "kind": "verification",
+          "results": [
+            "BUILD SUCCESS: final clean verify5953 JUnit tests,0 failures/errors/skipped; includes41 AutoEvaluationApiTest cases and12 ML configuration cases alongside existing5900 regressions.",
+            "PASS:8 JavaScript unit tests;5184 exact Fraction scoring references;4 schemas/72 fixtures with no shared contract drift.",
+            "PASS: packaged auto_smoke.py against Java/fake ML and temporary SQLite, including invalid evidence,score100,duplicate/conflicting UUID,timeout and actual kill/restart of its own Java process. This is NOT actual Python/provider E2E.",
+            "PASS: packaged workspace_smoke.py,organizer_smoke.py and review_smoke.py with isolated synthetic databases, including immutable originals,checklist versions,manual/review/CAS,organizer signature handling and restart.",
+            "PASS:4 actual browser AI scenarios:double-click single inference,saved model result/manual draft retention,invalid evidence/status,timeout unknown/reload UUID recovery without replay,explicit new attempt with previous unknown immutable.",
+            "PASS:11 existing T12 browser scenarios,including create A/New blank/B,version CAS,manual/evidence,review,stale responses and XSS. Only the obsolete AI-unavailable wording assertion was updated.",
+            "CI adds the synthetic packaged auto smoke; remote run result will be reported after push, not preclaimed here."
+          ],
+          "limits": "Browser runs are local with fake HTTP model answers, not live E2E or CI browser coverage. Real Python ML process/provider/model quality,credentials/quota and real DEV/CONTROL/audio remain NOT RUN. No new responsive/cross-browser matrix for T13."
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "handoff",
+          "details": "Nurtas must confirm local service readiness, provider/model, synthetic-only policy, quota/budget/free-plan and attempt budget before one explicitly authorized live run on an inspected existing fixture. Secrets remain Python-only. Verify real diagnostics, answer relevance and Java persisted score together; T13 stays in_progress until live E2E and peer approval. T14 not started."
+        }
+      ],
       "requirement_ids": [
         "R05",
         "R09"

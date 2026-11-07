@@ -65,6 +65,8 @@ jobs:
         with:
           node-version: '22'
       - name: Java regression and packaged Vanilla assets
+        env:
+          CQA_ML_URL: ''
         run: ./server/mvnw -f server/pom.xml clean verify
       - name: Exact scoring reference
         run: python3 server/src/test/python/scoring_reference.py --check
@@ -73,8 +75,10 @@ jobs:
       - name: Synthetic packaged HTTP regressions
         env:
           CQA_ORGANIZER_URL: ''
+          CQA_ML_URL: ''
           GROQ_API_KEY: ''
         run: |
           python3 -B server/src/test/python/workspace_smoke.py
           python3 -B server/src/test/python/organizer_smoke.py
           python3 -B server/src/test/python/review_smoke.py
+          python3 -B server/src/test/python/auto_smoke.py

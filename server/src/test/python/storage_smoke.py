@@ -57,7 +57,7 @@ def main():
             nonlocal process
             process = subprocess.Popen(
                 ["java", "-jar", str(JAR), f"--server.port={port}", f"--cqa.db-path={database}",
-                 "--spring.main.banner-mode=off", "--logging.level.root=WARN"],
+                 "--cqa.ml-url=", "--spring.main.banner-mode=off", "--logging.level.root=WARN"],
                 cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
             for _ in range(150):
                 assert process.poll() is None, "Java process exited during startup"
