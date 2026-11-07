@@ -1,0 +1,243 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "2.0.0"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "conversation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "dataset_group_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "conversation_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "channel": {
+          "enum": [
+            "agent chat",
+            "voice call"
+          ]
+        },
+        "language": {
+          "enum": [
+            "RU",
+            "KZ",
+            "EN"
+          ]
+        },
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^m[0-9]{4,}$"
+              },
+              "timestamp": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "speaker": {
+                "enum": [
+                  "operator",
+                  "client",
+                  "bot",
+                  "system"
+                ]
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "timestamp",
+              "speaker",
+              "text"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "dataset_group_id",
+        "conversation_id",
+        "channel",
+        "language",
+        "messages"
+      ]
+    },
+    "checklist": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "maxLength": 80
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S",
+                "maxLength": 40
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S",
+                "maxLength": 180
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ]
+          }
+        },
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S",
+                "maxLength": 40
+              },
+              "section_id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "instruction": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "kind": {
+                "enum": [
+                  "binary",
+                  "scale",
+                  "flag"
+                ]
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "allow_na": {
+                "type": "boolean"
+              },
+              "na_rule": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "levels": {
+                "type": "array",
+                "minItems": 0,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "description": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "description"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "section_id",
+              "title",
+              "instruction",
+              "kind",
+              "weight",
+              "allow_na",
+              "na_rule",
+              "levels"
+            ]
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "key",
+        "version",
+        "title",
+        "description",
+        "sections",
+        "criteria"
+      ]
+    }
+  },
+  "required": [
+    "contract_version",
+    "request_id",
+    "conversation",
+    "checklist"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

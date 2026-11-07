@@ -1,0 +1,8 @@
+{
+  "detail": {
+    "code": "EVALUATOR_TIMEOUT",
+    "message": "Evaluation deadline exceeded. Check request status before retrying.",
+    "retryable": true,
+    "request_id": null
+  }
+}

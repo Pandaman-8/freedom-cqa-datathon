@@ -1,0 +1,2 @@
+# Tooling for T02; not a backend or ML service dependency.
+jsonschema==4.23.0

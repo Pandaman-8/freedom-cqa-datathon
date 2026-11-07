@@ -1,0 +1,8 @@
+{
+  "detail": {
+    "code": "INVALID_INPUT",
+    "message": "Request did not contain a valid request ID.",
+    "retryable": false,
+    "request_id": null
+  }
+}

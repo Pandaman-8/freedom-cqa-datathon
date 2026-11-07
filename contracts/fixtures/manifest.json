@@ -1,0 +1,933 @@
+{
+  "contract_version": "2.0.0",
+  "transport": {
+    "method": "POST",
+    "endpoint": "/v1/evaluate",
+    "content_type": "application/json",
+    "success_status": 200
+  },
+  "purpose": "Synthetic compatibility fixtures only; no real model results or private data. Layer expectations are separate from HTTP error-code mapping.",
+  "cases": [
+    {
+      "id": "evaluation_request",
+      "file": "fixtures/positive/evaluation_request.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Exact synthetic example from plan.json; arbitrary IDs, binary/scale/NA/flag."
+    },
+    {
+      "id": "evaluation_result",
+      "file": "fixtures/positive/evaluation_result.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Exact offline example; attempt_count0 is not a real model result.",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "provider_output",
+      "file": "fixtures/positive/provider_output.json",
+      "schema": "provider_output",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Provider returns answers only, no version/identity/diagnostics envelope.",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "error",
+      "file": "fixtures/positive/error.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Exact error example; no contract_version field by existing design.",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 504
+    },
+    {
+      "id": "error_null_request_id",
+      "file": "fixtures/positive/error_null_request_id.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "No valid request ID available while parsing invalid input.",
+      "http_status": 422
+    },
+    {
+      "id": "request_ru",
+      "file": "fixtures/positive/request_ru.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Own translated synthetic text; exact Unicode, no semantic accuracy claim."
+    },
+    {
+      "id": "result_ru",
+      "file": "fixtures/positive/result_ru.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/request_ru.json"
+    },
+    {
+      "id": "request_voice_repeated_timestamp",
+      "file": "fixtures/positive/request_voice_repeated_timestamp.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "ISO timestamps preserved, two same timestamps retain distinct message IDs; no audio analysis."
+    },
+    {
+      "id": "result_voice",
+      "file": "fixtures/positive/result_voice.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/request_voice_repeated_timestamp.json"
+    },
+    {
+      "id": "request_kz",
+      "file": "fixtures/positive/request_kz.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Own translated synthetic text; exact Unicode, no semantic accuracy claim."
+    },
+    {
+      "id": "result_kz",
+      "file": "fixtures/positive/result_kz.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/request_kz.json"
+    },
+    {
+      "id": "request_changed_criterion",
+      "file": "fixtures/positive/request_changed_criterion.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "New configured criterion/version; no hardcoded C01-C08 restriction."
+    },
+    {
+      "id": "result_changed_criterion",
+      "file": "fixtures/positive/result_changed_criterion.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/request_changed_criterion.json"
+    },
+    {
+      "id": "request_unicode_decomposed",
+      "file": "fixtures/positive/request_unicode_decomposed.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "Source uses decomposed e + combining accent; do not normalize."
+    },
+    {
+      "id": "result_unicode_exact",
+      "file": "fixtures/positive/result_unicode_exact.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/request_unicode_decomposed.json"
+    },
+    {
+      "id": "result_numeric_equivalence",
+      "file": "fixtures/positive/result_numeric_equivalence.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": true
+      },
+      "mode": "offline_fixture",
+      "note": "JSON Schema integer accepts mathematically integral2.0; 10 and10.0 are equal levels, not string coercion.",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "request_old_contract",
+      "file": "fixtures/negative/request_old_contract.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_missing_id",
+      "file": "fixtures/negative/request_missing_id.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_numeric_string_version",
+      "file": "fixtures/negative/request_numeric_string_version.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_unknown_nested_field",
+      "file": "fixtures/negative/request_unknown_nested_field.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_audio_url_forbidden",
+      "file": "fixtures/negative/request_audio_url_forbidden.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "result_old_contract",
+      "file": "fixtures/negative/result_old_contract.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_missing_diagnostics",
+      "file": "fixtures/negative/result_missing_diagnostics.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_numeric_totals_forbidden",
+      "file": "fixtures/negative/result_numeric_totals_forbidden.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_string_scale",
+      "file": "fixtures/negative/result_string_scale.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_boolean_scale",
+      "file": "fixtures/negative/result_boolean_scale.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_non_scale_value",
+      "file": "fixtures/negative/result_non_scale_value.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_blank_explanation",
+      "file": "fixtures/negative/result_blank_explanation.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_unicode_blank_quote",
+      "file": "fixtures/negative/result_unicode_blank_quote.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_unknown_warning",
+      "file": "fixtures/negative/result_unknown_warning.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_duplicate_warning",
+      "file": "fixtures/negative/result_duplicate_warning.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_negative_cost",
+      "file": "fixtures/negative/result_negative_cost.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_too_many_attempts",
+      "file": "fixtures/negative/result_too_many_attempts.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "provider_extra_field",
+      "file": "fixtures/negative/provider_extra_field.json",
+      "schema": "provider_output",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "provider_empty_answers",
+      "file": "fixtures/negative/provider_empty_answers.json",
+      "schema": "provider_output",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "provider_empty_evidence",
+      "file": "fixtures/negative/provider_empty_evidence.json",
+      "schema": "provider_output",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "error_bad_retryable",
+      "file": "fixtures/negative/error_bad_retryable.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 504
+    },
+    {
+      "id": "error_unknown_field",
+      "file": "fixtures/negative/error_unknown_field.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 504
+    },
+    {
+      "id": "error_missing_request_id",
+      "file": "fixtures/negative/error_missing_request_id.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": false,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 504
+    },
+    {
+      "id": "result_wrong_request_id",
+      "file": "fixtures/negative/result_wrong_request_id.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_raw_conversation_id",
+      "file": "fixtures/negative/result_raw_conversation_id.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_wrong_checklist_key",
+      "file": "fixtures/negative/result_wrong_checklist_key.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_stale_version",
+      "file": "fixtures/negative/result_stale_version.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_missing_answer",
+      "file": "fixtures/negative/result_missing_answer.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_duplicate_answer",
+      "file": "fixtures/negative/result_duplicate_answer.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_unknown_criterion",
+      "file": "fixtures/negative/result_unknown_criterion.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_illegal_scale",
+      "file": "fixtures/negative/result_illegal_scale.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_forbidden_na",
+      "file": "fixtures/negative/result_forbidden_na.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_flag_na",
+      "file": "fixtures/negative/result_flag_na.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_scale_as_binary",
+      "file": "fixtures/negative/result_scale_as_binary.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_unknown_message",
+      "file": "fixtures/negative/result_unknown_message.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_fabricated_quote",
+      "file": "fixtures/negative/result_fabricated_quote.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_unicode_normalized_quote",
+      "file": "fixtures/negative/result_unicode_normalized_quote.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "NFC-equivalent text is not an exact source substring.",
+      "request": "fixtures/positive/request_unicode_decomposed.json"
+    },
+    {
+      "id": "result_zero_attempts_production",
+      "file": "fixtures/negative/result_zero_attempts_production.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "production",
+      "note": "Still synthetic; exercises only the production attempt_count guard, not a real model call.",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "request_duplicate_criterion",
+      "file": "fixtures/negative/request_duplicate_criterion.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_duplicate_section",
+      "file": "fixtures/negative/request_duplicate_section.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_unknown_section",
+      "file": "fixtures/negative/request_unknown_section.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_blank_na_rule",
+      "file": "fixtures/negative/request_blank_na_rule.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_duplicate_levels",
+      "file": "fixtures/negative/request_duplicate_levels.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_missing_zero_level",
+      "file": "fixtures/negative/request_missing_zero_level.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_flag_has_weight",
+      "file": "fixtures/negative/request_flag_has_weight.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_binary_zero_weight",
+      "file": "fixtures/negative/request_binary_zero_weight.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_duplicate_message_id",
+      "file": "fixtures/negative/request_duplicate_message_id.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "request_nonpositional_message_id",
+      "file": "fixtures/negative/request_nonpositional_message_id.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "error_wrong_status_pair",
+      "file": "fixtures/negative/error_wrong_status_pair.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 422
+    },
+    {
+      "id": "error_unknown_code",
+      "file": "fixtures/negative/error_unknown_code.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 504
+    },
+    {
+      "id": "error_lost_request_id",
+      "file": "fixtures/negative/error_lost_request_id.json",
+      "schema": "error",
+      "expected": {
+        "parse": true,
+        "schema": true,
+        "context": false
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json",
+      "http_status": 504
+    },
+    {
+      "id": "request_duplicate_json_key",
+      "file": "fixtures/negative/request_duplicate_json_key.json",
+      "schema": "evaluation_request",
+      "expected": {
+        "parse": false,
+        "schema": null,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": ""
+    },
+    {
+      "id": "result_nan",
+      "file": "fixtures/negative/result_nan.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": false,
+        "schema": null,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_infinity",
+      "file": "fixtures/negative/result_infinity.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": false,
+        "schema": null,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_exponent_overflow",
+      "file": "fixtures/negative/result_exponent_overflow.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": false,
+        "schema": null,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    },
+    {
+      "id": "result_trailing_text",
+      "file": "fixtures/negative/result_trailing_text.json",
+      "schema": "evaluation_result",
+      "expected": {
+        "parse": false,
+        "schema": null,
+        "context": null
+      },
+      "mode": "offline_fixture",
+      "note": "",
+      "request": "fixtures/positive/evaluation_request.json"
+    }
+  ]
+}

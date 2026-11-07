@@ -1,0 +1,126 @@
+{
+  "contract_version": "2.0.0",
+  "conversation": {
+    "id": "SYNTHETIC:contract-demo",
+    "dataset_group_id": "SYNTHETIC",
+    "conversation_id": "contract-demo",
+    "channel": "agent chat",
+    "language": "EN",
+    "messages": [
+      {
+        "id": "m0001",
+        "timestamp": "00:00",
+        "speaker": "client",
+        "text": "What time does support open?"
+      },
+      {
+        "id": "m0002",
+        "timestamp": "00:01",
+        "speaker": "bot",
+        "text": "Hello! An operator will join."
+      },
+      {
+        "id": "m0003",
+        "timestamp": "00:05",
+        "speaker": "operator",
+        "text": "Hello, I'm Ada. Support opens at 09:00."
+      },
+      {
+        "id": "m0004",
+        "timestamp": "00:10",
+        "speaker": "client",
+        "text": "Thank you."
+      },
+      {
+        "id": "m0005",
+        "timestamp": "00:12",
+        "speaker": "operator",
+        "text": "Happy to help. Goodbye."
+      }
+    ]
+  },
+  "checklist": {
+    "key": "synthetic-contract",
+    "version": 2,
+    "title": "Synthetic contract example",
+    "description": "Own fixture, not official rubric and not a model evaluation.",
+    "sections": [
+      {
+        "id": "service",
+        "title": "Service"
+      },
+      {
+        "id": "critical",
+        "title": "Critical"
+      },
+      {
+        "id": "service",
+        "title": "Service"
+      }
+    ],
+    "criteria": [
+      {
+        "id": "S_HELLO",
+        "section_id": "service",
+        "title": "Operator introduction",
+        "instruction": "Yes if the first operator response greets and introduces the operator. Bot greetings do not count.",
+        "kind": "binary",
+        "weight": 25,
+        "allow_na": false,
+        "na_rule": null,
+        "levels": []
+      },
+      {
+        "id": "S_CLARITY",
+        "section_id": "service",
+        "title": "Clear response",
+        "instruction": "Choose the configured clarity level. Assess clarity, not external factual correctness of opening hours.",
+        "kind": "scale",
+        "weight": 75,
+        "allow_na": false,
+        "na_rule": null,
+        "levels": [
+          {
+            "value": 0,
+            "description": "No understandable response."
+          },
+          {
+            "value": 4,
+            "description": "Several unclear statements."
+          },
+          {
+            "value": 7,
+            "description": "One noticeable ambiguity."
+          },
+          {
+            "value": 10,
+            "description": "Clear and coherent response."
+          }
+        ]
+      },
+      {
+        "id": "S_ID",
+        "section_id": "service",
+        "title": "Identity verification",
+        "instruction": "Yes if required identity verification precedes a protected account action.",
+        "kind": "binary",
+        "weight": 20,
+        "allow_na": true,
+        "na_rule": "The customer asks only a general public question; no protected account action is requested.",
+        "levels": []
+      },
+      {
+        "id": "S_FLAG",
+        "section_id": "critical",
+        "title": "Explicit insult",
+        "instruction": "Yes if the operator explicitly insults the customer. This is a separate flag, not a numeric penalty.",
+        "kind": "flag",
+        "weight": 0,
+        "allow_na": false,
+        "na_rule": null,
+        "levels": []
+      }
+    ]
+  },
+  "request_id": "11111111-1111-4111-8111-111111111111"
+}

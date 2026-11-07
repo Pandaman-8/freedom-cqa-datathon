@@ -1,12 +1,12 @@
 # Freedom CQA — единый контракт Java ↔ Python ML
 
-**Contract version: 2.0.0. Статус: proposed, требует принятия Farhat и Nurtas в T02 до реализации.** Это замена прежнего проекта 1.0.0 с in-process evaluator. Источник схем/численных политик/примеров — [plan.json](../plan.json), `contracts`; [план](IMPLEMENTATION_PLAN.md) задаёт tasks и merge. Контракт не означает, что HTTP service уже работает.
+**Contract version: 2.0.0. Статус: proposed, требует принятия Farhat и Nurtas в T02 до реализации.** Это замена прежнего проекта 1.0.0 с in-process evaluator. Схемы и fixtures вынесены в [contracts/](../contracts/README.md); неизменённые embedded-схемы, численные политики и примеры сохранены в [plan.json](../plan.json), `contracts`; [план](IMPLEMENTATION_PLAN.md) задаёт tasks и merge. Контракт не означает, что HTTP service уже работает.
 
 ## Транспорт и совместимость
 
 Java :8080 вызывает **POST `http://127.0.0.1:8001/v1/evaluate`**, UTF-8 `Content-Type: application/json`; успех 200 с EvaluationResult. `GET /health` проверяет readiness без платного model probe и секретов. `/v1` — первое поколение HTTP route; JSON envelope имеет точную версию`2.0.0`, поскольку заменяет старый in-process проект. Сейчас принимается только точная версия; расширения согласуются одновременно на обеих сторонах.
 
-Один JSON Schema Draft2020-12 и один набор synthetic positive/negative fixtures; две реализации: Java DTO/Jackson/Bean Validation и Python strict schemas. Pydantic не является единственным межъязыковым источником истины. Farhat владеет `server/`, Nurtas — `ml-service/`, shared `contracts/` меняет Farhat после reviewNurtas. Любое изменение JSON, endpoints, fields, score semantics, message IDs или validation согласуют **оба до реализации**. Эти будущие каталоги сейчас не создавались.
+Один JSON Schema Draft2020-12 и один набор synthetic positive/negative fixtures; две реализации: Java DTO/Jackson/Bean Validation и Python strict schemas. Pydantic не является единственным межъязыковым источником истины. Farhat владеет `server/`, Nurtas — `ml-service/`, shared `contracts/` меняет Farhat после reviewNurtas. Любое изменение JSON, endpoints, fields, score semantics, message IDs или validation согласуют **оба до реализации**. В T02 создан только `contracts/`; Java и Python service каталоги остаются будущими.
 
 ML transport может быть FastAPI либо другим HTTP framework по выбору Nurtas; Java зависит только от данного JSON. ML не обращается к SQLite и не рассчитывает totals. Java самостоятельно проверяет ответ, считает результат и сохраняет immutable snapshot. Java serving static Vanilla UI обеспечивает same-origin; browser не вызывает Python/provider и не получает organizer/provider credentials. Оба сервиса для localdemo слушают localhost.
 
@@ -343,7 +343,18 @@ ML adapter копирует identity/version/request_id из входа и diagn
 
 ## Машиночитаемые схемы и совместимость двух реализаций
 
-Полные схемы находятся в `plan.json → contracts.json_schemas`: `evaluation_request`, `evaluation_result`, `provider_output`, `error`. Сейчас они встроены в план, отдельные файлы не создаются. В T02 их переносят в `contracts/` вместе с fixtures без независимых ручных вариантов, а ссылку в plan фиксируют. Java DTO/Python schemas должны принимать/отвергать одинаковые fixtures; генерация DTO допустима, но не заменяет semantic checks. Unknown fields запрещены. Один контракт, две реализации.
+В T02 извлечены четыре схемы без изменения их JSON-значений:
+
+- [evaluation_request.schema.json](../contracts/evaluation_request.schema.json)
+- [evaluation_result.schema.json](../contracts/evaluation_result.schema.json)
+- [provider_output.schema.json](../contracts/provider_output.schema.json)
+- [error.schema.json](../contracts/error.schema.json)
+
+Embedded-схемы `plan.json → contracts.json_schemas` сохранены идентичными. [Общий manifest](../contracts/fixtures/manifest.json) задаёт ожидаемые результаты для 72 синтетических fixtures: 16 positive, 23 schema-negative, 28 context-negative и 5 parser-negative. Provider output и error не получают новое поле версии: их прежняя структура сохранена.
+
+[contracts/validate.py](../contracts/validate.py) проверяет Draft 2020-12 metaschemas, отсутствие расхождений с планом, примеры и validation layers. Команда и границы проверки — в [contracts/README.md](../contracts/README.md). Parser-negative файлы намеренно не проходят strict decoding; context-negative проходят schema и требуют независимых контекстных проверок. Java DTO/Python schemas должны использовать тот же corpus; эти будущие реализации ещё не тестировались. Unknown fields запрещены. Один контракт, две реализации.
+
+Артефакты подготовлены и проверены, но совместное согласование не получено. T02 остаётся `ready`; список решений для Farhat/Nurtas и отпечаток подготовленной версии зафиксированы в README и `plan.json → contracts.artifacts`. Значения полей, endpoint, контракт 2.0.0 и scoring semantics не изменены.
 
 Diagnostics: provider/model/prompt_version — nonblankstring; attempt_count integer0..2 (production≥1); tokens/latency неотрицательные integer|null; estimated_cost_usd finite number≥0|null; warnings unique allowlist. `contract_version`, `request_id` и message identity не получаютот LLM. Выбор provider/framework не меняетэтот JSON.
 

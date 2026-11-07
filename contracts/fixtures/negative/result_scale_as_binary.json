@@ -1,0 +1,72 @@
+{
+  "contract_version": "2.0.0",
+  "conversation_id": "SYNTHETIC:contract-demo",
+  "checklist_key": "synthetic-contract",
+  "checklist_version": 2,
+  "answers": [
+    {
+      "criterion_id": "S_HELLO",
+      "answer": "yes",
+      "value": null,
+      "explanation": "The first operator turn greets and introduces Ada; the bot greeting was not counted.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "Hello, I'm Ada."
+        }
+      ]
+    },
+    {
+      "criterion_id": "S_CLARITY",
+      "answer": "yes",
+      "value": null,
+      "explanation": "The operator gives one clear, coherent sentence answering the question. This fixture does not verify company opening hours.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "Support opens at 09:00."
+        }
+      ]
+    },
+    {
+      "criterion_id": "S_ID",
+      "answer": "na",
+      "value": null,
+      "explanation": "Only general opening hours are requested; no protected account action requires identification.",
+      "evidence": [
+        {
+          "message_id": "m0001",
+          "quote": "What time does support open?"
+        }
+      ]
+    },
+    {
+      "criterion_id": "S_FLAG",
+      "answer": "no",
+      "value": null,
+      "explanation": "Both operator turns were checked and neither contains an insult. These are real checked turns, not an invented absence quote.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "Hello, I'm Ada. Support opens at 09:00."
+        },
+        {
+          "message_id": "m0005",
+          "quote": "Happy to help. Goodbye."
+        }
+      ]
+    }
+  ],
+  "diagnostics": {
+    "provider": "synthetic-contract-fixture",
+    "model": "not-a-model",
+    "prompt_version": "example-only",
+    "attempt_count": 0,
+    "input_tokens": null,
+    "output_tokens": null,
+    "estimated_cost_usd": null,
+    "latency_ms": null,
+    "warnings": []
+  },
+  "request_id": "11111111-1111-4111-8111-111111111111"
+}
