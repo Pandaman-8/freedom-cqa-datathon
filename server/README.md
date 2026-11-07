@@ -2,8 +2,9 @@
 
 This module implements application liveness and a static Vanilla JS start page (T03),
 strict contract DTOs/validation and deterministic scoring (T04), and persistent SQLite,
-JSON import, versioned checklist REST and manual evaluation/history (T05).
-Appeals, organizer API fetching and ML HTTP integration are not implemented.
+JSON import, versioned checklist REST and manual evaluation/history (T05), plus
+immutable evaluations and atomic appeals/review (T06, pending peer review).
+Organizer API fetching and Java-to-ML HTTP integration are not implemented.
 The legacy backend/frontend and shared contract2.0.0 are unchanged.
 
 ## Requirements and pinned versions
@@ -164,9 +165,9 @@ ledger and HTTP inference are not implemented; auto never saves an evaluation in
 
 Manual saves validate exact evidence against the pinned source/checklist, compute with
 T04, and persist original answers, ScoreResult and scoring_version in one short transaction.
-No latest-version lookup occurs during save or history reads. final_answers/final_score
-currently equal the originals, appeals is empty and review_status is evaluated; there is
-no reviewer decision. T06 can add separate review tables without rewriting originals.
+No latest-version lookup occurs during save or history reads. Before any review,
+final_answers/final_score equal the originals, appeals is empty and review_status is
+evaluated. T06 derives the final result from separate decisions as described below.
 
 `StorageApiTest` runs real HTTP against temporary SQLite files, tests rollback, two
 concurrent applications updating the same checklist, pool connection replacement,
@@ -188,3 +189,77 @@ source and prints aggregate counts only. It performs no external network request
 python3 server/src/test/python/storage_smoke.py
 python3 server/src/test/python/storage_smoke.py --dataset data/dev/invoke.json
 ```
+
+## T06 appeals and review
+
+The existing ML contract 2.0.0, shared fixtures and `cqa-score/1` mathematics are unchanged.
+These routes belong exclusively to the Java domain API:
+
+| Route | Request and response |
+|---|---|
+| `POST /api/evaluations/{id}/appeals` | `{criterion_id,comment}`; 201 with the persisted appeal |
+| `POST /api/appeals/{id}/resolve?expected_revision=N` | `{decision,reason,replacement}`; 200 with the complete updated EvaluationView |
+| `GET /api/evaluations/{id}` and list | Original snapshot, derived final answers/score, full appeals, review_status and review_revision |
+
+Comment/reason must be nonblank and at most 3,000 Unicode code points; text is preserved.
+Strict JSON parsing rejects extra fields, wrong types and duplicate keys. Unknown resources
+return 404 NOT_FOUND; invalid payloads/criterion/evidence return 422 INVALID_INPUT.
+
+**Resolve requires `expected_revision` in the query**, obtained from the evaluation GET.
+It is a nonnegative signed-64-bit integer. Missing/invalid values return 422; a stale value,
+duplicate open appeal or already resolved appeal returns 409 REVIEW_CONFLICT with no writes.
+The evaluation revision begins at 0 and increments for every successful create or resolve,
+including creation of an appeal on another criterion. The client must reload the evaluation
+after a conflict and reconsider its decision; it must not blindly replay with a newer number.
+This is an intentional Java write-API compatibility requirement. Legacy JSON body shapes
+are preserved; no expected_revision field is added to Python/ML DTOs or shared schemas.
+
+Create returns id, evaluation_id, criterion_id, comment, status, decision, reason,
+replacement, created_at, resolved_at, created_revision and resolved_revision. Pending
+decision fields are null. Read the evaluation to obtain its current aggregate revision.
+History is ordered by created_revision; changes are applied by resolved_revision, independent
+of timestamps. If any appeal is open, review_status is appealed; with only resolved appeals
+it is reviewed; without appeals it is evaluated. Resolved changes remain effective while
+another appeal is open.
+
+Confirm requires null replacement (omission also means null) and confirms the **current**
+answer, including prior changes. Change requires a full existing CriterionAnswer for exactly
+the appealed criterion. T04 validators check the complete final answer set and exact evidence
+against the immutable source and exact historical checklist. Only resolved changes replace
+answers. Arbitrary criterion IDs, allowed N/A exclusion, independent critical flags and
+HALF_UP scoring are supported. Original answers/score/version/origin are never updated or
+recomputed. An unsupported stored scorer version returns an explicit 409 REVIEW_CONFLICT
+message, before decoding its score or attempting any recalculation; no fallback is used.
+
+Storage initialization adds only `evaluation_reviews` (evaluation_id FK, revision) and
+`appeals` (evaluation FK, criterion, comment, status, decision/reason/replacement JSON,
+timestamps and creation/resolution revisions), their indexes and history guards.
+No existing T05 table is altered, copied, dropped or backfilled. All old immutable triggers
+remain intact. An old evaluation has implicit revision 0 until its first appeal creates a
+review row. Initialization is idempotent; legacy Python databases are never migrated.
+On a normal application launch the additive schema runs against the configured Java DB;
+all automated T06 checks use temporary files, never the user's persistent DB.
+
+A partial unique SQL index permits one open appeal per evaluation/criterion. The same
+criterion may be appealed again after resolution. Conditional updates check affected rows;
+revision CAS and appeal writes commit in one IMMEDIATE transaction. Failed validation,
+duplicates and failed writes roll back everything, including lazy revision-row creation.
+SQL triggers prevent deletion or rewriting of completed history. Consistent GET projections
+also use the existing transaction template: no revision/history mismatch, but reads briefly
+reserve the SQLite writer. This local-demo tradeoff can limit throughput for large histories.
+Correctness does not depend on one Hikari connection or a Java process lock.
+
+`ReviewApiTest` covers strict payloads, scoring/evidence, re-appeals, original bytes, pinning,
+two independent Spring applications sharing a SQLite file, stale writes, injected SQL
+failures and restart. `ReviewMigrationTest` boots over a frozen T05 schema populated with
+65 **synthetic** sources and checks every original row and immutable trigger. The T06
+packaged-JAR smoke also closes/restarts its own JVM from another working directory:
+
+```bash
+python3 server/src/test/python/review_smoke.py
+```
+
+No real DEV/CONTROL data, provider calls, ML HTTP integration, reviewer UI or authentication
+is involved. Exact-substring grounding cannot establish whether a human decision is
+semantically justified. T06 remains in_progress until the second participant reviews the
+Java API/revision behavior, additive schema and verification evidence required by plan.json.

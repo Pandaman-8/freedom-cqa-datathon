@@ -1,6 +1,7 @@
 package cqa.repository;
 
 import cqa.api.ApiModels.EvaluationView;
+import cqa.api.ApiFailure;
 import cqa.dto.*;
 import cqa.scoring.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,11 +23,13 @@ public class EvaluationRepository {
     }
     private RowMapper<EvaluationView> mapper() {
         return (r,i) -> {
+            // Reject an unknown algorithm before decoding its potentially different score shape.
+            if (!ScoringEngine.VERSION.equals(r.getString("scoring_version"))) throw ApiFailure.unsupportedScorer();
             var answers = json.read(r.getString("answers_json"), ProviderOutput.class).answers();
             var score = json.read(r.getString("score_json"), ScoreResult.class);
             return new EvaluationView(r.getString("id"), r.getString("conversation_id"), r.getString("checklist_key"),
                 new BigInteger(r.getString("checklist_version")), r.getString("origin"), r.getString("created_at"),
-                answers, score, answers, score, List.of(), "evaluated", "2.0.0", r.getString("scoring_version"));
+                answers, score, answers, score, List.of(), "evaluated", "2.0.0", r.getString("scoring_version"), 0);
         };
     }
     public EvaluationView find(String id) {
