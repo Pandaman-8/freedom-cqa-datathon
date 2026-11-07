@@ -3384,9 +3384,9 @@
       ],
       "estimate_hours": 3,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "in_progress",
+      "status": "done",
       "risks_and_blockers": [
-        "Technical implementation and local verification complete; Farhat acceptance and Nurtas peer review pending. T12 remains in_progress.",
+        "PR6 merged; Farhat requested closure after Nurtas final APPROVED on2026-11-07, relayed in chat, with no blocking comments. Remaining verification and demo limits below are unchanged.",
         "No real Organizer GET, real DEV/CONTROL external inference or live audio playback; browser checks use a temporary SQLite and synthetic sources only.",
         "Drafts are in-memory, scoped and retained across view/context changes; not durable across page reload/close. beforeunload prompt behavior depends on the browser. Unknown outcomes require explicit manual reconciliation, not an exactly-once ledger.",
         "Complete Java lists and transcripts are loaded without server pagination/virtualization; very large datasets/histories are outside tested performance scope.",
@@ -3481,6 +3481,29 @@
             "PASS:git diff --check and190 protected-file SHA256 comparisons, including Java,ML,contracts,legacy code and frontend/package-lock.json."
           ],
           "limits": "Browser suite run locally, not claimed as CI. Unknown create outcome is a deliberately injected transport failure; no real Organizer/Groq/DEV/CONTROL/audio requests. No additional cross-browser or responsive-layout checks for this lifecycle-only fix."
+        },
+        {
+          "date": "2026-11-07",
+          "kind": "final_peer_approval_and_closure",
+          "pull_request": "https://github.com/Pandaman-8/freedom-cqa-datathon/pull/6",
+          "merge_commit": "226e83f58697fcf903d0d5d4b93b302c67827dff",
+          "verified_head_commit": "00f5960d74f7085eb5cf11c3af1e04b2988af0ef",
+          "approval": {
+            "reviewer": "Nurtas",
+            "decision": "APPROVED",
+            "date": "2026-11-07",
+            "source": "Final approval with no blocking comments relayed by Farhat in this chat; not a GitHub Review record. Farhat explicitly requested T12 closure."
+          },
+          "verification": [
+            "5900 JUnit PASS; Java clean verify BUILD SUCCESS,0 failures/errors/skipped.",
+            "8 JS tests PASS.",
+            "72 contract fixtures PASS; shared contract2.0.0 unchanged.",
+            "11/11 actual browser scenarios PASS against synthetic temporary SQLite, including create-draft lifecycle, historical versions and CAS.",
+            "GitHub Actions CI4/4 PASS:frontend,backend,ml-service,java-workspace."
+          ],
+          "ci_run": "https://github.com/Pandaman-8/freedom-cqa-datathon/actions/runs/42397701827",
+          "verification_basis": "Recorded results from the verified PR head above; full application/browser suites were not rerun for this documentation-only closure. Merge SHA and merged PR state verified against GitHub; local main fast-forward pull is current.",
+          "scope": "Only plan.json changed for closure. T13/T14 remain planned; Java,ML,frontend and contract2.0.0 unchanged. Real Organizer/Groq/DEV/CONTROL/audio verification remains NOT RUN."
         }
       ],
       "requirement_ids": [
