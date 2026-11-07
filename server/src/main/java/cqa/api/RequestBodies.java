@@ -35,6 +35,7 @@ public class RequestBodies {
                     if (record instanceof ObjectNode item && !item.has("audio_url")) item.putNull("audio_url");
                 }
             } else if (type == ApiModels.ChecklistDraft.class && !object.has("description")) object.put("description", "");
+            else if (type == cqa.review.ReviewModels.Resolution.class && !object.has("replacement")) object.putNull("replacement");
         }
         return json.shape(node, type);
     }
@@ -44,5 +45,10 @@ public class RequestBodies {
         BigInteger version = new BigInteger(value);
         if (version.signum() <= 0) throw ApiFailure.invalid();
         return version;
+    }
+    public static long reviewRevision(String value) {
+        if (value == null || !value.matches("[0-9]{1,19}")) throw ApiFailure.invalid();
+        try { return Long.parseLong(value); }
+        catch (NumberFormatException e) { throw ApiFailure.invalid(); }
     }
 }

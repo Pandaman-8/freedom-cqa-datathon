@@ -5,6 +5,7 @@ import cqa.api.ApiModels.*;
 import cqa.dataset.Dataset;
 import cqa.dto.*;
 import cqa.repository.EvaluationRepository;
+import cqa.review.ReviewService;
 import cqa.scoring.ScoringEngine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -20,10 +21,12 @@ public class EvaluationService {
     private final ScoringEngine scorer;
     private final TransactionTemplate writes;
     private final ContractJson json;
+    private final ReviewService reviews;
     public EvaluationService(ConversationService conversations, ChecklistService checklists, EvaluationRepository repository,
-            ScoringEngine scorer, TransactionTemplate writes, ContractJson json) {
+            ScoringEngine scorer, TransactionTemplate writes, ContractJson json, ReviewService reviews) {
         this.conversations = conversations; this.checklists = checklists; this.repository = repository;
         this.scorer = scorer; this.writes = writes; this.json = json;
+        this.reviews = reviews;
     }
     public record PinnedContext(Dataset.Conversation conversation, Checklist checklist) {}
     public PinnedContext pin(String conversation, String key, BigInteger version) {
@@ -41,7 +44,7 @@ public class EvaluationService {
         ContractValidation.groundedAnswers(new EvaluationRequest("2.0.0", id, pinned.conversation().projection(), checklist), answers);
         var score = scorer.calculate(checklist, answers);
         var result = new EvaluationView(id, pinned.conversation().id(), checklist.key(), checklist.version(), "manual",
-            Instant.now().toString(), List.copyOf(answers), score, List.copyOf(answers), score, List.of(), "evaluated", "2.0.0", ScoringEngine.VERSION);
+            Instant.now().toString(), List.copyOf(answers), score, List.copyOf(answers), score, List.of(), "evaluated", "2.0.0", ScoringEngine.VERSION, 0);
         writes.executeWithoutResult(status -> repository.insert(result));
         return result; // Never look up latest while saving or reading the snapshot.
     }
@@ -50,10 +53,6 @@ public class EvaluationService {
         pin(request.conversation_id(), request.checklist_key(), request.checklist_version());
         throw new ApiFailure(501,"EVALUATOR_UNCONFIGURED","ML evaluator is not configured.");
     }
-    public List<EvaluationView> list(String conversation) { return repository.list(conversation); }
-    public EvaluationView get(String id) {
-        var found = repository.find(id);
-        if (found == null) throw ApiFailure.missing();
-        return found;
-    }
+    public List<EvaluationView> list(String conversation) { return reviews.list(conversation); }
+    public EvaluationView get(String id) { return reviews.get(id); }
 }

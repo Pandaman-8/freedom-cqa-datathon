@@ -3,6 +3,7 @@ package cqa.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cqa.dto.*;
 import cqa.scoring.ScoreResult;
+import cqa.review.ReviewModels.AppealView;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.math.BigInteger;
@@ -33,6 +34,6 @@ public final class ApiModels {
 
     public record EvaluationView(String id, String conversation_id, String checklist_key, BigInteger checklist_version,
         String origin, String created_at, List<CriterionAnswer> original_answers, ScoreResult original_score,
-        List<CriterionAnswer> final_answers, ScoreResult final_score, List<Object> appeals, String review_status,
-        String contract_version, String scoring_version) {}
+        List<CriterionAnswer> final_answers, ScoreResult final_score, List<AppealView> appeals, String review_status,
+        String contract_version, String scoring_version, long review_revision) {}
 }
