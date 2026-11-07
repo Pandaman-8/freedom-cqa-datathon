@@ -9,6 +9,9 @@ Current review status: Nurtas accepted all 24 T09 synthetic labels and their evi
 one human reviewer, peer review pending. See the [T09 report](reports/t09-human-review-report.json)
 and the current T09/PR/T13 checklist at the end of this document. Older quality sections
 retain their historical status and do not override this later human review.
+Current prompt: `cqa-dynamic/4`, with language-specific explanation examples and stricter
+evidence instructions. Its live quality has not been measured. The offline-only dynamic
+checklist demo proposal and verification scope are described in the final section below.
 
 ## Run from repository root
 
@@ -579,3 +582,77 @@ T12; полный DoD и T02 joint approval проверяются отдель�
 T13 можно использовать для технической проверки интеграции с известными ограничениями
 качества. Его прохождение не закрывает автоматически T14/T15 и не доказывает качество
 на длинных/реальных разговорах или звук; без аудио не оценивать дикцию и интонацию.
+
+## После T13: язык объяснений и offline demo — cqa-dynamic/4
+
+Изменения от 2026-11-08 ограничены ML prompt и его offline-проверками. Основание —
+сохранённый v3: 24/24 совпадения меток, но все 16 RU/KZ-объяснений на английском;
+косвенное обоснование N/A и неполный проверенный участок для GROSS в kz_public_na.
+Review T09 Нуртаса относится к 24 эталонным меткам/evidence; эти expected.json и
+исходные шесть request.json не менялись. Одобрение не перенесено на новый demo.
+
+В [prompt](prompts/evaluate-v1.txt) усилены прямое написание explanation на нужном
+языке, проверка языка каждой фразы и сохранение исходных цитат. [Сборщик](app/prompt.py)
+добавляет в system message только короткую инструкцию и два примера для текущего
+conversation.language: RU, KZ или EN. Примеры не содержат criterion_id, message_id,
+answer/value и не задают готовый ответ. Они иллюстрируют стиль; факты, оценки и
+доказательства модель по-прежнему должна выводить из текущих checklist/conversation.
+Постперевода, подмены ответа модели и нового семантического валидатора нет.
+
+Для N/A, основанного на запросе клиента, нужно цитировать сам клиентский вопрос,
+подтверждающий na_rule; приветствие или ответ оператора о теме не заменяют вопрос.
+Для других na_rule используется реальный подтверждающий контекст, без выдуманного
+вопроса — в частности, нельзя требовать несуществующую реплику клиента. Перед no
+по нарушению модель должна проверить все релевантные реплики оператора; в коротком
+диалоге с двумя операторскими репликами цитировать обе, а не одну вежливую фразу.
+В длинном участке нужны релевантные примеры, границы и объяснение проверенного охвата.
+
+Contract 2.0.0, transport, provider/model, retries/deadline, validators, Java scoring
+и синтетическая allowlist не изменены. Обновилось только значение существующего
+diagnostics.prompt_version: `cqa-dynamic/4`. Исторический quality_pass `--run-id prompt-v3`
+на новом prompt намеренно отказывает; его guard не ослаблен, новый live-run не разрешён.
+
+**[Demo proposal](reports/dynamic-checklist-demo-proposal.json)** — один новый полностью
+вымышленный RU-диалог про учебное приложение, представленный с двумя версиями рубрики:
+
+| Свойство | Версия 1 | Версия 2 |
+|---|---|---|
+| Checklist key | synthetic-demo-steps | synthetic-demo-steps |
+| Изменяемый criterion_id | LOCAL_GREETING | DEMO_STEP_ORDER |
+| Условие | Приветствие и представление в первой реплике оператора | Два конкретных шага в явном порядке |
+| Предложенная метка | no: приветствует только бот | yes: оператор перечисляет шаги 1 и 2 |
+
+Conversation `SYNTHETIC:ru_dynamic_steps_proposal` одинаков в обеих версиях. Клиент
+просит два шага для открытия учебной справки без доступа к аккаунту. Оператор сразу
+даёт нумерованную инструкцию и затем вежливо завершает диалог. Остальные предложенные
+ответы: IDENTITY=na с вопросом m0001; CLARITY=10 с инструкцией m0003; GROSS=no с обеими
+операторскими репликами m0003/m0005. Они записаны как **предложенная разметка ассистента,
+не результат модели и не human-approved gold**. Требуется отдельное человеческое review.
+Числовые totals и фиктивные diagnostics отсутствуют.
+
+Demo лежит только в reports/, не в tests/fixtures/, и не зарегистрирован для inference.
+До любого live-добавления нужно согласовать с Фархатом расширение Java SyntheticPolicy,
+которая сейчас требует ровно шесть fixtures, и согласованную регистрацию с обеих сторон.
+В этой работе allowlist не расширялась, Java/UI demo не запускался. Это согласование
+нового входа; изменений общего контракта сейчас не требуется.
+
+Offline-проверки проверяют доставку нужных языковых примеров, сохранение mixed-language
+текста/Unicode/ID/allowed pairs в первом и repair prompt, v4 diagnostics, строгую
+валидность обеих версий demo и предложенных цитат. Отдельная HTTP-проверка требует
+503 PRIVACY_POLICY_UNCONFIGURED для demo с нулём обращений к mock provider. Количество
+локальных request fixtures остаётся ровно шесть. Эти тесты не доказывают, что LLM
+будет всегда соблюдать язык или смысловую релевантность; нужен отдельно разрешённый
+будущий live quality evaluation. Новых вызовов Groq в этой доработке не было.
+
+Фактическая проверка этой доработки:
+
+```bash
+PYTHONPATH=ml-service /tmp/freedom-cqa-ml-validation/bin/python -m pytest -q ml-service/tests
+# 332 passed, 1 warning in 11.09s
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+# 72/72 fixtures; четыре схемы совпадают с plan.json; schema drift отсутствует
+```
+
+Warning — прежняя депрекация httpx в Starlette TestClient. Все 12 хешей исходных
+request/expected совпали с отчётом T09. Для v4 нет новых измерений latency/tokens
+или доказательства улучшения языка модели; Java E2E повторно не выполнялся.

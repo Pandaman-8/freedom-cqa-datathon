@@ -10,7 +10,7 @@ import json
 
 import pytest
 
-from app.prompt import build_messages
+from app.prompt import EXPLANATION_GUIDES, build_messages
 from app.validation import ROOT, strict_loads, validate_context, validate_shape
 
 
@@ -61,6 +61,11 @@ def test_explanation_language_policy_preserves_literal_transcript(code, name):
     assert "Write every explanation in conversation.language" in system
     assert "English rubric wording does not change the explanation language" in system
     assert "never translate evidence to match the explanation language" in system
+    assert messages[0]["content"].endswith(EXPLANATION_GUIDES[code])
+    for other in EXPLANATION_GUIDES.keys() - {code}:
+        assert EXPLANATION_GUIDES[other] not in messages[0]["content"]
+    assert "They are not evidence or preselected answers" in system
+    assert "LOCAL_" not in EXPLANATION_GUIDES[code]
     assert context["conversation"]["language"] == code
     assert context["conversation"]["messages"] == request["conversation"]["messages"]
 
@@ -69,10 +74,40 @@ def test_evidence_policy_requires_relevance_and_na_context_not_just_exact_matchi
     request, _ = scenario("kz_public_na")
     system = instructions(request)
     assert "An existing quote is not sufficient unless it supports the selected answer or level" in system
-    assert "cite the customer request or surrounding context establishing the exact na_rule" in system
-    assert "a greeting alone does not establish that no protected action was requested" in system
-    assert "including its beginning and end, not only an unrelated polite closing sentence" in system
+    assert "cite the actual client question that directly establishes the configured na_rule" in system
+    assert "is not a substitute for that client quote" in system
+    assert "never invent a client question if no such turn exists" in system
+    assert "inspect every relevant operator turn in the checked span" in system
+    assert "In a short conversation with two operator turns, cite both" in system
     assert "Do not translate, normalize or trim a quote" in system
+
+
+@pytest.mark.parametrize("code,example", [
+    ("RU", "Оператор выполнил действие до проверки личности."),
+    ("KZ", "Оператор әрекетті жеке басты тексеруден бұрын орындаған."),
+    ("EN", "The operator acted before verifying the client's identity."),
+])
+def test_selected_language_examples_survive_repair_without_changing_evidence_or_allowed_pairs(code, example):
+    request, _ = scenario(f"{code.lower()}_public_na")
+    # Mixed-language source and decomposed Unicode must stay literal, independent of prose language.
+    request["conversation"]["messages"][1]["text"] += " Help > Guide; cafe\u0301."
+    original = copy.deepcopy(request)
+    messages = build_messages(request, {"category": "EVIDENCE_QUOTE"})
+    assert example in messages[0]["content"]
+    assert "check every explanation sentence" in messages[0]["content"]
+    assert messages[:2] == build_messages(request)
+    context = json.loads(messages[1]["content"])
+    assert request == original
+    assert context["conversation"] == original["conversation"]
+    assert context["allowed_message_ids"] == [m["id"] for m in original["conversation"]["messages"]]
+    for criterion, allowed in zip(original["checklist"]["criteria"], context["required_answers"]):
+        pairs = allowed["allowed_answer_value_pairs"]
+        assert ({"answer": "na", "value": None} in pairs) == criterion["allow_na"]
+        if criterion["kind"] == "scale":
+            assert {p["value"] for p in pairs if p["answer"] == "scale"} == {level["value"] for level in criterion["levels"]}
+        else:
+            assert {p["answer"] for p in pairs} == ({"yes", "no", "na"} if criterion["allow_na"] else {"yes", "no"})
+            assert all(p["value"] is None for p in pairs)
 
 
 @pytest.mark.parametrize("verification_first", [True, False], ids=["before-action", "after-action"])
