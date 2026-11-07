@@ -2322,7 +2322,7 @@
       ],
       "estimate_hours": 2,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "done",
       "risks_and_blockers": [
         "Decimal coercion/rounding и custom scales могут расходиться между языками; проверить parity, не копировать double.",
         "Java target пока не реализован; новые пути обозначают будущие файлы.",
@@ -2333,7 +2333,116 @@
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-07",
+          "kind": "scope_and_base",
+          "branch": "codex/fs-T04-scoring",
+          "base_commit": "83a2caf0c8f36780a88d151022d1a95f3af58df7",
+          "details": "T04 branch originally pointed to T02. Fast-forwarded to the existing T03 commit 83a2caf from codex/fs-T03-java without creating a commit. Implemented only T04; no T05 work or shared-contract edits. T02 approval status is unchanged; no joint acknowledgment invented."
+        },
+        {
+          "kind": "files",
+          "java_files": [
+            "server/src/main/java/cqa/dto/Checklist.java",
+            "server/src/main/java/cqa/dto/ContractError.java",
+            "server/src/main/java/cqa/dto/ContractJson.java",
+            "server/src/main/java/cqa/dto/ContractValidation.java",
+            "server/src/main/java/cqa/dto/ContractViolation.java",
+            "server/src/main/java/cqa/dto/Criterion.java",
+            "server/src/main/java/cqa/dto/CriterionAnswer.java",
+            "server/src/main/java/cqa/dto/Diagnostics.java",
+            "server/src/main/java/cqa/dto/ErrorDetail.java",
+            "server/src/main/java/cqa/dto/EvaluationRequest.java",
+            "server/src/main/java/cqa/dto/EvaluationResult.java",
+            "server/src/main/java/cqa/dto/Evidence.java",
+            "server/src/main/java/cqa/dto/ProviderOutput.java",
+            "server/src/main/java/cqa/dto/ScaleLevel.java",
+            "server/src/main/java/cqa/dto/Section.java",
+            "server/src/main/java/cqa/dto/SourceConversation.java",
+            "server/src/main/java/cqa/dto/SourceMessage.java",
+            "server/src/main/java/cqa/dto/Text.java",
+            "server/src/main/java/cqa/scoring/ExactDecimal.java",
+            "server/src/main/java/cqa/scoring/ScoreResult.java",
+            "server/src/main/java/cqa/scoring/ScoringEngine.java",
+            "server/src/test/java/cqa/dto/ContractFixturesTest.java",
+            "server/src/test/java/cqa/dto/StrictDtoTest.java",
+            "server/src/test/java/cqa/scoring/ScoringEngineTest.java"
+          ],
+          "supporting_files": [
+            "server/src/test/python/scoring_reference.py",
+            "server/src/test/resources/scoring/seed-reference.tsv",
+            "server/README.md"
+          ],
+          "dependencies": "No dependency, POM, wrapper or Spring configuration changes."
+        },
+        {
+          "kind": "implementation",
+          "details": [
+            "Immutable contract 2.0.0 records; strict Jackson UTF-8 decoding, duplicate/trailing/nonfinite/overflow rejection, required/unknown fields and scalar coercion rejection; exact BigDecimal and mathematically integral BigInteger values.",
+            "Bean Validation plus checklist composition, complete answers, configured levels/N/A, identity echoes, positional message IDs, exact evidence and error/status/request-ID rules. Dedicated full-validation entry points; default Spring mapper not changed.",
+            "Pure cqa-score/1 scorer with exact ratios of BigDecimal values; no intermediate rounding or binary floating arithmetic. HALF_UP only on emitted row/section/total values; N/A excludes weights; weightless flags independent; dynamic criteria and null totals/section percentages supported."
+          ]
+        },
+        {
+          "kind": "independent_scoring_reference",
+          "combinations": 5184,
+          "commands": [
+            "python3 server/src/test/python/scoring_reference.py",
+            "PYTHONPATH=backend backend/.venv/bin/python -B server/src/test/python/scoring_reference.py --check --legacy"
+          ],
+          "result": "All 5184 seed combinations match independent exact Fraction arithmetic and the unchanged Python Decimal scorer across every output field. JUnit independently compares each Java output to its reference hash. Custom decimal scales, repeating fractions, N/A, flags, all-NA and either side of HALF_UP ties tested separately.",
+          "reference_sha256": "d4524cb56ce75bdaaa202d1999b4704b313af5ae711a1b0577fee25cb9d8a443",
+          "limits": "Seed fidelity to the unavailable official checklist PDF remains provisional; this validates the existing seed, not an unread PDF."
+        },
+        {
+          "kind": "maven_and_junit",
+          "command": "./server/mvnw -f server/pom.xml verify -B -ntp -o",
+          "result": "BUILD SUCCESS; tests 5766, failures 0, errors 0, skipped 0; executable JAR rebuilt. Final verification runs offline with cached dependencies; no ML, external HTTP, model, DEV/CONTROL or Python runtime needed by JUnit.",
+          "suites": [
+            {
+              "suite": "cqa.FoundationTest",
+              "tests": 4,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dto.ContractFixturesTest",
+              "tests": 72,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dto.StrictDtoTest",
+              "tests": 499,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.scoring.ScoringEngineTest",
+              "tests": 5191,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "reports": "server/target/surefire-reports/",
+          "t03_regression": "All four FoundationTest checks pass: actual Spring server, SQLite SELECT1, health JSON, HTML/CSS/JS over local HTTP. Existing T03 application and static sources unchanged."
+        },
+        {
+          "kind": "shared_contract",
+          "command": "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+          "result": "PASS: four Draft 2020-12 metaschemas; exact plan/schema drift check; contract 2.0.0 and POST /v1/evaluate; 72 fixture expectations (16 positive, 23 shape negatives, 28 context negatives, 5 parser negatives). Java independently passes the same 72 cases and positive DTO round trips.",
+          "limits": "Compatibility demonstrated against published schemas, fixture expectations and Python artifact validator; no Python ML service or live Java-to-Python HTTP integration claimed."
+        },
+        {
+          "kind": "fixes_and_preservation",
+          "details": "Resolved missing T03 base via fast-forward. Corrected initial Java annotation helper placement and empty-JSON parser handling; final tests pass without disabled checks or weakened schemas. Protected-file hashes match baseline: contracts, AGENTS, integration spec, legacy backend/seed and pre-existing frontend/package-lock.json. Only T04 status/completion_evidence changed relative to the T03 plan. No commit or push."
+        }
+      ],
       "requirement_ids": [
         "R08",
         "R11",
