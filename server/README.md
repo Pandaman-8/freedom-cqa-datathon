@@ -667,3 +667,77 @@ acceptance, Farhat and Nurtas must agree a new own-synthetic conversation+checkl
 review its exact contents and permission to expand the fixture set, and separately approve
 the provider/model, attempt budget and live run. Existing fixtures and SyntheticPolicy are
 unchanged. T14 stays in_progress until that scenario and peer review are complete.
+
+## T21 sequential batch
+
+Open **Массовая AI-оценка**, select a group and a specific checklist version in the existing
+top selector, then **Зафиксировать batch**. Java's current conversation list is read once;
+the exact group membership and checklist key/version are fixed in a browser-local manifest.
+Changing latest or importing another conversation later does not change this batch. Inspect
+the list, then click **Запустить / продолжить batch**. Each item uses the existing
+POST /api/evaluations/auto and GET /api/evaluation-requests/{request_id}; there are no new
+Java endpoints, request fields, database tables, server workers or inference retries.
+
+The Vanilla runner sends one POST at a time. A UUID and sending intent are synchronously
+written to localStorage **before** that POST. Every outcome is reconciled with the Java
+ledger; a successful result is read back and checked for model origin and exact
+conversation/checklist identity before a result link is shown. Counts distinguish queued,
+success, error, pending and unknown. All attempts remain visible with their UUID and status.
+Known failures continue to the next untouched item. A pending, unknown or unavailable status
+stops the loop. **Пауза после текущего диалога** drains the current request and prevents
+the next POST; it does not cancel inference.
+
+Reload restores the manifest and performs GET reconciliation only. Running never resumes
+automatically. **Сверить статусы batch** rereads attempted items; **Запустить / продолжить
+batch** sends only items that have never been attempted. Pending/unreadable ledger states
+block further dispatch. A404 after a lost response does not prove the request was never
+accepted; it stays uncertain. Explicit consent allows continuing untouched items past
+unknown/404, or a deliberate **Новая попытка для этого диалога** with a new UUID. The old
+attempt stays in history. Neither retryable=true nor refresh/reload creates a new POST.
+Conflicting UUIDs cannot attach another conversation's result. Retry can incur another
+charge; a timeout cannot guarantee provider cancellation or exactly-once billing.
+
+The manifest (`cqa:batch:v1`) is an internal UI format, separate from shared contract2.0.0.
+It contains only batch/group/conversation IDs, checklist key/version, attempt UUIDs, safe
+error codes, result IDs and state. It never stores transcripts, rubric text, answers,
+evidence, credentials or raw errors. Only one manifest is retained per browser origin.
+Completed batches can be explicitly removed locally; Java results/ledger remain intact.
+Incomplete or uncertain batches are retained for reconciliation. Storage failure/corruption
+blocks dispatch instead of falling back to a nonrecoverable in-memory queue.
+
+Web Locks serialize batch actions across browser contexts on the same origin; a second
+runner is refused immediately, not queued for an unexpected later start. A browser with
+Web Locks on localhost/HTTPS and writable localStorage is required. Keep the same browser
+profile and URL/port, and the same Java SQLite, to recover. Clearing site data, switching
+origins/devices or replacing the database is not automatic recovery. This is a local-demo
+browser runner, not a server-wide scheduler: separately invoked single evaluations or
+external API clients are not part of its browser lock. The existing Python busy/ledger
+semantics remain authoritative. Do not run multiple Java processes against one ML database.
+
+Java scoring, SyntheticPolicy and contract2.0.0 are unchanged. The runner can select
+imported groups, but only exact approved fixture pairs reach ML. DEV/CONTROL, arbitrary
+synthetic text and edited checklist versions fail safely before inference. A batch UI does
+not authorize external transfer or additional Groq calls.
+
+Verification (all local inference uses a fake HTTP peer):
+
+```bash
+./server/mvnw -f server/pom.xml clean verify
+node --experimental-default-type=module --test server/src/test/js/*.test.mjs
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+python3 server/src/test/python/scoring_reference.py --check
+python3 -B server/src/test/python/batch_smoke.py
+# Fresh isolated browser run: open the printed BATCH BROWSER URL, click Run batch browser regression.
+python3 -B server/src/test/python/batch_smoke.py --serve
+```
+
+The batch smoke starts its own packaged JVM, temporary SQLite and fake ML peer, imports
+the unchanged own RU/KZ/EN public fixtures, and verifies sequential model results and
+ledger recovery after restart. Browser tests additionally drive group/version selection,
+double-start and Web Lock contention, pause/resume, frozen membership across a late import,
+v1 despite latest v2, explicit retry/history, reload during pending, unknown timeout and
+actual JVM crash, policy rejection without ML calls, XSS-safe text and corrupt storage.
+Test control routes exist only in the disposable proxy. Run the browser suite once per
+fresh smoke process, then press Enter in its terminal to stop it and remove its database.
+CI runs Node tests, Java integration tests and the HTTP smoke; actual browser runs are
+reported separately. No test invokes Groq or the real Organizer API.

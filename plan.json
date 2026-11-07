@@ -4150,9 +4150,21 @@
         "T07"
       ],
       "files": [
+        "server/src/main/resources/static/js/batch-state.js",
         "server/src/main/resources/static/js/batch.js",
-        "server/src/main/java/cqa/evaluation/",
-        "server/src/test/java/cqa/batch/"
+        "server/src/main/resources/static/js/app.js",
+        "server/src/main/resources/static/index.html",
+        "server/src/main/resources/static/styles.css",
+        "server/src/test/java/cqa/AutoEvaluationApiTest.java",
+        "server/src/test/java/cqa/FoundationTest.java",
+        "server/src/test/js/batch.test.mjs",
+        "server/src/test/browser/batch.html",
+        "server/src/test/browser/batch-tests.js",
+        "server/src/test/python/batch_smoke.py",
+        ".github/workflows/ci.yml",
+        "README.md",
+        "server/README.md",
+        "plan.json"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -4168,23 +4180,62 @@
         "Нет отдельной очереди/Redis/workers; batch frontend orchestration надJava single-item API с persisted request ledger."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "./server/mvnw -f server/pom.xml clean verify",
+        "node --experimental-default-type=module --test server/src/test/js/*.test.mjs",
+        "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+        "python3 server/src/test/python/scoring_reference.py --check",
+        "GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false PYTHONPATH=ml-service ml-service/.venv/bin/python -B -m pytest -q -p no:cacheprovider ml-service/tests",
+        "python3 -B server/src/test/python/batch_smoke.py --serve; fresh temporary SQLite, open printed BATCH BROWSER URL and run nine scenarios.",
+        "python3 -B server/src/test/python/workspace_smoke.py --serve; existing eleven browser scenarios.",
+        "python3 -B server/src/test/python/auto_smoke.py --serve; existing four AI browser scenarios.",
+        "python3 -B server/src/test/python/organizer_smoke.py",
+        "python3 -B server/src/test/python/review_smoke.py"
       ],
       "estimate_hours": 1,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "Browser close/Java crash оставляют unknown request; нельзя молча повторить оплату или пропустить item.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "Peer review remains outstanding; implementation/test evidence does not mark T21 done.",
+        "The planned DEV/CONTROL name is not authorization to send real datasets externally. Unchanged SyntheticPolicy permits only exact existing own-synthetic conversation/checklist pairs; arbitrary text or edited versions fail before ML. No Groq or real Organizer calls were made.",
+        "Manifest recovery requires the same browser profile/origin and Java SQLite. Web Locks and writable localStorage are required; unsupported/corrupt storage blocks dispatch. Browser-local orchestration is not a server-wide scheduler or background worker.",
+        "Browser close or Java crash can leave pending/unknown. Reload/status uses GET only. Pending/unreadable status blocks dispatch; unknown/404 requires explicit consent to continue untouched items or retry with a new UUID. A timeout/404 cannot guarantee cancellation or exactly-once billing.",
+        "No changes to Java domain/API/ledger schema, contract2.0.0, scoring, SyntheticPolicy, ML, shared fixtures or legacy frontend/backend. New manifest is internal UI state, not a shared transport contract."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-08",
+          "kind": "implementation",
+          "branch": "codex/T21-batch",
+          "base_commit": "88206fff1ed30ef30d737425a09775c918674568",
+          "details": [
+            "Vanilla batch runner snapshots group conversation IDs and explicit checklist key/version; one in-flight single-item POST, no automatic POST replay, progress and per-attempt UUID/code/result history. Java existing API/SQLite request ledger remains authoritative.",
+            "Sending intent is written before dispatch. Reload reconciles GET status and saved result identity; no automatic resume. Pause drains the current item; known failures continue; retry requires explicit acknowledgment and a new UUID. Unknown, missing or unreadable outcomes never become silently queued items.",
+            "Web Locks refuse competing browser runners, double actions are guarded through result-list refresh, storage failure blocks inference, HTML-like labels render as text. No transcripts, answers, rubric, raw errors or credentials in the manifest.",
+            "Java HTTP integration test verifies three exact RU/KZ/EN fixture results stay v1 across latest changes, survive restart, and replay existing UUIDs without inference. FoundationTest checks packaged batch modules. No production Java change was needed."
+          ]
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "verification",
+          "results": [
+            "BUILD SUCCESS:5964 JUnit tests,0 failures/errors/skipped.",
+            "PASS:24 JavaScript tests (16 new batch state-machine tests plus8 existing workspace tests).",
+            "PASS:4 Draft2020-12 schemas/72 contract fixtures and5184 exact Fraction scoring reference cases.",
+            "PASS:332 offline ML tests;1 existing Starlette/httpx deprecation warning. Existing conftest forbids real HTTP; no provider calls.",
+            "PASS:9/9 new real-browser batch scenarios on packaged Java, exact own fixtures, fake HTTP ML and disposable SQLite: snapshot, double-start/two-context lock, pause/resume, latest/membership changes, failure/retry, reload pending/unknown, JVM crash, policy rejection, XSS-safe text and corrupt manifest.",
+            "PASS:11/11 existing workspace browser scenarios, including checklist create-draft lifecycle, CAS, manual scoring and evidence jumps.",
+            "PASS:4/4 existing T13 AI browser scenarios, including duplicate-submit prevention and unknown recovery; fake ML only.",
+            "PASS:packaged batch_smoke, workspace_smoke, auto_smoke, organizer_smoke and review_smoke; actual JVM restarts and isolated synthetic SQLite only.",
+            "PASS:protected-file hash comparison for208 files, including contracts, ML/fixtures, production Java, legacy backend/frontend and untracked frontend/package-lock.json."
+          ],
+          "limits": "Fake ML is not a live provider E2E. No Groq/real DEV/CONTROL/Organizer/audio calls. Browser runs are local, not claimed as CI browser coverage; no new cross-browser/mobile matrix. Remote CI and PR will be checked after push."
+        }
+      ],
       "requirement_ids": [
         "R04",
         "R22"

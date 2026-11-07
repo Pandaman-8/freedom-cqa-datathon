@@ -17,6 +17,7 @@
       <button type="button" data-view="checklists"><span>03</span> Чек-листы</button>
       <button type="button" data-view="results"><span>04</span> Результаты и review</button>
       <button type="button" data-view="datasets"><span>05</span> Загрузка данных</button>
+      <button type="button" data-view="batch"><span>06</span> Массовая AI-оценка</button>
     </nav>
     <div class="sidebar-bottom"><span class="badge">LOCAL WORKSPACE</span><p>Прозрачная оценка.<br>Проверяемое решение.</p></div>
   </aside>
@@ -35,6 +36,7 @@
     <section data-panel="conversations" hidden><div id="conversation-workspace"></div><div id="manual-workspace" class="panel"></div></section>
     <section data-panel="checklists" hidden><div id="checklist-editor" class="panel"></div></section>
     <section data-panel="results" hidden><div id="evaluation-workspace"></div></section>
+    <section data-panel="batch" hidden><div id="batch-workspace"></div></section>
     <section data-panel="datasets" hidden>
       <div class="panel"><p class="eyebrow">ИМПОРТ</p><h2>Загрузить диалоги</h2><p class="muted" id="group-help">group_id из набора организаторов. Адрес подключения задаётся только на сервере.</p>
         <form id="dataset-form"><fieldset><label class="field" for="group-id">group_id<input id="group-id" name="group_id" required autocomplete="off" placeholder="DEV" aria-describedby="group-help"></label><button type="submit" id="fetch-dataset">Fetch dataset</button></fieldset></form>

@@ -83,6 +83,15 @@ class AutoEvaluationApiTest {
                 .put("conversation_id",input.at("/conversation/id").asText()).put("checklist_key",input.at("/checklist/key").asText())
                 .set("checklist_version",input.at("/checklist/version"));
             result.set("answers",expected.get("answers").deepCopy());
+            if(current.equals("batch")) {
+                String name=input.at("/conversation/conversation_id").asText();
+                assertTrue(Set.of("en_public_na","kz_public_na","ru_public_na").contains(name));
+                var directory=Path.of("../ml-service/tests/fixtures",name);
+                var approved=json.readTree(directory.resolve("request.json").toFile());
+                assertEquals(approved.get("conversation"),input.get("conversation"));
+                assertEquals(approved.get("checklist"),input.get("checklist"));
+                result.set("answers",json.readTree(directory.resolve("expected.json").toFile()).get("answers"));
+            }
             var diagnostics=((ObjectNode)result).putObject("diagnostics").put("provider","local-test").put("model","fake-http")
                 .put("prompt_version","synthetic-test").put("attempt_count",1).putNull("input_tokens").putNull("output_tokens")
                 .putNull("estimated_cost_usd").put("latency_ms",1);diagnostics.putArray("warnings");
@@ -213,5 +222,27 @@ class AutoEvaluationApiTest {
     @Test void missingAndInvalidStatusIdsDoNotCallPython()throws Exception{
         var body=payload();var reply=status(body);assertEquals(404,reply.code());assertEquals(body.get("request_id"),reply.body().at("/detail/request_id"));
         assertEquals(422,call("GET","/api/evaluation-requests/not-a-uuid",null).code());assertEquals(0,calls.get());
+    }
+    @Test void sequentialGroupItemsPinVersionAndRecoverLedgerWithoutRepeatingInference()throws Exception {
+        mode.set("batch");var payloads=new ArrayList<ObjectNode>();var snapshots=new ArrayList<JsonNode>();
+        for(String name:List.of("en_public_na","kz_public_na","ru_public_na")) {
+            var approved=json.readTree(Path.of("../ml-service/tests/fixtures",name,"request.json").toFile());
+            assertEquals(200,call("POST","/api/datasets/import",dataset(approved.get("conversation"))).code());
+            var body=payload().put("conversation_id",approved.at("/conversation/id").asText());
+            var result=auto(body);assertEquals(200,result.code(),result.raw());
+            assertEquals(1,result.body().get("checklist_version").asInt());assertEquals(100,result.body().at("/original_score/overall_score").asInt());
+            payloads.add(body);snapshots.add(result.body());
+            // Latest changes between items; every request still names its original v1 explicitly.
+            var draft=(ObjectNode)fixture.get("checklist").deepCopy();draft.remove(List.of("key","version"));draft.put("title","Synthetic newer batch rubric");
+            var head=call("GET","/api/checklists/synthetic-local",null).body().get("version").asText();
+            assertEquals(200,call("PUT","/api/checklists/synthetic-local?expected_version="+head,draft).code());
+        }
+        assertEquals(3,calls.get());app.close();boot();
+        for(int i=0;i<payloads.size();i++) {
+            var view=status(payloads.get(i));assertEquals("succeeded",view.body().get("status").asText());
+            assertEquals(snapshots.get(i),call("GET","/api/evaluations/"+view.body().get("evaluation_id").asText(),null).body());
+            assertEquals(snapshots.get(i),auto(payloads.get(i)).body());
+        }
+        assertEquals(3,calls.get());
     }
 }

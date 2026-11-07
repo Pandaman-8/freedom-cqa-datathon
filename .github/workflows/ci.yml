@@ -71,7 +71,7 @@ jobs:
       - name: Exact scoring reference
         run: python3 server/src/test/python/scoring_reference.py --check
       - name: Dependency-free JavaScript unit tests
-        run: node --experimental-default-type=module server/src/test/js/workspace.test.mjs
+        run: node --experimental-default-type=module --test server/src/test/js/*.test.mjs
       - name: Synthetic packaged HTTP regressions
         env:
           CQA_ORGANIZER_URL: ''
@@ -82,3 +82,4 @@ jobs:
           python3 -B server/src/test/python/organizer_smoke.py
           python3 -B server/src/test/python/review_smoke.py
           python3 -B server/src/test/python/auto_smoke.py
+          python3 -B server/src/test/python/batch_smoke.py
