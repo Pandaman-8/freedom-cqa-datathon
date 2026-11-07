@@ -5,6 +5,11 @@ Python 3.11+; tested here on Python 3.14. Java owns persistence, request-status
 reconciliation and deterministic scoring. This service returns model answers and
 grounded evidence, never authoritative totals. No dependency on `backend/`.
 
+Current review status: Nurtas accepted all 24 T09 synthetic labels and their evidence;
+one human reviewer, peer review pending. See the [T09 report](reports/t09-human-review-report.json)
+and the current T09/PR/T13 checklist at the end of this document. Older quality sections
+retain their historical status and do not override this later human review.
+
 ## Run from repository root
 
 ```bash
@@ -337,6 +342,8 @@ evidence для N/A и отсутствующего поведения; явны
 `cqa-dynamic/3`; модель и контракт остаются прежними. На момент первого отчёта patch
 не был применён. Последующая реализация после review описана ниже: patch сохранён
 как первоначальное предложение, его не нужно применять поверх текущего prompt.
+При подготовке PR архив переведён в zero-context diff без изменения предложенного
+содержимого, чтобы не хранить whitespace-only context lines.
 
 Offline до live: 304 основных теста и 4 теста ограничителя прогона прошли; общий
 валидатор — 72/72 fixtures. Итоговый полный offline-прогон: **308 passed, 1 warning
@@ -395,7 +402,8 @@ T13 E2E можно начать с явной фиксацией дефекто�
 `diagnostics.prompt_version` теперь `cqa-dynamic/3`. Contract 2.0.0, модель
 `openai/gpt-oss-20b`, provider adapter, validators, retry/deadline и Java API
 не менялись. Все 6 request.json и 6 expected.json совпадают с хешами baseline;
-разметка остаётся предварительной, без полученного человеческого подтверждения.
+На момент изменения prompt человеческое подтверждение ещё ожидалось; последующий
+review Нуртаса зафиксирован в разделе T09 ниже. Expected-файлы не менялись.
 
 [Новые offline-тесты](tests/test_prompt_quality.py) отдельно проверяют инструкции
 для двух ошибок, язык, релевантность evidence, порядок системных подтверждений
@@ -421,9 +429,10 @@ Warning — существующая депрекация httpx в Starlette Tes
 HTTP transports. Новых live-вызовов при этой доработке не было. Исторический отчёт и
 его ошибки не переписаны и не замаскированы xfail/skip.
 
-Prompt готов к одному повторному quality evaluation, но улучшение качества пока
-не измерено. **Следующую команду выполнять только после отдельного разрешения**,
-из корня репозитория, с настроенным подтверждённым Groq Free Plan:
+На момент подготовки prompt ожидался повторный quality evaluation. Этот проход
+теперь выполнен и сохранён: 24/24 совпадения меток, 6 HTTP 200, 6 attempts.
+Следующая команда оставлена для воспроизводимости; **не запускать заново и не удалять
+журнал ради повтора**. Будущие live-вызовы требуют отдельного разрешения:
 
 ```bash
 PYTHONPATH=ml-service ml-service/.venv/bin/python ml-service/scripts/quality_pass.py --run-id prompt-v3
@@ -441,3 +450,132 @@ PYTHONPATH=ml-service ml-service/.venv/bin/python ml-service/scripts/quality_pas
 Изменений общего Java ↔ Python контракта не требуется; несовместимости по схемам
 не обнаружено. Реальное Java E2E здесь не запускалось. Увеличение prompt может
 повлиять на tokens/latency и качество; это измеряется будущим разрешённым проходом.
+
+## T09: проверка Нуртаса и готовность Prompt v3 к PR
+
+Источник — [T09_Нуртас_review.json](reports/T09_Нуртас_review.json), точная копия
+предоставленного экспорта из Downloads. Его SHA-256:
+`47debaaa039441359da0d5bd6cd1cfe02f44ef77c3f9274384a6b76c68d2db8a`.
+Время создания экспорта: `2026-11-07T16:03:23.688Z`. Единственный human reviewer —
+**Нуртас**. Пользователь отдельно подтвердил личную проверку всех 24 меток и отсутствие
+повторной проверки вторым участником. Codex сверил файл, но не является вторым human reviewer.
+
+[Отчёт T09](reports/t09-human-review-report.json) содержит все 24 уникальные пары
+scenario/criterion, answer/value, ACCEPT, evidence_review=ok и хеши исходных fixtures.
+В исходном экспорте ACCEPT выражен через `review_status=good` и `chosen=proposed`;
+все значения сопоставлены с expected.json, включая scale:10. Сам экспорт не содержит
+хешей fixtures: привязка к текущим байтам выполнена при подготовке этого отчёта.
+
+| Язык | Проверено Нуртасом | ACCEPT | Evidence ok |
+|---|---:|---:|---:|
+| RU | 8 | 8 | 8 |
+| KZ | 8 | 8 | 8 |
+| EN | 8 | 8 | 8 |
+| Всего | 24 | 24 | 24 |
+
+Часть acceptance criteria T09 о проверке меток человеком теперь имеет подтверждение
+одного реального reviewer. Все шесть request.json и шесть expected.json сохранены
+побайтно и совпадают с хешами до первого live-прохода. Исторические baseline-отчёты
+не переписаны. Peer review **не выполнен**: второй проверки меток нет; подтверждения
+проверки shared boundaries и тестов вторым участником также не предоставлено.
+Последнее отдельно требуется общим Definition of Done; это не утверждение, будто
+T09 требует именно двух независимых разметчиков каждой метки. `gold_status` исходного
+файла остаётся `provisional_pending_joint_approval`. Полное закрытие T09/изменение
+plan.json или принятие T02 от имени второго участника здесь не выполняются.
+
+**24/24 ACCEPT — одобрение конечного набора эталонных меток, не доказательство общей
+точности модели.** Отдельный сохранённый проход v3 совпал с ними на 24/24 против
+22/24 у v2. Это одна малая синтетическая выборка; реальный DEV/CONTROL, длинные
+контексты, звук и полный официальный checklist этим не проверены.
+`evidence_review=ok` относится к проверенным эталонам, не означает автоматического
+принятия всех live-ответов. У v3 сохраняются 16 английских объяснений вместо RU/KZ;
+в `kz_public_na` обоснование GROSS покрывает одну операторскую реплику, а IDENTITY=na
+подкреплено косвенно ответом о часах работы. Эти замечания не изменяют принятые метки.
+
+Prompt v3 готов к **PR на review с перечисленными ограничениями**, а не к заявлению
+о завершённой качественной приёмке или автоматическому merge. Проверен diff от
+локального main для ветки `codex/ml-prompt-v3`, базовый HEAD `219fab2`; удалённая
+ветка не обновлялась. Runtime в этой доработке не менялся. Проверки:
+
+- Полный offline pytest: **326 passed, 1 warning in 11.13s**. Warning — существующая
+  депрекация httpx/Starlette TestClient; реальный HTTP блокируется тестовой фикстурой.
+- Контрактный валидатор: **72/72**, все четыре схемы равны plan.json, drift отсутствует.
+- Финальный `git diff main --check` проходит. У архивного proposal.patch убраны
+  whitespace-only context lines без изменения предложенного содержимого.
+- Проверены публичные ML-файлы и изменённые blobs единственного коммита ветки:
+  шаблоны ключей/токенов, private keys, подписанные URL, credential assignments и
+  совпадения с локально настроенными секретами. Значения секретов не выводились.
+  Секретов и клиентских данных в проверенном содержимом не обнаружено; это scoped
+  inspection, не математическая гарантия отсутствия любых возможных секретов.
+- `.env` и `.quality-run/` исключены из Git и не отслеживаются. В публичные отчёты
+  не скопированы полные live-ответы, DEV/CONTROL, записи звонков или закрытые материалы.
+
+Новых Groq-вызовов не было. Общий контракт, plan.json, server/, Java scoring и исходные
+expected не менялись. Peer review и актуализация статусов плана остаются отдельными
+действиями владельцев; PR/commit/push/merge в этой работе не выполнялись.
+
+## T13: технический checklist для совместной интеграции
+
+Это **подготовленный checklist, не выполненный E2E**. T13 зависит от T05, T10, T11,
+T12; полный DoD и T02 joint approval проверяются отдельно. Ответственность за Java
+реализацию и тесты остаётся у Фархата. Контракт 2.0.0 не требует изменений.
+
+Разрешённые входы — только точные шесть fixtures, перечисленные в отчёте T09:
+
+| Сценарий | Что проверить в полном пути UI → Java → Python → модель → Java → SQLite → UI |
+|---|---|
+| ru_public_na | GREETING=yes, IDENTITY=na, CLARITY=10, GROSS=no; нормализация N/A в Java |
+| kz_public_na | Те же метки; сохранение казахского Unicode; отдельное ревью смысла evidence |
+| en_public_na | Те же метки; точный переход UI к message_id и цитате |
+| ru_protected_violation | GREETING=no, IDENTITY=no, CLARITY=10, GROSS=yes; bot/system и повторные ISO timestamps; только текст звонка |
+| kz_protected_violation | Те же метки; понятность отдельно от грубости; цитаты без перевода |
+| en_protected_violation | LOCAL_CLOSING=no, IDENTITY=no, CLARITY=10, GROSS=yes; checklist version 2, изменённый ID |
+
+- [ ] Согласовать отдельный будущий live E2E и его бюджет; наличие checklist не даёт
+  нового разрешения на Groq. Только `openai/gpt-oss-20b`, подтверждённый Free Plan,
+  синтетические transcripts и rubric. DEV/CONTROL, реальные звонки/PII не отправлять.
+- [ ] Проверить готовность T05/T10/T11/T12 и документированные совместные решения T02.
+  Подготовить отдельную тестовую SQLite; импортировать в Java точные conversations
+  и checklist snapshots из fixtures. Сохранить исходные ID, роли, порядок, язык,
+  timestamps, key/version и rubric; не подменять v1/v2 на latest.
+- [ ] Java обслуживает UI и `/api` на 8080; один Python worker — на 8001. Health не
+  вызывает модель. Ключ находится только в Python-конфигурации, отсутствует в браузере,
+  Java payload, access logs и публичных отчётах.
+- [ ] Для каждого нового разрешённого E2E создать свежий request_id. UI передаёт в
+  Java explicit checklist_version; Java один раз фиксирует полные snapshots до HTTP,
+  сохраняет request ledger и не удерживает DB-транзакцию во время inference.
+- [ ] Выполнить реальный маршрут через Java `POST /api/evaluations/auto`, далее
+  `POST http://127.0.0.1:8001/v1/evaluate`, JSON/UTF-8, contract 2.0.0. Прямой запуск
+  quality_pass.py и старые журналы не засчитывать как Java E2E.
+- [ ] Java независимо проверяет schema/DTO/context, точные request_id/conversation_id/
+  checklist_key/checklist_version, полный набор критериев, answer/value, уровни,
+  N/A, flags и дословность evidence по pinned сообщениям. Никакой нормализации цитат
+  и доверия к ответу только потому, что его принял Python.
+- [ ] Java рассчитывает cqa-score/1 по pinned checklist: N/A исключает вес, flag не
+  становится штрафом. Python не возвращает authoritative totals. Java атомарно
+  сохраняет answers, original score snapshot, версии и диагностику; GET/reload
+  возвращает сохранённый результат, без пересчёта по latest.
+- [ ] В UI проверить все 24 answer/value, объяснения, признаки N/A/critical flag,
+  message jump, роли и timestamps. Известные RU/KZ English explanations зафиксировать
+  как quality limitation. Exact substring и смысловую достаточность проверять раздельно.
+- [ ] Офлайн через тестовый HTTP peer/mocks проверить отказ Java при wrong identity,
+  missing/duplicate/unknown criterion, лишних полях, неверных типах, NaN/Infinity,
+  неправильном N/A/уровне и поддельной цитате. Invalid result не сохраняется как успех.
+  Эти отрицательные проверки не отправлять реальной модели и не выдавать за live E2E.
+- [ ] Офлайн проверить missing config, 401/403, 429, 5xx, busy, oversize и timeout:
+  безопасный согласованный error envelope и request_id; никаких raw upstream ошибок.
+  Python ≤2 attempts / ≤65 s; Java connect ≤3 s / deadline ≤70 s; browser ≤75 s.
+  Автоматических Java/UI POST retries нет.
+- [ ] Проверить `GET /api/evaluation-requests/{request_id}`: pending/succeeded/failed/
+  unknown. Повтор того же ID не запускает модель заново; другой payload под тем же ID
+  даёт 409. После timeout/reload сначала reconciliation статуса; неопределённый исход
+  не превращается в скрытый replay. Timeout не гарантирует отмену inference/billing.
+- [ ] Сохранить минимальные доказательства: revisions Java/Python, scenario ID,
+  fresh request_id, pinned versions, HTTP/status/evaluation ID, prompt/model,
+  attempts, usage, latency, Java validation/save/UI результаты. Секреты, полный raw
+  provider output, реальные данные и приватную БД не включать в PR. Оба участника
+  отдельно подтверждают shared boundaries и результаты перед закрытием T13.
+
+T13 можно использовать для технической проверки интеграции с известными ограничениями
+качества. Его прохождение не закрывает автоматически T14/T15 и не доказывает качество
+на длинных/реальных разговорах или звук; без аудио не оценивать дикцию и интонацию.
