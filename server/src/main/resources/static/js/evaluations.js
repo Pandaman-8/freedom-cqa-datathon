@@ -3,11 +3,13 @@ import {Latest} from './state.js';
 import {display} from './json.js';
 import {answerEditor, blankAnswer, validateAnswers} from './answers.js';
 import {review} from './review.js';
+import {automatic} from './auto.js';
 import {transcript} from './conversations.js';
 import {el, button, select, note, badge, messageNode, formShell, mutation, status} from './ui.js';
 export function manual(root,{drafts,onSaved}) {
-  let conversation=null, checklist=null, activeKey=null;
+  let conversation=null, checklist=null, activeKey=null, auto=null;
   function render() {
+    auto?.dispose();
     if(!conversation||!checklist) {activeKey=null;root.replaceChildren(el('h2',{text:'Ручная оценка'}),note('Выберите диалог и конкретную версию чек-листа.'));return;}
     const source=conversation, pinned=checklist;
     const key='manual:'+JSON.stringify([source.id,pinned.key,String(pinned.version)]); activeKey=key;
@@ -26,8 +28,8 @@ export function manual(root,{drafts,onSaved}) {
         if(activeKey===key) await onSaved(saved.id);
       });
     });
-    const ai=el('div',{class:'notice'},'AI evaluation будет доступна после T13. Java возвращает 501 EVALUATOR_UNCONFIGURED.');
-    root.replaceChildren(ai,form);
+    auto=automatic(source,pinned,{drafts,onSaved});
+    root.replaceChildren(auto.node,form);
   }
   render();
   return {conversation(value){conversation=value;render();},checklist(value){checklist=value;render();}};

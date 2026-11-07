@@ -95,3 +95,30 @@ WHEN NEW.evaluation_id IS NOT OLD.evaluation_id OR NEW.revision <> OLD.revision 
 BEGIN SELECT RAISE(ABORT, 'invalid_review_revision'); END;;
 CREATE TRIGGER IF NOT EXISTS evaluation_reviews_no_delete BEFORE DELETE ON evaluation_reviews
 BEGIN SELECT RAISE(ABORT, 'immutable_review_revision'); END;;
+
+-- T13 adds a durable inference ledger; source/evaluation/review tables stay unchanged.
+CREATE TABLE IF NOT EXISTS evaluation_requests (
+    request_id TEXT PRIMARY KEY NOT NULL,
+    payload_json TEXT NOT NULL,
+    pinned_request_json TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('pending','succeeded','failed','unknown')),
+    evaluation_id TEXT UNIQUE REFERENCES evaluations(id),
+    error_json TEXT,
+    http_status INTEGER,
+    diagnostics_json TEXT,
+    created_at TEXT NOT NULL,
+    completed_at TEXT,
+    CHECK ((status='pending' AND evaluation_id IS NULL AND error_json IS NULL AND http_status IS NULL
+                AND diagnostics_json IS NULL AND completed_at IS NULL)
+        OR (status='succeeded' AND evaluation_id IS NOT NULL AND error_json IS NULL AND http_status=200
+                AND diagnostics_json IS NOT NULL AND completed_at IS NOT NULL)
+        OR (status IN ('failed','unknown') AND evaluation_id IS NULL AND error_json IS NOT NULL
+                AND http_status BETWEEN 400 AND 599 AND diagnostics_json IS NULL AND completed_at IS NOT NULL))
+);;
+CREATE TRIGGER IF NOT EXISTS evaluation_requests_terminal BEFORE UPDATE ON evaluation_requests
+WHEN OLD.status <> 'pending' OR NEW.status = 'pending'
+    OR NEW.request_id IS NOT OLD.request_id OR NEW.payload_json IS NOT OLD.payload_json
+    OR NEW.pinned_request_json IS NOT OLD.pinned_request_json OR NEW.created_at IS NOT OLD.created_at
+BEGIN SELECT RAISE(ABORT, 'immutable_request_history'); END;;
+CREATE TRIGGER IF NOT EXISTS evaluation_requests_no_delete BEFORE DELETE ON evaluation_requests
+BEGIN SELECT RAISE(ABORT, 'immutable_request_history'); END;;

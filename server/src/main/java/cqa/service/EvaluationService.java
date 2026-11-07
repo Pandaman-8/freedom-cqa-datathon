@@ -48,11 +48,6 @@ public class EvaluationService {
         writes.executeWithoutResult(status -> repository.insert(result));
         return result; // Never look up latest while saving or reading the snapshot.
     }
-    public void auto(AutoRequest request) {
-        json.validateShape(request);
-        pin(request.conversation_id(), request.checklist_key(), request.checklist_version());
-        throw new ApiFailure(501,"EVALUATOR_UNCONFIGURED","ML evaluator is not configured.");
-    }
     public List<EvaluationView> list(String conversation) { return reviews.list(conversation); }
     public EvaluationView get(String id) { return reviews.get(id); }
 }

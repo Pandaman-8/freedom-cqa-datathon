@@ -40,7 +40,7 @@ async function health(){
     const data=await response.json();if(!ticket.current())return;
     if(!response.ok||data.status!=='ok'||data.service!=='freedom-cqa-java')throw new Error();
     card.dataset.state='ok';label.textContent='Java доступен';document.querySelector('#service-version').textContent=data.version;
-    detail.textContent='Ручная оценка доступна. AI evaluation — после T13.';
+    detail.textContent='Ручная оценка доступна. AI требует настроенного локального ML и проверенной собственной синтетики.';
   }catch{if(ticket.current()){card.dataset.state='error';label.textContent='Нет подключения';detail.textContent='Проверьте запуск Java и повторите чтение.';}}
   finally{clearTimeout(timer);if(ticket.current())retry.disabled=false;}
 }

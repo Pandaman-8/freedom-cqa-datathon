@@ -94,7 +94,7 @@ def main():
             def start(cwd):
                 nonlocal process
                 process = subprocess.Popen(["java", "-jar", str(JAR), f"--server.port={port}",
-                    f"--cqa.db-path={database}", "--spring.main.banner-mode=off", "--logging.level.root=WARN"],
+                    f"--cqa.db-path={database}", "--cqa.ml-url=", "--spring.main.banner-mode=off", "--logging.level.root=WARN"],
                     env=environment, cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
                 for _ in range(300):
                     assert process.poll() is None, "Java child exited"

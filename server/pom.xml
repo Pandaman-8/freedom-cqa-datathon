@@ -45,6 +45,12 @@
     <build>
         <resources>
             <resource>
+                <directory>${project.basedir}/../ml-service/tests/fixtures</directory>
+                <targetPath>ml/synthetic</targetPath>
+                <filtering>false</filtering>
+                <includes><include>*/request.json</include></includes>
+            </resource>
+            <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
             </resource>

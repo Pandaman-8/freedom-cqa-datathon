@@ -177,7 +177,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
   await test('audio stays unloaded until explicit action, organizer safe503 and honest AI state',async()=>{
    nav('conversations');source('UI-SYNTHETIC:EN');await selectedSource('UI-SYNTHETIC:EN');const audio=doc.querySelector('#conversation-workspace audio');
    assert(audio&&!audio.getAttribute('src')&&audio.preload==='none','no automatic audio request');
-   assert(doc.querySelector('#manual-workspace').textContent.includes('после T13'),'honest AI state');
+   assert(doc.querySelector('#manual-workspace').textContent.includes('Без настройки Java возвращает 501'),'honest AI state');
    nav('datasets');doc.querySelector('#group-id').value='SYNTHETIC';click('Fetch dataset');await until(()=>doc.querySelector('#dataset-result').dataset.state==='error','safe organizer error');
    assert(doc.querySelector('#dataset-result').textContent.includes('не настроено'),'fixed error');
    assert(!calls.some(c=>c.path.includes('/api/evaluations/auto')),'no AI requests');
