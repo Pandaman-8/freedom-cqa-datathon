@@ -1,0 +1,108 @@
+{
+  "contract_version": "2.0.0",
+  "request_id": "22222222-2222-4222-8222-222222222222",
+  "conversation": {
+    "id": "SYNTHETIC:en_protected_violation",
+    "dataset_group_id": "SYNTHETIC",
+    "conversation_id": "en_protected_violation",
+    "channel": "agent chat",
+    "language": "EN",
+    "messages": [
+      {
+        "id": "m0001",
+        "timestamp": "00:01",
+        "speaker": "client",
+        "text": "Change the phone number on my account."
+      },
+      {
+        "id": "m0002",
+        "timestamp": "00:02",
+        "speaker": "bot",
+        "text": "Hello, I am a bot. An operator will join."
+      },
+      {
+        "id": "m0003",
+        "timestamp": "00:03",
+        "speaker": "operator",
+        "text": "You are an idiot. I already changed your phone without verifying your identity."
+      },
+      {
+        "id": "m0004",
+        "timestamp": "00:04",
+        "speaker": "client",
+        "text": "Why did you not verify my identity?"
+      }
+    ]
+  },
+  "checklist": {
+    "key": "synthetic-local",
+    "version": 2,
+    "title": "Own synthetic service rubric",
+    "description": "Fictional conversations. Company facts and audio are not verified.",
+    "sections": [
+      {
+        "id": "quality",
+        "title": "Quality"
+      }
+    ],
+    "criteria": [
+      {
+        "id": "LOCAL_CLOSING",
+        "section_id": "quality",
+        "title": "LOCAL_CLOSING",
+        "instruction": "Yes if the operator closes with a farewell.",
+        "kind": "binary",
+        "weight": 25,
+        "allow_na": false,
+        "na_rule": null,
+        "levels": []
+      },
+      {
+        "id": "LOCAL_IDENTITY",
+        "section_id": "quality",
+        "title": "LOCAL_IDENTITY",
+        "instruction": "Yes if identity verification occurs before a protected account action.",
+        "kind": "binary",
+        "weight": 25,
+        "allow_na": true,
+        "na_rule": "Only a general public question is asked, without a protected account action.",
+        "levels": []
+      },
+      {
+        "id": "LOCAL_CLARITY",
+        "section_id": "quality",
+        "title": "LOCAL_CLARITY",
+        "instruction": "Rate understandable wording using the configured levels, independently of politeness and external company facts.",
+        "kind": "scale",
+        "weight": 50,
+        "allow_na": false,
+        "na_rule": null,
+        "levels": [
+          {
+            "value": 0,
+            "description": "No understandable response."
+          },
+          {
+            "value": 4,
+            "description": "Some ambiguous wording."
+          },
+          {
+            "value": 10,
+            "description": "Clear, understandable wording. Assess clarity separately from politeness and factual correctness."
+          }
+        ]
+      },
+      {
+        "id": "LOCAL_GROSS",
+        "section_id": "quality",
+        "title": "LOCAL_GROSS",
+        "instruction": "Yes if the operator explicitly insults the client; no otherwise. A separate weightless violation flag.",
+        "kind": "flag",
+        "weight": 0,
+        "allow_na": false,
+        "na_rule": null,
+        "levels": []
+      }
+    ]
+  }
+}

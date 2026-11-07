@@ -1,0 +1,56 @@
+{
+  "answers": [
+    {
+      "criterion_id": "LOCAL_GREETING",
+      "answer": "yes",
+      "value": null,
+      "explanation": "The operator greets and introduces themselves.",
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "quote": "Hello, I am Ada. Support opens at 09:00."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_IDENTITY",
+      "answer": "na",
+      "value": null,
+      "explanation": "The question concerns public opening hours; no protected action is requested.",
+      "evidence": [
+        {
+          "message_id": "m0001",
+          "quote": "What time does support open?"
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_CLARITY",
+      "answer": "scale",
+      "value": 10,
+      "explanation": "The wording is understandable; this does not verify facts or politeness.",
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "quote": "Hello, I am Ada. Support opens at 09:00."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_GROSS",
+      "answer": "no",
+      "value": null,
+      "explanation": "The checked operator turns contain no insult.",
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "quote": "Hello, I am Ada. Support opens at 09:00."
+        },
+        {
+          "message_id": "m0004",
+          "quote": "Happy to help. Goodbye."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+# Freedom CQA — Python ML service
+
+Independent FastAPI service for T08/T09/T10, contract **2.0.0**, localhost **8001**.
+Python 3.11+; tested here on Python 3.14. Java owns persistence, request-status
+reconciliation and deterministic scoring. This service returns model answers and
+grounded evidence, never authoritative totals. No dependency on `backend/`.
+
+## Run from repository root
+
+```bash
+python3 -m venv ml-service/.venv
+ml-service/.venv/bin/python -m pip install -r ml-service/requirements-dev.txt
+cp ml-service/.env.example ml-service/.env
+```
+
+Edit the private `ml-service/.env`: set `GROQ_API_KEY` and, **only after verifying
+that the Groq organization is on Free Plan**, set `GROQ_FREE_PLAN_CONFIRMED=true`.
+The default candidate is `openai/gpt-oss-20b`; `openai/gpt-oss-120b` is also supported.
+Do not paste secrets into chat or commit `.env`. No paid mode is enabled.
+
+```bash
+ml-service/.venv/bin/python -m uvicorn app.main:app \
+  --app-dir ml-service --env-file ml-service/.env \
+  --host 127.0.0.1 --port 8001 --workers 1 --no-access-log
+```
+
+Use **one process/worker**: the in-flight limit is process-local. `GET /health`
+performs no provider call; 200 means configured and idle, 503 means unavailable or
+busy. It does not verify credentials, account billing, quotas or remote availability.
+Without a key/Free Plan confirmation, evaluate returns honest **501
+EVALUATOR_UNCONFIGURED**, never synthetic successful answers.
+
+```bash
+curl -i http://127.0.0.1:8001/health
+curl -i --max-time 75 http://127.0.0.1:8001/v1/evaluate \
+  -H 'Content-Type: application/json' \
+  --data-binary @ml-service/tests/fixtures/kz_public_na/request.json
+```
+
+A successful response contains identity echoes, `answers` and `diagnostics`, exactly
+as in the published schema. `answers[].value` is a configured discrete level, not
+a weighted score. For a protected-action/insult case use
+`ml-service/tests/fixtures/kz_protected_violation/request.json`; the changed rubric
+case is `ml-service/tests/fixtures/en_protected_violation/request.json`.
+
+The curl fixtures have a fixed request UUID for a single manual smoke. Generate a
+new UUID for each intentional new evaluation. This stateless ML service does not
+deduplicate calls or persist statuses; Java owns the request ledger. A repeated
+direct curl call can run inference again. Never auto-replay a timed-out POST.
+
+Explicit live smoke, once the free account is configured:
+
+```bash
+ml-service/.venv/bin/python ml-service/scripts/smoke.py --case kz_public_na
+# All six, at most twelve provider attempts total:
+ml-service/.venv/bin/python ml-service/scripts/smoke.py
+```
+
+The script sends only bundled own synthetic requests to localhost, uses fresh UUIDs,
+prints safe metadata and label comparison counts, and stops on an HTTP failure.
+Its expected labels are **proposals awaiting human review**, not approved gold.
+There is no live model call in pytest or CI.
+
+For a diagnostic probe capped at **one provider attempt**, including no repair/retry:
+
+```bash
+PYTHONPATH=ml-service ml-service/.venv/bin/python ml-service/scripts/live_once.py
+```
+
+This starts an isolated temporary localhost server on a free port, sends only
+`kz_public_na`, prints status/usage without answers, and stops the server. An existing
+service on :8001 is untouched. Restart that service separately after code changes.
+
+## Validation and failure behavior
+
+- Strict UTF-8 JSON rejects duplicates, trailing text and nonfinite/overflow numbers.
+  Published Draft 2020-12 schemas are loaded directly from `../contracts/`; deploy
+  from the repository with that directory present. Pydantic forbids extra fields
+  and coercion, while preserving the contract's integer equivalence `2.0 == 2`.
+  Runtime floating-point parsing follows the published Python fixture tool's
+  binary64 policy; this is not proof of every Java BigDecimal edge case.
+- Independent context checks enforce complete criterion sets, composition, discrete
+  levels, N/A rules, identity echoes, positional IDs and exact unnormalized evidence.
+  Schema-valid evidence does not prove semantic relevance; human review remains needed.
+  Text/order/timestamps are preserved, including repeated times and IDs beyond m9999.
+- Dynamic prompt includes the full checklist and original conversation. Transcript
+  instructions are treated as evidence, not authority. No eight-criterion assumption.
+  Unsupported audio-only/factual judgments must not become invented evidence or N/A.
+  All results carry `DOMAIN_FACT_UNVERIFIED` because no company KB is provided;
+  voice transcripts also carry `AUDIO_NOT_ASSESSED`.
+- Groq GPT-OSS requests use `json_schema` with `strict: true`. An internal decoding
+  schema derives the same field shapes from the published schema and expresses
+  answer/value pairing with `anyOf`, using Groq's supported subset. This is only a
+  generation aid: the unchanged full published schema, Pydantic and context checks
+  still decide acceptance. No markdown extraction or silent answer correction.
+  GPT-OSS uses `include_reasoning=false`, `reasoning_effort=low`; no unsupported
+  `reasoning_format` parameter. The prompt retains literal RU/KZ text and enumerates
+  each configured criterion's allowed answer/value pairs and all source message IDs.
+- Connect ≤5s, each complete streaming read ≤30s, full evaluation ≤65s, at most two
+  attempts total, backoff ≤2s. No SDK/HTTP retries below the evaluator. Invalid
+  output gets one repair with safe rule codes. Timeout/429/5xx may retry within the
+  same budget. Auth, permission, context overflow and missing config do not retry.
+  Retry-After is never shortened; if it exceeds budget, return the mapped error.
+- Request ≤1 MiB, upstream/result ≤256 KiB, ≤100 criteria. No truncation. Model output
+  budget is 4096 tokens; large rubrics may exceed it and fail explicitly. One evaluation
+  in flight; others get 503. Cancellation does not prove provider inference stopped.
+- Usage sums all attempts, including rejected completions. Missing usage produces null
+  aggregates/cost. Confirmed free usage costs 0; it is not a paid-tier estimate.
+  No prompts, answers, raw provider exceptions, keys or customer text are logged.
+
+Local `ml_service.validation` warnings now distinguish JSON parsing, JSON Schema,
+Pydantic, criterion completeness, answer kind, discrete values, N/A, evidence,
+model identity, truncation, refusal and malformed provider envelopes. Each warning
+contains only a static category/code, attempt number, known safe criterion/message
+IDs (otherwise null), and numeric answer/evidence indices. No quotes, explanations,
+raw validation messages, provider bodies or reasoning are logged. Repair receives
+the same sanitized coordinates. The public HTTP error JSON is unchanged.
+
+Example local warning payload (not an additional HTTP response field):
+
+```json
+{"category":"evidence_grounding","code":"EXACT_EVIDENCE","criterion_id":"LOCAL_GREETING","message_id":"m0002","attempt":1,"answer_index":0,"evidence_index":0}
+```
+
+`PROVIDER_TRUNCATED` means the provider reported `finish_reason=length`, not a quote
+failure. `SCHEMA_INVALID` means the full canonical schema failed; `EXACT_EVIDENCE`
+means the selected quote is not a nonblank exact substring of its source message.
+Neither logs nor a substring match establish semantic correctness.
+
+Only exact conversations registered in the bundled synthetic fixtures are admitted;
+changing just the dataset label cannot authorize real transcripts. Checklist edits
+are accepted dynamically, but must also contain no private data. To add **own
+synthetic** text, add a reviewed synthetic request in `tests/fixtures/<case>/request.json`
+and restart. This is not a production access-control boundary. Real-data mode is
+intentionally unavailable pending policy approval.
+
+## Tests and acceptance limits
+
+```bash
+PYTHONPATH=ml-service ml-service/.venv/bin/python -m pytest -q ml-service/tests
+```
+
+Tests exercise all 72 published fixtures through this service's own validators,
+six RU/KZ/EN scenarios, HTTP envelopes, exact evidence, changed criteria, mocked
+provider transport, usage accounting, deadlines, cancellation and concurrency.
+Injected model replies exist **only in tests**. For the separate shared artifact
+drift check, use the isolated tooling environment from `contracts/README.md`.
+
+See [provider review](config/provider-review.md) for sources, pricing and data policy.
+Live model quality/free-account checks, human gold review and Java↔Python integration
+remain unverified. T02 joint acceptance is not inferred; `plan.json` and shared files
+are unchanged. This work does not claim completion of every T08/T09/T10 acceptance gate.
+
+Initial verification recorded on 2026-11-07 (Python 3.14.8), before the live-output fix:
+
+- `PYTHONPATH=ml-service /tmp/freedom-cqa-ml-validation/bin/python -m pytest -q ml-service/tests`
+  → **149 passed, 1 warning in 2.22s**. The warning is Starlette's deprecation of
+  its httpx-based TestClient, not a failed assertion. TestClient needed execution
+  outside the restricted sandbox because its cross-thread event loop stalled there.
+  No external provider calls occurred.
+- `/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py` in the
+  separate tooling environment → **4 schemas, no plan drift, all 72 fixtures pass**.
+- Temporary real Uvicorn process on `127.0.0.1:8001` with the API key explicitly
+  cleared: health 503/configured=false; valid synthetic POST 501 with preserved UUID;
+  obsolete contract 422; invalid UTF-8 422; request above 1 MiB 413. Server stopped
+  after the check. Successful inference HTTP responses were tested with injected
+  doubles and a mocked Groq transport, **not a live LLM**.
+- `pip check` → no broken requirements. Existing tracked files were unchanged;
+  all additions are inside `ml-service/`. No commit, push, merge or reset performed.
+
+Follow-up verification on 2026-11-07:
+
+- Same pytest command: **175 passed, 1 warning in 2.46s**, including regression tests
+  for safe validation locations, raw-text/key exclusion, finish reasons, structured
+  schema generation without shared-schema mutation, literal Kazakh prompt text,
+  exact evidence rejection and the one-attempt probe budget.
+- Separate contract validator: **all 72 fixtures pass; no schema/plan drift**.
+- Exactly **one live Groq call** through real localhost HTTP using `live_once.py`:
+  **HTTP 200**, `openai/gpt-oss-20b`, contract `2.0.0`, four validated answers,
+  2485 input / 567 output tokens, estimated Free Plan cost **0 USD**. No retry.
+  This confirms this KZ request passed structural and exact-grounding validation;
+  it does not establish multilingual accuracy or human-approved gold labels.
+- The historical reported 502 cannot be assigned to a specific validator after the
+  fact: the previous implementation discarded its reason and no original response
+  was available. Confirmed defects were missing diagnostic provenance, merged
+  completion failure reasons, and JSON-object-only generation without schema
+  enforcement. The successful new probe does not prove which one caused that run.
+
+## T11 integration verification — 2026-11-07
+
+This section records evidence, not a replacement task tracker. The existing
+`plan.json` is unchanged; it still records T11 as `planned`. Python technical
+acceptance checks below pass. Formal closure additionally requires Farhat's review
+and completion evidence in the owner-maintained plan; neither is inferred here.
+
+Three defects were reproduced by six initially failing regression cases and fixed:
+
+1. An asyncio timer cannot run during synchronous code. A late provider completion
+   or validation could return HTTP 200 after its 30s/65s limit. Explicit monotonic
+   checks now reject late success and prevent another attempt after the total
+   deadline, including after a delayed backoff wakeup. The async cancellation timers
+   remain. This does not preempt CPU work or guarantee upstream cancellation.
+2. An HTTP 400 provider rejection with HTML/invalid JSON or an oversized body was
+   misclassified as invalid model output and retried. It now returns safe HTTP 502
+   `EVALUATOR_PROVIDER_ERROR` without retry. Explicit `json_validate_failed` repairs,
+   timeout/429/5xx retry rules and context/auth mappings are preserved.
+3. Valid MIME `application/json; charset="UTF-8"` was rejected. Parameter parsing
+   now accepts quoted UTF-8 while still rejecting unsupported encodings/media types.
+   JSON parsing, field validation and evidence rules are unchanged.
+
+| T11 acceptance criterion | Verification | Result |
+|---|---|---|
+| Reject missing/unknown/duplicate criteria, forged/blank quotes, extra fields, duplicate keys and nonfinite numbers | Shared raw fixtures plus `/v1/evaluate` negative model-output tests, including Unicode and numeric types | PASS |
+| Shared fixtures through Python transport and Java-facing JSON checks; no fabricated N/A | All 72 fixtures at their proper wire boundaries, independent final-schema checks, changed rubrics, allowed/forbidden N/A, flags, exact identity echoes | PASS on Python side |
+| Timeout/429/auth/version/size failures have agreed safe errors and request IDs | Real FastAPI handler + Groq adapter + MockTransport; bounded attempt counts, deadlines, Retry-After, input/output limits, busy recovery | PASS |
+
+Fixture coverage is explicit: all **72** run through application validators.
+Additionally, `test_fixture_transport.py` executes **22 request + 4 provider-output**
+fixtures through the actual `/v1/evaluate` route. The other **38 result + 8 error**
+fixtures are outbound documents, so their unchanged bytes are replayed using a
+test-only ASGI HTTP transport and checked by the service's Java-facing validators.
+They are not POST input payloads. This tests Python wire behavior, not Java/Jackson.
+
+Additional HTTP coverage includes 100/101 criteria, exactly/above 1 MiB request
+and 256 KiB provider-response boundaries, final envelope size after metadata,
+scale N/A, custom discrete levels, weightless flags, wrong quote characters,
+malformed model JSON, 401/403/429/5xx, context overflow and connection/timeout errors.
+The existing missing-key, readiness and concurrency checks are retained. Tests use
+short real async timers and a controlled monotonic clock to exercise the 65s boundary
+without sleeping for 65 seconds; separate assertions fix the production constants.
+
+Results from the repository root, Python 3.14.8:
+
+```text
+PYTHONPATH=ml-service /tmp/freedom-cqa-ml-validation/bin/python -m pytest -q ml-service/tests
+304 passed, 1 warning in 11.11s
+
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+PASS: 4 schemas; no plan drift; all 72 fixtures (16 positive, 23 schema, 28 context, 5 parser).
+```
+
+The pytest warning is the previously observed Starlette/httpx TestClient deprecation.
+`pip check` reports no broken requirements. HTTP tests ran outside the restricted
+sandbox for TestClient's cross-thread event loop. An autouse test guard rejects both
+real sync/async httpx transports and fails teardown even if the application catches
+that exception. All provider tests use doubles/MockTransport; **zero live Groq calls**
+were made for T11, and the private `.env` was not read or changed.
+
+Ready for joint Java ↔ Python HTTP integration on the authorized synthetic fixtures.
+Actual Java execution, Jackson parity, persistence/request-ledger behavior and peer
+acceptance remain separate checks. The synthetic-only data policy remains in effect.
+No shared schemas, contracts, Java files, scoring or plan contents were modified.

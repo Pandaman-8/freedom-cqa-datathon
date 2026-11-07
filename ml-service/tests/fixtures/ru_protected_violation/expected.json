@@ -1,0 +1,52 @@
+{
+  "answers": [
+    {
+      "criterion_id": "LOCAL_GREETING",
+      "answer": "no",
+      "value": null,
+      "explanation": "The first operator turn lacks the required behavior.",
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "quote": "Вы идиот. Я уже изменил телефон без проверки личности."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_IDENTITY",
+      "answer": "no",
+      "value": null,
+      "explanation": "A protected action was performed without prior verification.",
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "quote": "Вы идиот. Я уже изменил телефон без проверки личности."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_CLARITY",
+      "answer": "scale",
+      "value": 10,
+      "explanation": "The wording is understandable; this does not verify facts or politeness.",
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "quote": "Вы идиот. Я уже изменил телефон без проверки личности."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_GROSS",
+      "answer": "yes",
+      "value": null,
+      "explanation": "An explicit insult is present.",
+      "evidence": [
+        {
+          "message_id": "m0004",
+          "quote": "Вы идиот. Я уже изменил телефон без проверки личности."
+        }
+      ]
+    }
+  ]
+}
