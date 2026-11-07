@@ -2,7 +2,7 @@ import json
 
 from .validation import ROOT, SCHEMAS
 
-PROMPT_VERSION = "cqa-dynamic/2"
+PROMPT_VERSION = "cqa-dynamic/3"
 SYSTEM = (ROOT / "prompts/evaluate-v1.txt").read_text(encoding="utf-8")
 
 

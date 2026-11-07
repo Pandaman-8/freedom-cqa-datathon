@@ -1,0 +1,2 @@
+# Private local quality-run ledger and synthetic model outputs; never publish raw responses.
+.quality-run/

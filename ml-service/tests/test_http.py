@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from app.prompt import SYSTEM
 from app.provider import GroqProvider
 from app.validation import CONTRACTS, ROOT, strict_loads, validate_context, validate_shape
 from conftest import ScriptedProvider, reply
@@ -77,6 +78,9 @@ def test_ru_kz_en_synthetic_http_with_injected_test_provider(settings, path):
     validate_shape("evaluation_result", response.json())
     validate_context("evaluation_result", response.json(), request)
     assert response.json()["answers"] == output["answers"]
+    assert response.json()["diagnostics"]["prompt_version"] == "cqa-dynamic/3"
+    assert provider.messages[0][0] == {"role": "system", "content": SYSTEM}
+    assert json.loads(provider.messages[0][1]["content"])["conversation"] == request["conversation"]
     assert "AUDIO_NOT_ASSESSED" in response.json()["diagnostics"]["warnings"] if request["conversation"]["channel"] == "voice call" else True
 
 
