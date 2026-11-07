@@ -2920,16 +2920,15 @@
         "python3 server/src/test/python/scoring_reference.py --check",
         "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
         "python3 -B server/src/test/python/organizer_smoke.py --serve (packaged HTTP/restart assertions plus actual browser checks)",
-        "Peer review of the new Java organizer boundary/error codes, privacy and test evidence remains pending.",
+        "Nurtas APPROVED 2026-11-07 after ed21ee0, reported by Farhat in chat; PR5 merged as 22d5b21. No separate GitHub Review is claimed.",
         "Real organizer GET: NOT RUN. Explicit permission is required before accessing that endpoint."
       ],
       "estimate_hours": 0.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "in_progress",
+      "status": "done",
       "risks_and_blockers": [
-        "Technical implementation and automated/browser verification completed; mandatory T07 peer review remains outstanding. T06 approval does not approve T07.",
         "Real organizer GET NOT RUN. Signature validity/expiry, real service availability and access to another group_id remain unverified; preserved query bytes do not guarantee authorization.",
-        "Java-only organizer errors add scoped ORGANIZER_* codes without modifying ML contract2.0.0 or shared schemas. Review those codes and the UI behavior before merge.",
+        "Java-only organizer errors add scoped ORGANIZER_* codes without modifying ML contract2.0.0 or shared schemas. Those codes and UI behavior were included in the final peer approval reported by Farhat.",
         "Engineering limits: group_id<=200 Unicode code points, response<=16MiB, connect default3s/max5s, complete-response default10s/max30s. Non-identity encoding and all redirects are rejected.",
         "Only minimal fetch form/group counters implemented. Conversation viewer/editor/evaluation/review UI remain T12/T14; Java-to-Python HTTP remains T13."
       ],
@@ -3067,7 +3066,7 @@
           "details": "Protected contracts, ML, legacy backend/frontend, AGENTS, scoring code and T06 review/repository files unchanged, including frontend/package-lock.json. No official signed URI, real datasets, SQLite/PDF files or secrets added to diff. Only T07 changed in plan after the separate T06 closure commit."
         },
         {
-          "kind": "peer_review_pending",
+          "kind": "historical_peer_review_pending",
           "technical_status": "implemented_and_verified",
           "formal_status": "in_progress",
           "acknowledgment": null,
@@ -3076,7 +3075,28 @@
             "Shared parser/import reuse, no changes to ML/scoring/review semantics, privacy and synthetic evidence.",
             "Minimal UI states and5894 JUnit/HTTP/browser verification evidence."
           ],
-          "details": "No T07 peer approval is claimed. Real organizer GET remains a separately reported limitation, not a synthetic-test PASS."
+          "details": "No T07 peer approval is claimed. Real organizer GET remains a separately reported limitation, not a synthetic-test PASS.",
+          "superseded_by": "Final approval below; this entry describes the pre-review implementation state only."
+        },
+        {
+          "date": "2026-11-07",
+          "kind": "final_peer_approval_and_closure",
+          "status": "done",
+          "reviewer": "Nurtas",
+          "approval": "APPROVED",
+          "acknowledgment_source": "Farhat explicitly relayed Nurtas final peer approval in this task, 2026-11-07. Not claimed as a separate GitHub Review. No remaining blocking comments reported.",
+          "reviewed_commit": "ed21ee0dfe1152f6f9d4c25615fedacc972bcb9f",
+          "pr": "https://github.com/Pandaman-8/freedom-cqa-datathon/pull/5",
+          "merge_commit": "22d5b213f0d8e6cd163f70d777db10897e8308a1",
+          "merge_verification": "GitHub PR metadata confirms merged=true and this merge SHA; local main synchronized with origin.",
+          "regression": "After ed21ee0 fix: clean verify BUILD SUCCESS, 5900 JUnit, 0 failures/errors/skipped; all three null-scheme URI and actual HTTP503 cases pass, no URL leaks or SQLite changes.",
+          "contract_validation": "PASS: 4 Draft2020-12 schemas, no plan drift, 72 fixtures; contract2.0.0 unchanged.",
+          "scoring_reference": "PASS: 5184 exact Fraction cases, all score fields.",
+          "synthetic_http": "PASS: packaged organizer_smoke.py after fix, temporary SQLite/restart, synthetic upstream only.",
+          "browser_verification": "Prior T07 actual browser evidence above retained; not rerun for the URI-only fix.",
+          "ci": "PASS, reported explicitly by Farhat with final peer approval.",
+          "real_organizer_get": "NOT RUN",
+          "real_data_external_inference": "NOT RUN"
         }
       ],
       "requirement_ids": [
