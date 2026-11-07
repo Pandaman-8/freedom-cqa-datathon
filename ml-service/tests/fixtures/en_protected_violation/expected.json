@@ -1,0 +1,52 @@
+{
+  "answers": [
+    {
+      "criterion_id": "LOCAL_CLOSING",
+      "answer": "no",
+      "value": null,
+      "explanation": "No operator farewell appears in the checked conversation.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "You are an idiot. I already changed your phone without verifying your identity."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_IDENTITY",
+      "answer": "no",
+      "value": null,
+      "explanation": "A protected action was performed without prior verification.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "You are an idiot. I already changed your phone without verifying your identity."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_CLARITY",
+      "answer": "scale",
+      "value": 10,
+      "explanation": "The wording is understandable; this does not verify facts or politeness.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "You are an idiot. I already changed your phone without verifying your identity."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_GROSS",
+      "answer": "yes",
+      "value": null,
+      "explanation": "An explicit insult is present.",
+      "evidence": [
+        {
+          "message_id": "m0003",
+          "quote": "You are an idiot. I already changed your phone without verifying your identity."
+        }
+      ]
+    }
+  ]
+}

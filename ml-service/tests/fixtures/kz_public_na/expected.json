@@ -1,0 +1,56 @@
+{
+  "answers": [
+    {
+      "criterion_id": "LOCAL_GREETING",
+      "answer": "yes",
+      "value": null,
+      "explanation": "The operator greets and introduces themselves.",
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "quote": "Сәлеметсіз бе! Менің атым Әлия. Қолдау қызметі сағат 09:00-де ашылады."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_IDENTITY",
+      "answer": "na",
+      "value": null,
+      "explanation": "The question concerns public opening hours; no protected action is requested.",
+      "evidence": [
+        {
+          "message_id": "m0001",
+          "quote": "Қолдау қызметі қашан ашылады?"
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_CLARITY",
+      "answer": "scale",
+      "value": 10,
+      "explanation": "The wording is understandable; this does not verify facts or politeness.",
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "quote": "Сәлеметсіз бе! Менің атым Әлия. Қолдау қызметі сағат 09:00-де ашылады."
+        }
+      ]
+    },
+    {
+      "criterion_id": "LOCAL_GROSS",
+      "answer": "no",
+      "value": null,
+      "explanation": "The checked operator turns contain no insult.",
+      "evidence": [
+        {
+          "message_id": "m0002",
+          "quote": "Сәлеметсіз бе! Менің атым Әлия. Қолдау қызметі сағат 09:00-де ашылады."
+        },
+        {
+          "message_id": "m0004",
+          "quote": "Көмектескеніме қуаныштымын. Сау болыңыз!"
+        }
+      ]
+    }
+  ]
+}
