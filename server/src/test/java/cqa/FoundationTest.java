@@ -54,5 +54,10 @@ class FoundationTest {
         assertThat(js.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(js.getHeaders().getContentType().toString()).contains("javascript");
         assertThat(js.getBody()).contains("fetch('/api/health'");
+        for(String name:java.util.List.of("batch.js","batch-state.js")) {
+            var module=http.getForEntity("/js/"+name,String.class);
+            assertThat(module.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(module.getHeaders().getContentType().toString()).contains("javascript");
+        }
     }
 }

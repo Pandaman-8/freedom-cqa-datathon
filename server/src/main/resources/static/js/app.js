@@ -4,6 +4,7 @@ import {conversations} from './conversations.js';
 import {checklists} from './checklists.js';
 import {manual, evaluations} from './evaluations.js';
 import {datasets} from './datasets.js';
+import {batch} from './batch.js';
 const draftStatus=document.querySelector('#draft-status');
 const drafts=new Drafts(()=>{
   draftStatus.textContent=drafts.pending?'Сохранение выполняется. Дождитесь результата перед сменой контекста.':
@@ -11,7 +12,7 @@ const drafts=new Drafts(()=>{
 });
 window.addEventListener('beforeunload',event=>{if(drafts.count()||drafts.pending||drafts.unknown.size){event.preventDefault();event.returnValue='';}});
 function canSwitch(){if(drafts.pending){draftStatus.textContent='Дождитесь завершения сохранения. Текущий черновик защищён.';return false;}return true;}
-const names={overview:'Обзор',conversations:'Диалоги',checklists:'Чек-листы',results:'Результаты и review',datasets:'Загрузка данных'};
+const names={overview:'Обзор',conversations:'Диалоги',checklists:'Чек-листы',results:'Результаты и review',datasets:'Загрузка данных',batch:'Массовая AI-оценка'};
 function show(name,internal=false){
   if(!Object.hasOwn(names,name)||(!internal&&!canSwitch()))return;
   for(const panel of document.querySelectorAll('[data-panel]'))panel.hidden=panel.dataset.panel!==name;
@@ -26,9 +27,10 @@ document.querySelector('.brand').addEventListener('click',event=>{event.preventD
 const totals={conversations:null,checklists:null,evaluations:null};
 function counts(key,rows){totals[key]=rows.length;document.querySelector('#overview-counts').replaceChildren(...Object.entries({conversations:'Диалогов в SQLite',checklists:'Чек-листов (latest)',evaluations:'Сохранённых оценок'}).map(([k,label])=>el('div',{class:'metric'},el('strong',{text:totals[k]??'—'}),el('span',{text:label}))));}
 const results=evaluations(document.querySelector('#evaluation-workspace'),{drafts,canSwitch,onList:rows=>counts('evaluations',rows)});
+const batches=batch(document.querySelector('#batch-workspace'),{drafts,onOpen:async id=>{show('results',true);await results.open(id);},onSaved:()=>results.load()});
 const composer=manual(document.querySelector('#manual-workspace'),{drafts,onSaved:async id=>{show('results',true);await results.open(id);await results.load();}});
 const chats=conversations(document.querySelector('#conversation-workspace'),{canSwitch,onSelect:source=>composer.conversation(source),onList:rows=>{counts('conversations',rows);results.conversations(rows);}});
-const lists=checklists(document.querySelector('#checklist-picker'),document.querySelector('#checklist-editor'),{drafts,canSwitch,onSelect:list=>composer.checklist(list),onList:rows=>counts('checklists',rows)});
+const lists=checklists(document.querySelector('#checklist-picker'),document.querySelector('#checklist-editor'),{drafts,canSwitch,onSelect:list=>{composer.checklist(list);batches.checklist(list);},onList:rows=>counts('checklists',rows)});
 const imports=datasets({drafts,onImported:()=>chats.load()});
 const healthReads=new Latest();
 async function health(){
