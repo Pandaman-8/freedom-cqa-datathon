@@ -43,6 +43,18 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/../backend/app/seed</directory>
+                <targetPath>db/seed</targetPath>
+                <filtering>false</filtering>
+                <includes><include>chat_quality.json</include></includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
