@@ -1,0 +1,327 @@
+{
+  "task": "T09",
+  "report_type": "single_human_review_record",
+  "contract_version": "2.0.0",
+  "human_reviewers": [
+    {
+      "name": "Нуртас",
+      "role": "ML owner; human reviewer",
+      "source_created_at": "2026-11-07T16:03:23.688Z"
+    }
+  ],
+  "human_reviewer_count": 1,
+  "source": {
+    "file": "T09_Нуртас_review.json",
+    "sha256": "47debaaa039441359da0d5bd6cd1cfe02f44ef77c3f9274384a6b76c68d2db8a",
+    "copied_without_changes": true,
+    "source_gold_status": "provisional_pending_joint_approval",
+    "binding_note": "The export has no fixture hashes. Its 24 unique scenario/criterion/proposed/chosen entries were matched to current expected.json; all request/expected bytes also match the pre-live baseline hashes."
+  },
+  "summary": {
+    "total": 24,
+    "accepted": 24,
+    "rejected": 0,
+    "evidence_ok": 24,
+    "RU": {
+      "accepted": 8,
+      "total": 8
+    },
+    "KZ": {
+      "accepted": 8,
+      "total": 8
+    },
+    "EN": {
+      "accepted": 8,
+      "total": 8
+    }
+  },
+  "review_scope": "Expected labels and their evidence in the six synthetic fixtures. Not blanket human acceptance of live-model explanations/evidence.",
+  "peer_review": {
+    "status": "not_performed",
+    "second_label_reviewer": null,
+    "source": "User explicitly stated that the second participant did not re-review labels; requested unfinished peer review to be recorded.",
+    "shared_boundaries_and_test_results": "pending; no peer acceptance evidence supplied"
+  },
+  "gold_status": "single_human_accepted_pending_peer_and_joint_approval",
+  "task_status": "Human-label portion of T09 acceptance is supported. Full DoD/plan closure is not claimed.",
+  "limitations": [
+    "24/24 ACCEPT records approval of this finite synthetic label set, not general model accuracy.",
+    "One human reviewer only; Codex verification is not a second human review.",
+    "Small set does not establish robustness on DEV/CONTROL, long contexts, real calls, or the full official checklist.",
+    "No permission for real-data external inference or new live calls follows from this review."
+  ],
+  "preservation": {
+    "expected_json_modified": false,
+    "baseline_reports_modified": false,
+    "plan_json_modified": false,
+    "runtime_modified": false
+  },
+  "fixture_hashes": {
+    "en_protected_violation": {
+      "request_sha256": "c94ddf3077ecf05b23a22a14db32d469effced2f9d812fe1e5a88a7bb4807d66",
+      "expected_sha256": "d6c7ab33fb31a657cadcd11b694bd7b08ac84d6df38dcbb5cfc7ab2e7fb9501f"
+    },
+    "en_public_na": {
+      "request_sha256": "fcdd853c5ee0235a0c130da92765d7ff961efbaa1e477c9e4071aa31a2e3a408",
+      "expected_sha256": "bd0f325077a4eb2e174340e79faa505e9ad899e04e05fadd8bd1f3acb9748ac7"
+    },
+    "kz_protected_violation": {
+      "request_sha256": "6bbc0d550e6b96431bfdbe0fb17a8e5d182073f6a52dce8bc464b9965a3ff072",
+      "expected_sha256": "75f3fa1a124177969edf8ce95d8cefcbc4c791788d5b3907de2b76c0f51482eb"
+    },
+    "kz_public_na": {
+      "request_sha256": "f7ed4cce652cf772c7d569b7371e29ec1d4b8c69aca59ad1cdfeb11f5f476d98",
+      "expected_sha256": "35f2565c88acd4458f7d9fcaf64f41da740a727802be2f7e413b812c15a49760"
+    },
+    "ru_protected_violation": {
+      "request_sha256": "6202a4f8b53d7768520c2e8b75581d1d073314ef9f10c2a15e2fdfbe20ec3615",
+      "expected_sha256": "c3e1a58b466870b72c1336d71b7afe0ecbd7295aa4261dbd926c183a92b14468"
+    },
+    "ru_public_na": {
+      "request_sha256": "fc76e6091cde16d9c440f07ee4359e476aadd0c906224d43c512fa1f51b127dd",
+      "expected_sha256": "c7dd0093a6306d7ead4b855eca65cedc17e954cd09772e39b84c8e652106440c"
+    }
+  },
+  "entries": [
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "RU",
+      "answer": "yes",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "RU",
+      "answer": "na",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "RU",
+      "answer": "scale",
+      "value": 10,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "RU",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "RU",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "RU",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "RU",
+      "answer": "scale",
+      "value": 10,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "ru_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "RU",
+      "answer": "yes",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "KZ",
+      "answer": "yes",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "KZ",
+      "answer": "na",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "KZ",
+      "answer": "scale",
+      "value": 10,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "KZ",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "KZ",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "KZ",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "KZ",
+      "answer": "scale",
+      "value": 10,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "kz_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "KZ",
+      "answer": "yes",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_GREETING",
+      "language": "EN",
+      "answer": "yes",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "EN",
+      "answer": "na",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "EN",
+      "answer": "scale",
+      "value": 10,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_public_na",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "EN",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_CLOSING",
+      "language": "EN",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_IDENTITY",
+      "language": "EN",
+      "answer": "no",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_CLARITY",
+      "language": "EN",
+      "answer": "scale",
+      "value": 10,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    },
+    {
+      "scenario_id": "en_protected_violation",
+      "criterion_id": "LOCAL_GROSS",
+      "language": "EN",
+      "answer": "yes",
+      "value": null,
+      "decision": "ACCEPT",
+      "source_review_status": "good",
+      "evidence_review": "ok"
+    }
+  ]
+}

@@ -1,0 +1,358 @@
+{
+  "reviewed_at": "2026-11-07",
+  "reviewer": "Codex assistant, independent textual review before live outputs",
+  "human_review": {
+    "status": "pending",
+    "evidence": null
+  },
+  "gold_status": "provisional_until_human_review",
+  "scenarios": {
+    "en_protected_violation": {
+      "language": "EN",
+      "request_sha256": "c94ddf3077ecf05b23a22a14db32d469effced2f9d812fe1e5a88a7bb4807d66",
+      "expected_sha256": "d6c7ab33fb31a657cadcd11b694bd7b08ac84d6df38dcbb5cfc7ab2e7fb9501f",
+      "criteria": [
+        {
+          "criterion_id": "LOCAL_CLOSING",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "The sole operator turn has no farewell; N/A is forbidden.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_IDENTITY",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "The operator explicitly admits changing the account phone without identity verification. This requires no, not na.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_CLARITY",
+          "expected": {
+            "answer": "scale",
+            "value": 10
+          },
+          "reason": "The operator wording is unambiguous under this rubric. Insult/politeness, factual correctness and voice prosody are separate; level 10 applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_GROSS",
+          "expected": {
+            "answer": "yes",
+            "value": null
+          },
+          "reason": "The operator directly insults the client. This is a yes flag with no numeric penalty.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        }
+      ]
+    },
+    "en_public_na": {
+      "language": "EN",
+      "request_sha256": "fcdd853c5ee0235a0c130da92765d7ff961efbaa1e477c9e4071aa31a2e3a408",
+      "expected_sha256": "bd0f325077a4eb2e174340e79faa505e9ad899e04e05fadd8bd1f3acb9748ac7",
+      "criteria": [
+        {
+          "criterion_id": "LOCAL_GREETING",
+          "expected": {
+            "answer": "yes",
+            "value": null
+          },
+          "reason": "First operator response greets and introduces themselves in the client language.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_IDENTITY",
+          "expected": {
+            "answer": "na",
+            "value": null
+          },
+          "reason": "The client asks public opening hours; the configured N/A rule applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0001"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_CLARITY",
+          "expected": {
+            "answer": "scale",
+            "value": 10
+          },
+          "reason": "The operator wording is unambiguous under this rubric. Insult/politeness, factual correctness and voice prosody are separate; level 10 applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_GROSS",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "Both operator turns are civil and contain no explicit insult.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002",
+            "m0004"
+          ]
+        }
+      ]
+    },
+    "kz_protected_violation": {
+      "language": "KZ",
+      "request_sha256": "6bbc0d550e6b96431bfdbe0fb17a8e5d182073f6a52dce8bc464b9965a3ff072",
+      "expected_sha256": "75f3fa1a124177969edf8ce95d8cefcbc4c791788d5b3907de2b76c0f51482eb",
+      "criteria": [
+        {
+          "criterion_id": "LOCAL_GREETING",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "Only the bot greets. The first operator turn lacks both greeting and introduction.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_IDENTITY",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "The operator explicitly admits changing the account phone without identity verification. This requires no, not na.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_CLARITY",
+          "expected": {
+            "answer": "scale",
+            "value": 10
+          },
+          "reason": "The operator wording is unambiguous under this rubric. Insult/politeness, factual correctness and voice prosody are separate; level 10 applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_GROSS",
+          "expected": {
+            "answer": "yes",
+            "value": null
+          },
+          "reason": "The operator directly insults the client. This is a yes flag with no numeric penalty.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0003"
+          ]
+        }
+      ]
+    },
+    "kz_public_na": {
+      "language": "KZ",
+      "request_sha256": "f7ed4cce652cf772c7d569b7371e29ec1d4b8c69aca59ad1cdfeb11f5f476d98",
+      "expected_sha256": "35f2565c88acd4458f7d9fcaf64f41da740a727802be2f7e413b812c15a49760",
+      "criteria": [
+        {
+          "criterion_id": "LOCAL_GREETING",
+          "expected": {
+            "answer": "yes",
+            "value": null
+          },
+          "reason": "First operator response greets and introduces themselves in the client language.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_IDENTITY",
+          "expected": {
+            "answer": "na",
+            "value": null
+          },
+          "reason": "The client asks public opening hours; the configured N/A rule applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0001"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_CLARITY",
+          "expected": {
+            "answer": "scale",
+            "value": 10
+          },
+          "reason": "The operator wording is unambiguous under this rubric. Insult/politeness, factual correctness and voice prosody are separate; level 10 applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_GROSS",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "Both operator turns are civil and contain no explicit insult.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002",
+            "m0004"
+          ]
+        }
+      ]
+    },
+    "ru_protected_violation": {
+      "language": "RU",
+      "request_sha256": "6202a4f8b53d7768520c2e8b75581d1d073314ef9f10c2a15e2fdfbe20ec3615",
+      "expected_sha256": "c3e1a58b466870b72c1336d71b7afe0ecbd7295aa4261dbd926c183a92b14468",
+      "criteria": [
+        {
+          "criterion_id": "LOCAL_GREETING",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "Only the bot greets. The first operator turn lacks both greeting and introduction.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0004"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_IDENTITY",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "The operator explicitly admits changing the account phone without identity verification. This requires no, not na.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0004"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_CLARITY",
+          "expected": {
+            "answer": "scale",
+            "value": 10
+          },
+          "reason": "The operator wording is unambiguous under this rubric. Insult/politeness, factual correctness and voice prosody are separate; level 10 applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0004"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_GROSS",
+          "expected": {
+            "answer": "yes",
+            "value": null
+          },
+          "reason": "The operator directly insults the client. This is a yes flag with no numeric penalty.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0004"
+          ]
+        }
+      ]
+    },
+    "ru_public_na": {
+      "language": "RU",
+      "request_sha256": "fc76e6091cde16d9c440f07ee4359e476aadd0c906224d43c512fa1f51b127dd",
+      "expected_sha256": "c7dd0093a6306d7ead4b855eca65cedc17e954cd09772e39b84c8e652106440c",
+      "criteria": [
+        {
+          "criterion_id": "LOCAL_GREETING",
+          "expected": {
+            "answer": "yes",
+            "value": null
+          },
+          "reason": "First operator response greets and introduces themselves in the client language.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_IDENTITY",
+          "expected": {
+            "answer": "na",
+            "value": null
+          },
+          "reason": "The client asks public opening hours; the configured N/A rule applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0001"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_CLARITY",
+          "expected": {
+            "answer": "scale",
+            "value": 10
+          },
+          "reason": "The operator wording is unambiguous under this rubric. Insult/politeness, factual correctness and voice prosody are separate; level 10 applies.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002"
+          ]
+        },
+        {
+          "criterion_id": "LOCAL_GROSS",
+          "expected": {
+            "answer": "no",
+            "value": null
+          },
+          "reason": "Both operator turns are civil and contain no explicit insult.",
+          "expected_evidence_review": "Exact and relevant; broad full-turn quotations are acceptable.",
+          "evidence_message_ids": [
+            "m0002",
+            "m0004"
+          ]
+        }
+      ]
+    }
+  },
+  "evidence_review_policy": {
+    "exactness": "Existing message ID and nonblank exact source substring; no normalization.",
+    "relevance": "Quote must support the specific speaker, behavior and criterion, not merely match source.",
+    "coverage": "For multi-part or absence claims, record incomplete support separately from wrong labels. A no-flag finding should cover all operator turns.",
+    "scale": "Understandability is explicitly independent of politeness and external factual correctness."
+  },
+  "limitations": [
+    "Six short scenarios with four criteria each are not representative of the official eight-criterion rubric.",
+    "No successful verification before a protected action; no subtle violations or protected-action sequencing contrast.",
+    "All clarity labels are 10: levels 0/4 are untested.",
+    "The changed EN criterion and the old greeting criterion would both yield no; explanation review is essential and contrastive coverage is missing.",
+    "RU voice case is fictional text only, not audio evidence.",
+    "No external company knowledge is supplied; opening-hour truth is not assessed."
+  ]
+}

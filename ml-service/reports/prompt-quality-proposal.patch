@@ -1,0 +1,23 @@
+--- a/ml-service/prompts/evaluate-v1.txt
++++ b/ml-service/prompts/evaluate-v1.txt
+@@ -10,0 +11,5 @@
++
++Judge each criterion independently according to its own instruction and level descriptions.
++Do not lower an unrelated scale because another criterion detects a violation. For a binary
++criterion, yes means its stated condition is satisfied, not merely that a mentioned action
++occurred. Check that your selected answer agrees with your explanation and cited facts.
+@@ -28,0 +34,4 @@
++For N/A, cite the customer request or surrounding context establishing the exact na_rule;
++a greeting alone does not establish that no protected action was requested. For a finding
++that something is absent across a short conversation, cite operator turns covering the
++checked span, including its beginning and end, not only a polite closing sentence.
+@@ -36 +45,3 @@
+-Use the conversation language for explanations. Assess completeness from the conversation;
++Write every explanation in the conversation language: RU means Russian, KZ means Kazakh,
++EN means English. English rubric wording does not change the explanation language. Keep
++criterion IDs and answer enum tokens unchanged. Assess completeness from the conversation;
+--- a/ml-service/app/prompt.py
++++ b/ml-service/app/prompt.py
+@@ -5 +5 @@
+-PROMPT_VERSION = "cqa-dynamic/2"
++PROMPT_VERSION = "cqa-dynamic/3"
