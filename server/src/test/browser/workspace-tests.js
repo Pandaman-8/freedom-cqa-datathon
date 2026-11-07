@@ -124,6 +124,56 @@ document.querySelector('#run').addEventListener('click',async()=>{
    click('Сохранить новую версию',editor());await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes(key+' / v3.'),'v3 saved');
    assert((await api('/api/checklists/'+key+'?version=1')).title==='Browser <script>alert(1)</script>','v1 immutable');
   });
+  await test('create A, blank New, retain unfinished/error/unknown create draft, create B; both Java v1 snapshots survive',async()=>{
+   nav('checklists');const editor=()=>doc.querySelector('#checklist-editor');
+   const keyA='browser-create-a-'+Date.now(),keyB=keyA.replace('-a-','-b-');
+   // A separate version draft must survive successful creation of A and B.
+   fill('Название чек-листа','Unrelated version draft',editor());
+   function newBlank(){
+    click('Создать новый чек-лист',editor());
+    for(const label of ['Новый checklist key','Название чек-листа','Описание чек-листа'])assert(named(label,editor()).value==='','New is blank: '+label);
+    assert(!editor().querySelector('.editor-card'),'New has no saved sections or criteria');
+   }
+   function populate(newKey,title){
+    fill('Новый checklist key',newKey,editor());fill('Название чек-листа',title,editor());fill('Описание чек-листа','Synthetic create lifecycle',editor());
+    click('Добавить раздел',editor());fill('Section ID','section',editor());fill('Название раздела','Section',editor());
+    click('Добавить критерий',editor());const criterion=editor().querySelector('[data-criterion-index="0"]');
+    fill('Criterion ID','BINARY',criterion);fill('Название критерия','Binary criterion',criterion);fill('Инструкция','Use synthetic source evidence.',criterion);
+   }
+   async function submitCreated(newKey){
+    click('Создать чек-лист',editor());await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes(newKey+' / v1.')&&idle(),'created '+newKey);
+   }
+   const snapshot=()=>stringify(all('input,textarea,select',editor()).map(n=>({value:n.value,checked:!!n.checked})));
+   async function reopen(){
+    nav('overview');nav('checklists');fill('Checklist key',keyA);
+    await until(()=>editor().querySelector('h2')?.textContent===keyA+' · редактор версии','switch to existing checklist');
+    click('Создать новый чек-лист',editor());
+   }
+   newBlank();populate(keyA,'Create A');await submitCreated(keyA);
+   const originalA=stringify(await api('/api/checklists/'+keyA+'?version=1'));
+   newBlank();populate(keyB,'Create B');const unfinished=snapshot();
+   await reopen();assert(snapshot()===unfinished,'unfinished create draft survives view and checklist switches');
+   // A real Java validation error must not discard any fields.
+   fill('Вес','0',editor());const invalid=snapshot(),before=win.fetch;let lastStatus;
+   win.fetch=async(path,options={})=>{const response=await before(path,options);if(options.method==='POST'&&String(path).startsWith('/api/checklists/'))lastStatus=response.status;return response;};
+   click('Создать чек-лист',editor());await until(()=>lastStatus===422&&idle(),'Java rejects zero binary weight');
+   await reopen();assert(snapshot()===invalid,'failed POST retains complete create draft');
+   fill('Вес','1',editor());fill('Новый checklist key',keyA,editor());const duplicate=snapshot();lastStatus=undefined;
+   click('Создать чек-лист',editor());await until(()=>lastStatus===409&&idle(),'Java duplicate key409');
+   await reopen();assert(snapshot()===duplicate,'409 retains complete create draft');
+   fill('Новый checklist key',keyB,editor());const pending=snapshot();let attempts=0;
+   win.fetch=async(path,options={})=>{if(String(path)==='/api/checklists/'+keyB&&options.method==='POST'){attempts++;throw new TypeError('Synthetic lost create response');}return before(path,options);};
+   click('Создать чек-лист',editor());await until(()=>editor().querySelector('form').dataset.unknown==='true'&&idle(),'unknown create outcome');
+   await reopen();assert(snapshot()===pending,'unknown result retains complete create draft');
+   click('Создать чек-лист',editor());assert(attempts===1,'unknown create is not automatically retried');
+   assert(!(await api('/api/checklists')).some(c=>c.key===keyB),'explicit reconciliation finds B absent');
+   click('Я проверил историю — разрешить новую отправку',editor());win.fetch=before;await submitCreated(keyB);
+   const a=await api('/api/checklists/'+keyA),b=await api('/api/checklists/'+keyB);
+   assert(String(a.version)==='1'&&String(b.version)==='1'&&a.title==='Create A'&&b.title==='Create B','A and B are separate Java v1 checklists');
+   assert(stringify(a)===originalA,'A remains unchanged');newBlank();
+   fill('Checklist key',key);await until(()=>editor().querySelector('h2')?.textContent===key+' · редактор версии','return to unrelated draft');
+   assert(named('Название чек-листа',editor()).value==='Unrelated version draft','successful creates remove only their create draft');
+  });
   await test('audio stays unloaded until explicit action, organizer safe503 and honest AI state',async()=>{
    nav('conversations');source('UI-SYNTHETIC:EN');await selectedSource('UI-SYNTHETIC:EN');const audio=doc.querySelector('#conversation-workspace audio');
    assert(audio&&!audio.getAttribute('src')&&audio.preload==='none','no automatic audio request');

@@ -3466,6 +3466,21 @@
         {
           "kind": "preservation_and_review",
           "details": "Protected-file SHA256 checks confirm contracts/**,ml-service/**,all server/src/main/java/** (including scoring/T06/T07),legacy backend/frontend and frontend/package-lock.json unchanged. Synthetic fixtures only; no private PDFs, datasets, SQLite, signed credential URLs or secrets added. T12 acceptance/peer approval not claimed."
+        },
+        {
+          "date": "2026-11-07",
+          "kind": "create_draft_lifecycle_review_fix",
+          "reviewed_commit": "4d0864be833553554c9e7b0d8208fc2f9f55c8b2",
+          "details": "PR6 requested correction: a confirmed successful checklist POST removes only its create-draft; version saves still mark their own draft clean. Unfinished, rejected and unknown-outcome create drafts remain available. T12 stays in_progress pending repeat peer review; no merge or T13 work.",
+          "verification": [
+            "PASS: Java clean verify,5900 JUnit tests,0 failures/errors/skipped; BUILD SUCCESS.",
+            "PASS:8 JS tests;5184 exact Fraction scoring references;4 schemas/72 contract fixtures with no contract2.0.0 or plan-schema drift.",
+            "PASS:workspace_smoke.py --serve against the rebuilt JAR and temporary SQLite, including actual restart, historical versions, manual scoring and review/CAS.",
+            "PASS:11 actual in-app browser scenarios. Added create A -> blank New -> create B; both fetched from Java as independent v1 snapshots. Complete create form survives screen/checklist switches, real Java422/409 and an injected network failure; unknown outcome blocks another POST until explicit reconciliation. A and an unrelated version draft remain unchanged.",
+            "PASS: existing browser version-edit/CAS409/base-refresh/v3/historical-v1 regression and all prior manual/evidence/review/stale-response/XSS scenarios.",
+            "PASS:git diff --check and190 protected-file SHA256 comparisons, including Java,ML,contracts,legacy code and frontend/package-lock.json."
+          ],
+          "limits": "Browser suite run locally, not claimed as CI. Unknown create outcome is a deliberately injected transport failure; no real Organizer/Groq/DEV/CONTROL/audio requests. No additional cross-browser or responsive-layout checks for this lifecycle-only fix."
         }
       ],
       "requirement_ids": [

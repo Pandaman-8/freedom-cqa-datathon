@@ -95,7 +95,9 @@ export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch}
           throw new Error('Нужны разделы и 1–100 критериев с уникальными ID. Укажите существующий раздел для каждого критерия.');
         const body={title:d.title,description:d.description,sections:d.sections,criteria:d.criteria.map(c=>({...c,weight:decimal(c.weight),levels:c.kind==='scale'?c.levels.map(l=>({...l,value:decimal(l.value)})):[]}))};
         const saved=await request('/api/checklists/'+pathId(data.key)+(data.mode==='version'?'?expected_version='+integer(data.baseVersion):''),{method:data.mode==='create'?'POST':'PUT',body});
-        drafts.clean(draftKey); status(output,`Сохранена версия ${saved.version}.`);
+        if(data.mode==='create') drafts.remove(draftKey);
+        else drafts.clean(draftKey);
+        status(output,`Сохранена версия ${saved.version}.`);
         // Read back the immutable snapshot; never publish a locally computed checklist result.
         if(activeDraft===draftKey) {
           selected=saved; await loadList();
