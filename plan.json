@@ -3860,9 +3860,12 @@
         "T21"
       ],
       "files": [
-        "server/src/test/",
-        "contracts/fixtures/",
-        "docs/api-contract.md"
+        "server/src/test/python/release_smoke.py",
+        "server/src/test/python/offline_ml_service.py",
+        "server/src/test/python/test_public_safety.py",
+        "docs/RELEASE_READINESS.md",
+        ".github/workflows/ci.yml",
+        "plan.json"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -3880,23 +3883,48 @@
         "Python legacy tests только reference; отдельно зафиксированы Java/Python/browser результаты."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "./server/mvnw -f server/pom.xml clean verify",
+        "node --experimental-default-type=module --test server/src/test/js/*.test.mjs",
+        "python3 server/src/test/python/scoring_reference.py --check",
+        "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+        "GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false PYTHONPATH=ml-service ml-service/.venv/bin/python -B -m pytest -q -p no:cacheprovider ml-service/tests",
+        "ml-service/.venv/bin/python -B server/src/test/python/release_smoke.py --ml-python \"$PWD/ml-service/.venv/bin/python\"",
+        "Synthetic HTTP/JAR: workspace_smoke.py,organizer_smoke.py,review_smoke.py,auto_smoke.py,batch_smoke.py",
+        "Actual browser: fresh workspace/auto/batch --serve harnesses; model-review.html uses a separate fresh auto harness."
       ],
       "estimate_hours": 1.25,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "Legacy tests не заменяют Java/browser tests; real file DB restart/concurrency требуют отдельных сценариев.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "Peer review of T16 results remains pending; no done status is inferred from test success.",
+        "65 distinct new inputs cannot reach ML under unchanged SyntheticPolicy: six existing approved pairs succeed and59 new own-synthetic sources are explicitly policy-blocked. Separate65 successful evaluation operations reuse those six approved fixtures with new request UUIDs; not65 unique successful conversations.",
+        "No new Groq, real Organizer, DEV/CONTROL, audio or live prompt-v4 quality/cost/capacity checks. Fake-provider tests are transport/validation/persistence evidence only.",
+        "T14 new dynamic AI pair and official checklist PDF remain blocked; no policies/contracts/fixtures/scoring are altered. Existing T02/T09/T14/T15/T21 statuses are not changed by this task."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-08",
+          "kind": "offline_release_regression",
+          "base_commit": "7476b83deb4a7d024702d7949b3cac105f043230",
+          "branch": "codex/T16-release",
+          "results": [
+            "BUILD SUCCESS:5964 JUnit,0 failures/errors/skipped; independently repeated in a clean clone.",
+            "PASS:24 JS tests;72 contract fixtures/4 metaschemas with no drift;5184 exact Fraction scoring references.",
+            "PASS:332 offline Python ML tests in existing and fresh virtualenv;1 existing Starlette/httpx deprecation warning.",
+            "PASS:new real packaged Java + real Python/FastAPI HTTP app with provider injection and external-network guard. Ordinary uvicorn unconfigured startup health503/evaluate501 verified before fake mode.",
+            "PASS:65 unique synthetic records imported idempotently with exact sources,6 allowed model results and59 explicit Java/Python policy rejects. Separate65 succeeded evaluations across six existing fixtures,65 provider stub calls.",
+            "PASS:model review original100/final33.33 with N/A denominator75, CAS409, original SQL rows unchanged, pinned existing v1/v2, new v3 policy blocked, both-process restart and replay of65 requests without additional calls.",
+            "PASS:31 actual browser scenarios:9 batch,11 workspace,7 model-review,4 single-AI. Fake HTTP setup, temporary SQLite, no new live calls.",
+            "PASS:all five existing synthetic packaged HTTP/JAR smokes; temporary SQLite only.4 public-safety detector negative tests pass."
+          ],
+          "limits": "No live provider/real data. Python production diagnostics provider/model labels in injected runs do not establish Groq inference. Browser testing is local, not CI browser coverage. See docs/RELEASE_READINESS.md for full scope."
+        }
+      ],
       "requirement_ids": [
         "R08",
         "R10",
@@ -3972,7 +4000,7 @@
     {
       "id": "T18",
       "title": "Подготовить воспроизводимый Java+ML release",
-      "description": "Fresh checkout: Java wrapper package/start + ML start + static UI доступны по инструкции; pinned deps, env paths. Старые README/AGENTS architecture согласованно обновлены во время реализации; сейчас не изменяются. Public release privacy scan без PDF signature/transcripts/audio/DB/.env; remote visibility проверяется участником.",
+      "description": "Воспроизводимый Java+ML release: fresh public checkout, pinned direct dependencies, безопасный Quick Start без ключей, актуальные README/AGENTS/architecture/API, demo≤5min, scoped public history privacy scan и честные blockers. Обновление документации явно разрешено пользователем в T18.",
       "priority": "P0",
       "owner": "Farhat",
       "depends_on": [
@@ -3982,9 +4010,16 @@
         "README.md",
         "AGENTS.md",
         "docs/architecture.md",
-        ".github/",
-        "server/pom.xml",
-        "ml-service/requirements.txt"
+        "docs/api-contract.md",
+        "docs/ml-contract.md",
+        "docs/requirements.md",
+        "docs/DEMO.md",
+        "docs/RELEASE_READINESS.md",
+        "server/README.md",
+        "scripts/check-public-safety.py",
+        "server/src/test/python/test_public_safety.py",
+        ".github/workflows/ci.yml",
+        "plan.json"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -3995,27 +4030,50 @@
       ],
       "acceptance_criteria": [
         "Fresh checkout: Java wrapper package/start + ML start + static UI доступны по инструкции; pinned deps, env paths.",
-        "Старые README/AGENTS architecture согласованно обновлены во время реализации; сейчас не изменяются.",
+        "README/AGENTS/architecture/API согласованно описывают текущий Java/Vanilla/Python стек; legacy инструкции не являются Quick Start. Подготовлен понятный demo до5мин.",
         "Public release privacy scan без PDF signature/transcripts/audio/DB/.env; remote visibility проверяется участником."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "Fresh public mirror + new clone of main base; candidate release-test files only, no private/untracked inputs. Maven clean verify and new Python venv requirements-dev install.",
+        "Fresh-clone release_smoke.py with its own Python venv; real unconfigured uvicorn and injected-provider HTTP regression.",
+        "python3 -B scripts/check-public-safety.py; repeat with --repo fresh-public-mirror.git; inspect historical paths/credential signatures without printing values.",
+        "python3 -B -m unittest discover -s server/src/test/python -p test_public_safety.py",
+        "GitHub repo API: PUBLIC/isPrivate=false; root Quick Start and docs local links checked.",
+        "Demo4:50 instructions;31 actual browser scenarios PASS; see docs/RELEASE_READINESS.md."
       ],
       "estimate_hours": 0.75,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "Clean checkout/dependency downloads/два процесса; старые AGENTS/README commands ещё несовместимы с target.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "Peer review remains pending; T18 is not marked done before it. Full official acceptance is not claimed.",
+        "Missing data/official/chat_quality_checklist.pdf; private student_guide_v3.pdf is present/ignored. Seed fidelity and official rounding cannot be fully verified.",
+        "Unchanged policy blocks arbitrary new conversations/checklists and real DEV/CONTROL. Dynamic AI needs separately approved pairs; prompt-v4 live quality and real CONTROL capacity/cost were not measured.",
+        "T02 remains ready without joint acceptance recorded; T09/T15 and T14/T21 retain their existing plan statuses. Reports/merged PRs do not silently replace missing approvals.",
+        "Direct dependencies are pinned; no complete transitive Python hash lock. Fresh checkout reused normal download caches. Windows/mobile/cross-browser matrix not run.",
+        "Privacy scan covers reachable public heads/tags/history and tracked candidates, not unreachable objects, PR-only refs, releases/assets, Actions logs/artifacts, issues, forks/caches or exhaustive semantic PII. No secrets/private files detected within checked scope."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-08",
+          "kind": "release_preparation",
+          "base_commit": "7476b83deb4a7d024702d7949b3cac105f043230",
+          "branch": "codex/T16-release",
+          "results": [
+            "Updated root Quick Start to Java21/Spring Boot3.5.16/SQLite/Vanilla + separate Python service, with no --env-file and explicit empty provider/organizer configuration; documented health503 versus liveness200.",
+            "Reconciled AGENTS, architecture, requirements, Java API/CAS/ledger and ML handoff. Historical integration-contract text/fixtures/schema remain unchanged. Added a4:50 own-synthetic/fake demo with explicit live/dynamic limitations.",
+            "PASS:fresh clone from public mirror, clean Maven verify5964, new Python venv install and332 offline ML tests. Three candidate test/scanner files copied; no .env/private DB/dataset copied. Real uvicorn unconfigured startup and full two-service fixture-provider regression PASS in that clone.",
+            "GitHub API confirmed PUBLIC/main. Fresh public mirror at base:36 commits,623 reachable objects,364 blobs plus messages and historical filenames; privacy detector PASS.4 negative detector tests pass.",
+            "PASS:227 protected file hashes unchanged, including production Java/Vanilla, ML/prompt/fixtures, contract2.0.0, legacy and frontend/package-lock.json. No runtime/dependency/scoring/policy changes.",
+            "CI gains full-history privacy scan and real Java/Python HTTP fixture-provider regression; remote result is checked after push, not preclaimed."
+          ],
+          "limits": "Official checklist PDF absent; no new live Groq/real-data/Organizer/audio calls. T16/T18 remain in_progress for peer review and documented acceptance limits."
+        }
+      ],
       "requirement_ids": [
         "R19",
         "R23"

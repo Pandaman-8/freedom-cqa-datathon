@@ -1,22 +1,23 @@
 # AGENTS.md — required context for Codex
 
-This repository is the foundation of a 24-hour CQA hackathon. Work on the existing
+This repository contains the Java/Vanilla application and separate Python ML service for a 24-hour CQA hackathon. Work on the existing
 `plan.json`; do not create a replacement plan or start dependent tasks without authorization.
 Read the assigned task and `docs/INTEGRATION_CONTRACT.md` before changing a shared boundary.
 Also read `README.md`, `docs/requirements.md`, `docs/architecture.md` and `docs/api-contract.md`
-before application changes. Those older documents still describe the legacy implementation
-in places; they do not override the approved target stack. Their release-wide reconciliation
-belongs to T18, not T02.
+before application changes. These documents describe the target application; historical
+audits and task evidence can describe earlier states. Use current source and
+docs/RELEASE_READINESS.md for verification scope; never treat old evidence as a new run.
 
 ## Sources of truth
 
 1. Organizer's **CQA_Hackathon_Student_Guide_v3** and **CQA_Chat_Quality_Checklist**.
-   The guide is available; `data/official/chat_quality_checklist.pdf` was unavailable at the
-   audit. Do not claim full official verification until it is supplied and checked.
+   `data/official/student_guide_v3.pdf` is available locally and private;
+   `data/official/chat_quality_checklist.pdf` remains unavailable at T18 verification.
+   Do not claim full official verification until it is supplied and checked.
 2. Initial checklist in `backend/app/seed/chat_quality.json`: preserve all eight criteria,
    exact levels and N/A rules; its fidelity remains provisional pending that PDF.
 3. `contracts/*.schema.json`, `contracts/fixtures/manifest.json` and
-   `docs/INTEGRATION_CONTRACT.md`: one language-neutral contract, two future implementations.
+   `docs/INTEGRATION_CONTRACT.md`: one language-neutral contract, two implementations.
    Embedded schemas in `plan.json` must stay identical; run the drift check after edits.
 4. Current tasks/acceptance criteria in `plan.json`; historical evidence in `docs/CODEX_AUDIT.md`.
    The legacy Python scorer/tests are behavioral references, not proof of passing Java tests.
@@ -26,11 +27,11 @@ When sources are silent, state an assumption instead of inventing an organizer r
 ## Approved architecture
 
 - **Farhat — Fullstack:** Java 21, Spring Boot MVC, JDBC/SQLite; HTML5, CSS3 and Vanilla
-  JavaScript. Java serves static assets and `/api` on localhost:8080. The exact Spring Boot
-  release remains a joint T02 decision before T03 bootstrap.
-- **Nurtas — ML:** independent Python HTTP service on localhost:8001; prompts, model/provider
-  integration, evidence extraction and validation. FastAPI is allowed inside that service
-  only if Nurtas chooses it; it is not the Fullstack backend.
+  JavaScript. Java serves static assets and `/api` on 127.0.0.1:8080. Current source pins
+  Spring Boot 3.5.16, SQLite JDBC 3.53.4.0 and Maven 3.9.11; no global Maven is required.
+- **Nurtas — ML:** independent Python/FastAPI HTTP service on 127.0.0.1:8001; prompts,
+  model/provider integration, evidence extraction and validation. Run one worker;
+  Python does not own the Fullstack domain API or SQLite.
 - Browser → Java REST API → Java storage/scoring/review or Python ML HTTP.
   Java calls `POST /v1/evaluate`, JSON/UTF-8, contract **2.0.0**. `/v1` is the HTTP route
   generation, not an alternative JSON envelope version.
@@ -78,7 +79,7 @@ When sources are silent, state an assumption instead of inventing an organizer r
 - **Any change to JSON, endpoints, field names, score semantics, message IDs or validation
   requires Farhat and Nurtas agreement BEFORE implementation.** Never silently change
   schemas, seed or fixtures to make tests pass.
-- T02 stays **ready** until both participants explicitly accept the same artifact revision.
+- T02 is still **ready** in plan.json: no joint acknowledgment is recorded there. It stays ready until both participants explicitly accept the same artifact revision.
   Preparing artifacts, passing checks or authorizing this task is not joint approval.
   Record actual acknowledgment evidence; never invent it.
 - Separate worktrees/clones and databases for independent work. Shared fixtures first,
@@ -99,14 +100,18 @@ This checks four Draft 2020-12 schemas, drift from `plan.json`, transport metada
 documented examples and all fixture expectations. Parser-negative files intentionally
 fail strict JSON decoding. See `contracts/README.md` for details and limits.
 
-Only after later tasks implement the relevant modules:
+Current target checks (use isolated environments, temporary SQLite and no provider keys):
 
 ```bash
-./server/mvnw -f server/pom.xml verify
-PYTHONPATH=ml-service python -m pytest -q ml-service/tests
+./server/mvnw -f server/pom.xml clean verify
+node --experimental-default-type=module --test server/src/test/js/*.test.mjs
+python3 server/src/test/python/scoring_reference.py --check
+GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false PYTHONPATH=ml-service ml-service/.venv/bin/python -B -m pytest -q ml-service/tests
+ml-service/.venv/bin/python -B server/src/test/python/release_smoke.py --ml-python "$PWD/ml-service/.venv/bin/python"
+python3 -B scripts/check-public-safety.py
 ```
 
-Also verify real browser and Java↔Python HTTP workflows when implemented. Never report
+Also verify real browser and Java↔Python HTTP workflows. Never report
 those checks as passed based on fixtures, legacy Python tests or a build. The legacy
 React build is not a prerequisite for the new Vanilla frontend.
 
@@ -119,8 +124,21 @@ React build is not a prerequisite for the new Vanilla frontend.
   Use same-origin/backend integration, never browser credentials to work around CORS.
 - Agree provider/data policy/budget before real-data external inference; until then use
   own synthetic data or an authorized local model. No fake successful AI fallback.
-- T02 does not implement Java backend or Python ML service. The legacy evaluator is
-  deliberately unconfigured (HTTP 501).
+- Current Java SyntheticPolicy permits exactly six bundled conversation/checklist pairs;
+  Python independently checks conversation fingerprints. Group names alone grant nothing.
+  New conversation IDs/text or rubric versions require separate reviewed approval; never
+  expand or mock these policies to turn a release-test failure into a success.
+- Release tests may inject an offline provider through Python's existing test seam, with
+  external networking forbidden. This is test infrastructure, not a runtime fake mode or
+  evidence of model quality. Distinguish 65 operations over six approved inputs from 65
+  distinct inputs; account for policy-blocked items explicitly.
+- Python without provider configuration returns health503/evaluate501; Java health is
+  liveness only. Java without an ML URL returns501 before ledger claim. Do not claim
+  readiness or real model success from a process start, a health check or a fixture result.
+- Batch recovery uses browser-local manifest + Java ledger, Web Locks, the same origin and
+  SQLite. Reload never starts POST automatically; unknown/pending are not silent retries.
+- T16/T18 evidence does not close T02/T09/T14/T15/T17/T21 or authorize further live runs.
+  Keep unverified official rules, dynamic AI, real-data permission and peer review explicit.
 - Do not invent voice scoring or infer diction/intonation from transcript alone. Clarify
   applicability with organizers. Company factual correctness needs reference material;
   model uncertainty is not automatic N/A.

@@ -1,36 +1,15 @@
-# ML teammate handoff
+# ML handoff — текущий HTTP boundary
 
-**Your target function**: `Evaluator.evaluate(conversation: dict, checklist: Checklist) -> list[CriterionAnswer]`, defined in `backend/app/evaluator.py`. It is a stub until a real model implementation is ready.
+ML живёт в `ml-service/`, принадлежит Нуртасу и запускается отдельно от Java. Старый `backend/app/evaluator.py` — legacy stub, не integration target. Python использует FastAPI, Java — Spring MVC/JDBC/SQLite, браузер — Vanilla JS.
 
-### Inputs
+Единственный нормативный wire contract: [2.0.0](INTEGRATION_CONTRACT.md), [четыре JSON Schema и 72 fixtures](../contracts/README.md). Java отправляет `POST http://127.0.0.1:8001/v1/evaluate`: request_id, immutable conversation и полный pinned checklist. Python возвращает identity echoes, полные answers, exact evidence и diagnostics; Java проверяет их независимо, рассчитывает баллы и сохраняет snapshot. Нового формата или поля этот документ не вводит.
 
-`conversation.messages` are ordered; each message has `id`, `timestamp`, `speaker` (`operator`, `client`, `bot`, `system`) and `text`. For voice calls, preserve ISO 8601. `checklist.criteria` is fully dynamic and contains ID, instruction, kind (`binary`, `scale`, `flag`), weight, allowed N/A, N/A rule and numeric levels. **Do not hardcode the 8 criterion IDs as model instructions** — a criterion will be replaced in judging.
+- Критерии динамические: передаются формулировки, weights, discrete levels и N/A rules, без hardcoded C01–C08 в provider output. Источник truth — данные checklist.
+- Quotes не переводятся и не нормализуются, IDs позиционные. Bot greeting не считается операторским. При пропуске действия цитируется реальный окружающий контекст, не выдуманная «цитата отсутствия».
+- Java SyntheticPolicy допускает только шесть точных опубликованных fixture-пар (v1 и существующая EN v2); Python проверяет conversation fingerprints. Новый текст/ID/рубрика требует согласованного разрешения; ни имя SYNTHETIC, ни fake provider сами по себе не снимают gate.
+- Python максимум2 provider attempts/65s, Java deadline70s без POST replay. Request ledger находится в Java. `/health` не проверяет удалённый provider/биллинг и не делает inference.
+- Provider secret остаётся в приватном Python окружении. Organizer URL остаётся в Java. Для безопасного старта следуйте root README без `--env-file`, с пустым ключом; ожидаются health503/evaluate501.
 
-### Output (one per configured criterion)
+Текущий prompt — `cqa-dynamic/4`; нового live quality pass нет. Исторический T13 Groq E2E на v3 и ревью Нуртаса описаны в plan.json / [T15 report](../ml-service/reports/t15-quality-and-demo.md), не выдаются за новые вызовы. Текстовые fixtures не проверяют дикцию, интонацию, аудио или фактические правила компании.
 
-```json
-{
-  "criterion_id": "C04",
-  "answer": "scale",
-  "value": 10,
-  "explanation": "Часть запроса решена, но существенный вопрос остался без ответа.",
-  "evidence": [{ "message_id": "m0007", "quote": "Клиентская реплика, дословно присутствующая в источнике" }]
-}
-```
-
-The example is **only a schema illustration, not a real assessment**. Valid answers: `yes`, `no`, `na`, `scale`. For `scale`, the value must **exactly** equal a configured level. N/A only if criterion allows it; explain **why** and cite the relevant portion. Critical flag: **yes** means a gross violation was found. Every evidence quote must be a substring of the referenced real message. Server rejects fabricated evidence/unknown IDs.
-
-### Important pitfalls
-
-- Don't treat the bot greeting as operator greeting (C01). The first operator turn matters.
-- For identity verification (C03), infer from the sequence of protected actions and confirmation, not just the existence of a word like “код”. No verification needed in a general question => N/A.
-- For missing actions, reference the turn(s) where the action was expected. Do not fabricate a non-existent sentence.
-- C04 problem resolution and C06 conversation clarity are different; evaluate independently.
-- Call transcripts can include transcription mistakes and side conversations between colleagues. Do not attribute all utterances to the client-facing agent with high confidence by default.
-- Flag C08 serious violations without altering the numeric score. If uncertain, prefer explainable conservatism and reviewer escalation.
-- Measure quality on at least RU/KZ/EN; test short, long, good, bad, interrupted and account-security cases. Use only synthetic dialogue excerpts in Git.
-- For paid APIs: estimate **per-conversation** cost across all calls, token usage and retry budget. Never expose the key to the Vite/browser environment.
-
-### Integration tests
-
-There must be an automated test verifying evaluator output can be passed through `calculate(checklist, answers)` and that all message IDs/quotes are real. Add end-to-end tests for a **changed checklist criterion**.
+[T16 release smoke](../server/src/test/python/release_smoke.py) проверяет настоящий Java↔Python HTTP с подставным provider через существующий test seam. В child запрещена внешняя сеть, production ML/fixtures не изменены. Это transport/validation/persistence regression, не LLM measurement. [Release blockers](RELEASE_READINESS.md) остаются явными.

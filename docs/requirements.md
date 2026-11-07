@@ -1,4 +1,10 @@
-# Organizer requirements — transcription of supplied documents
+# Organizer requirements — source status and implementation scope
+
+## Source status at release preparation
+
+The private guide is present at `data/official/student_guide_v3.pdf`; the checklist PDF is **missing** at `data/official/chat_quality_checklist.pdf`. Guide contents were recorded by the earlier audit; this release check confirms availability without publishing its signed API URI. Checklist details below are the existing provisional seed/reference, **not a new verification of the missing PDF**. Do not claim full official conformance.
+
+Current target: Java21/Spring Boot/SQLite, HTML/CSS/Vanilla JS, separate Python HTTP ML. See [architecture](architecture.md), [API](api-contract.md) and [confirmed release evidence/blockers](RELEASE_READINESS.md). The 65-source release dataset is generated own synthetic data; it is not the historical organizer DEV dataset described below.
 
 ## Student Guide v3 (4 pages)
 
@@ -12,7 +18,7 @@
 - Demo is **up to 5 minutes**: dialogue (1 min), score/evidence/N/A (2 min), appeal (1 min), replace criterion (1 min).
 - Paid AI API is allowed; disclose model and approximate cost per conversation covering all API calls. Audio is needed to assess diction/intonation; speech recognition is not required.
 
-## Chat Quality Checklist (3 pages)
+## Chat Quality Checklist — provisional existing seed (PDF unavailable)
 
 The exact seed is kept in `backend/app/seed/chat_quality.json`; it defines all 8 IDs, sections, descriptions, scales and N/A conditions. These behaviors are particularly easy to misread:
 
@@ -23,15 +29,15 @@ The exact seed is kept in `backend/app/seed/chat_quality.json`; it defines all 8
 - **C05:** politeness, and direct acknowledgement of a customer's stated trouble or dissatisfaction.
 - **C06:** score exactly 0/4/7/10; clarity, sequence and explicit warnings of waiting (but **not** a first-response timer threshold).
 - **C07 N/A:** chat interrupted before operator could properly close.
-- **C08:** separate `yes/no` serious violation: insult, private paid consultation bypassing company, or confidential disclosure. Merely proposing the bypass is enough. The PDF says **no points**; it does **not** prescribe automatic zeroing of total.
+- **C08:** separate `yes/no` serious violation: insult, private paid consultation bypassing company, or confidential disclosure. Merely proposing the bypass is enough. The retained seed uses **no numeric penalty**; the missing PDF has not been rechecked.
 - 3-minute first response threshold, tags and attachments are explicitly excluded.
 - Only N/A answers are removed from the denominator; max score remains 100; round to two decimal places; if no applicable weighted criteria, no overall score.
 
-## Dataset observed from submitted `invoke.json`
+## Historical aggregate observation of submitted `invoke.json` (not reread for release)
 
 - `isSuccess:true`, `data.dataset_group_id:"DEV"`, `data.total_records:65`, `data.records[]`.
 - Each record: `conversation_id`, `channel` (`agent chat`/`voice call`), `language` (`RU`/`KZ`/`EN`), `transcript[{timestamp,speaker,text}]`, `audio_url`.
 - 35 RU, 15 KZ, 15 EN. Calls are RU only. Source transcript has repeated timestamps; rely on per-turn ID, never timestamp for unique evidence references.
 - Transcripts contain automated ASR mistakes, internal agent discussions and redactions — do not infer misconduct solely from transcription artifacts without checking context.
 
-This document is a summary of *the user's supplied PDFs and dataset*, not a new organizer grading rubric. Exact judges' weighting between functionality/design/AI was **not supplied**.
+This document combines historical guide/dataset notes with the provisional seed; it is not a new organizer grading rubric or proof that both PDFs were verified. Exact judges' weighting between functionality/design/AI was **not supplied**.
