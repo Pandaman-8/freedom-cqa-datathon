@@ -1,135 +1,85 @@
-# Freedom CQA — current Java workspace
+# Freedom CQA
 
-The approved application is **Java21 + Spring Boot + SQLite**, serving HTML/CSS/Vanilla JS
-ES modules at localhost:8080. T07 organizer fetch is closed; T12 provides conversations,
-versioned checklist editing, manual evaluations, evidence, original/final scores and review
-(T12 closed after peer approval). T13 adds the Java ML HTTP client, durable request ledger
-and AI UI for exact own synthetic fixtures. T13 is closed after the live Groq E2E and
-peer approval reported by Farhat, corroborated by the persisted synthetic request/result.
-T14 verifies model appeals and manual evaluation with an extended checklist v2; dynamic
-v2 inference remains blocked pending a separately approved fixture and live-run agreement.
-T21 adds a sequential batch screen with a pinned group/checklist snapshot, pause/resume,
-browser-local recovery manifest and Java request-ledger reconciliation. It uses the same
-strict synthetic policy; real DEV/CONTROL inference remains unavailable under that policy.
+Локальное рабочее место для оценки качества диалогов: **Java 21 + Spring Boot 3.5.16 + SQLite**, HTML/CSS/Vanilla JS и отдельный **Python HTTP ML service**. Java отвечает за проверку evidence, scoring, хранение, апелляции и историю. Python возвращает ответы по полному чек-листу через контракт **2.0.0**, `POST /v1/evaluate`.
 
-Start and verify using [server/README.md](server/README.md), including an isolated synthetic
-browser walkthrough. No Node build is required for the target application. The Python ML
-service is separate; the legacy instructions below describe the original reference only.
+Работают импорт/Organizer fetch, RU/KZ/EN, редактор версий, ручная и разрешённая AI-оценка, original/final, evidence jump, review с CAS и последовательный batch с pause/resume/reload. Для AI Java разрешает только шесть точных fixture-пар; произвольные DEV/CONTROL и новые версии рубрики блокируются. Это ограничение безопасности, а не отсутствие импорта или ручной оценки.
 
----
+## Quick Start — без внешних модельных вызовов
 
-# Legacy foundation reference
+Linux/macOS: JDK 21 (`java` и `javac`), Python 3.12+ с venv, Git, curl. Проверенные версии и результаты — в [release report](docs/RELEASE_READINESS.md). Maven Wrapper скачивает Maven 3.9.11; нужны доступ к Maven Central/PyPI и место под зависимости. Node.js 22 нужен только для JS-тестов, не для запуска UI.
 
-**Freedom Broker CQA Hackathon · 7–8 November 2026**
-
-Public-safe foundation for the official **Conversation Quality Analytics** task. The app accepts the organizers' DEV / control JSON, displays original conversation turns, stores versioned checklists, calculates scores *deterministically*, and supports per-criterion appeals and human reviews.
-
-> **Status:** Real backend and manual evaluation/review flow are implemented and tested. **AI evaluation is NOT implemented yet** — `/api/evaluations/auto` deliberately returns HTTP `501`, never a fabricated result. The task plan JSON for Codex is intentionally **not** created yet.
-
-## Requirements
-
-- Python 3.11+ (3.12 recommended)
-- Node.js 22+ / npm (React/Vite frontend)
-- No Docker, PostgreSQL, cloud credentials, or authorization required for the demo
-
-## Quick start — Linux / Arch
-
-Terminal 1:
+Из корня свежего checkout. При проверке этого PR до merge выберите после clone его
+ветку `codex/T16-release` (`git switch --track origin/codex/T16-release`); после merge
+обычный main содержит те же инструкции и release tests:
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+git clone https://github.com/Pandaman-8/freedom-cqa-datathon.git
+cd freedom-cqa-datathon
+./server/mvnw -f server/pom.xml clean verify
+python3 -m venv ml-service/.venv
+ml-service/.venv/bin/python -m pip install -r ml-service/requirements.txt
 ```
 
-Terminal 2 (from repository root):
+Терминал 1, из корня репозитория — настоящий Python service, намеренно без ключа:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false ML_DATA_POLICY=synthetic_only \
+  ml-service/.venv/bin/python -m uvicorn app.main:app --app-dir ml-service \
+  --host 127.0.0.1 --port 8001 --workers 1 --no-access-log
 ```
 
-Open **http://127.0.0.1:5173**. FastAPI docs: **http://127.0.0.1:8000/docs**. Use two terminals: Vite does not start the backend automatically.
+Не добавляйте `--env-file`: этот безопасный запуск не читает приватный `.env`.
 
-Convenience scripts from the project root: `bash scripts/run-backend.sh`, `bash scripts/run-frontend.sh`.
-
-### Import official DEV dataset
-
-Upload `invoke.json` through the **Диалоги → Импортировать JSON** control, or use:
+Терминал 2, также из корня — Java и отдельная временная база:
 
 ```bash
-curl -X POST 'http://127.0.0.1:8000/api/datasets/import' \
-  -H 'Content-Type: application/json' \
-  --data-binary @/absolute/path/to/invoke.json
+CQA_DEMO_DIR=$(mktemp -d /tmp/freedom-cqa-demo.XXXXXX)
+CQA_ORGANIZER_URL= CQA_DB_PATH="$CQA_DEMO_DIR/cqa.sqlite" \
+  CQA_ML_URL=http://127.0.0.1:8001/v1/evaluate \
+  java -jar server/target/freedom-cqa-server-0.1.0.jar
 ```
 
-**Do not add the original file to Git.** The provided DEV envelope contains 65 records, including signed audio URLs; the API preserves all timestamps (chat MM:SS, calls ISO 8601), speakers (operator/client/bot/system), and the original transcription. Each turn gets a stable `m0001` evidence ID.
-
-For a public-safe import example, use `examples/synthetic_dataset.json` (2 fictional conversations). The same import endpoint works for all three languages RU/KZ/EN and both channels.
-
-### Test scoring and appeals before ML integration
-
-1. Import the sample or organizer JSON, then select a conversation.
-2. Open **Оценивание** and manually select each criterion, justification and an actual supporting message.
-3. Save: backend calculates original total, sections and gross-violation flag.
-4. In **Результаты / пересмотр**, create an appeal for a criterion and resolve it (confirm/change). Verify old vs final total.
-5. In **Чек-лист**, edit a criterion and save **v2**. Future evaluations use v2; historical v1 evaluations keep their original version.
-
-This is a tested **manual QA workflow**. It is not presented as a working AI model.
-
-## What the official scoring engine does
-
-The seeded checklist is a direct transcription of `CQA_Chat_Quality_Checklist.pdf`, pages 1–3. The first seven weights are `10 + 15 + 20 + 20 + 15 + 15 + 5 = 100`. C08 is a **separate, weightless gross-violation flag** and does *not* automatically zero the score.
-
-| ID | Criterion | Input | Weight |
-|---|---|---|---|
-| C01 | Установление контакта | yes/no | 10 |
-| C02 | Выявление потребности | yes/no/N/A | 15 |
-| C03 | Идентификация | yes/no/N/A | 20 |
-| C04 | Корректная и полная консультация | 0/5/10/15/20/N/A | 20 |
-| C05 | Эмпатия | yes/no | 15 |
-| C06 | Управление диалогом | 0/4/7/10 | 15 |
-| C07 | Завершение | yes/no/N/A | 5 |
-| C08 | Грубые ошибки | yes/no flag | 0 |
-
-- Binary yes = full criterion weight, no = 0.
-- Scales earn `weight × selected_level / max_level`.
-- N/A is allowed **only** for C02/C03/C04/C07 in the default version. The resulting sum is normalized by the sum of *applicable* weights to 100.
-- Final total is rounded to **2 decimals**. If no weighted criterion applies, result is null. Exact half-tie rounding is not stated in the organizer PDF; implementation uses standard `ROUND_HALF_UP`.
-- 3-minute first-response threshold, tags and attachments are **out of scope** for this checklist.
-
-### Design boundaries
-
-- **Frontend (fullstack teammate):** React + Vite, checklist editor, conversation browser, evidence jumps, appeals and review.
-- **Backend (fullstack teammate):** FastAPI, SQLite, strict schemas, import, immutable checklist revisions, deterministic scoring and review history.
-- **ML teammate:** implement the `Evaluator` protocol in `backend/app/evaluator.py`, returning one answer per criterion and evidence grounded in `conversation.messages`. Do not compute overall scores in ML.
-
-Read [AGENTS.md](AGENTS.md) before using Codex. Supporting specs: [architecture](docs/architecture.md), [API contract](docs/api-contract.md), [source requirements](docs/requirements.md), and [ML handoff](docs/ml-contract.md).
-
-## Run tests
+Откройте **http://127.0.0.1:8080/**. Проверка из третьего терминала:
 
 ```bash
-cd backend
-python -m pip install -r requirements-dev.txt
-cd ..
-PYTHONPATH=backend python -m pytest -q backend/tests
+curl -i http://127.0.0.1:8080/api/health
+curl -i http://127.0.0.1:8001/health
+curl -sS http://127.0.0.1:8080/api/datasets/import \
+  -H 'Content-Type: application/json' --data-binary @examples/synthetic_dataset.json
 ```
 
-CI runs backend tests and frontend Vite build. All test fixtures and demo conversations in this repository are synthetic.
+Ожидается Java health **200**, Python health **503** с `EVALUATOR_UNCONFIGURED`: процесс работает, но внешний провайдер не включён. Ручная оценка и редактор доступны. Этот пример импорта не входит в AI allowlist; кнопка AI не должна показывать успешную фиктивную оценку. Java без `CQA_ML_URL` возвращает 501; настроенная Java с непринятой парой — 503 до ML. Оба процесса останавливаются Ctrl+C.
 
-## Privacy / safety
+Для сохранения истории задайте собственный абсолютный `CQA_DB_PATH` и используйте его при следующем запуске. Без override Java использует `~/.local/share/freedom-cqa/java/cqa.sqlite`. Один Java-процесс владеет одной базой; Python запускается с одним worker. Не открывайте сервисы на `0.0.0.0`: аутентификации нет.
 
-The official DEV file has 5 real calls and may carry identifiers, sensitive transcription fragments and signed recording URLs. **Never commit the raw DEV, control group, audio URL with `sig`, SQLite database, `.env`, credentials, customer personal data or recording downloads.** They are excluded by `.gitignore`. Deploy this foundation **locally only** until authentication, access controls and privacy review are addressed. No client-side `VITE_*` API keys.
-
-## Publishing to the existing repository
-
-If this archive is your first local checkout and the remote is still empty:
+## Проверка интеграции без Groq
 
 ```bash
-bash scripts/publish.sh
+ml-service/.venv/bin/python -B server/src/test/python/release_smoke.py \
+  --ml-python "$PWD/ml-service/.venv/bin/python"
 ```
 
-This runs `git push` to `https://github.com/Pandaman-8/freedom-cqa-datathon.git` without force. If the repository already has commits or Git access is denied, stop and reconcile normally. The ChatGPT GitHub app previously returned HTTP 403 on writes; the included script uses **your own** local Git credentials.
+Тест запускает собственные Java и настоящий Python HTTP app, временную SQLite и подставной provider только внутри теста. Сетевая защита Python запрещает внешние соединения. Проверяется 65 разных синтетических записей: **6 разрешены, 59 явно блокируются политикой**. Дополнительно проходят **65 оценок шести разрешённых fixtures**, restart, replay без новых вызовов и review. Это не 65 разных успешных AI-диалогов и не измерение качества LLM.
+
+Для кликабельной репетиции с fake HTTP ML:
+
+```bash
+python3 -B server/src/test/python/batch_smoke.py --serve
+```
+
+Откройте напечатанный адрес без `/__tests/` для workspace либо `/__tests/` для девяти browser checks. Сервер содержит только синтетические данные. Enter останавливает его процессы и удаляет временную базу. [Сценарий демонстрации до 5 минут](docs/DEMO.md) явно отделяет fake ML от настоящего inference.
+
+## Проверки и документация
+
+- [Результаты, команды, ограничения и release blockers](docs/RELEASE_READINESS.md).
+- [Архитектура](docs/architecture.md), [Java REST API](docs/api-contract.md), [требования](docs/requirements.md).
+- [Полная инструкция Java/UI](server/README.md), [ML service](ml-service/README.md), [ML handoff](docs/ml-contract.md).
+- [Контракт и 72 fixtures](contracts/README.md), [нормативный transport contract](docs/INTEGRATION_CONTRACT.md), [задачи](plan.json), [правила разработки](AGENTS.md).
+
+`backend/`, `frontend/` и `scripts/run-backend.sh` / `run-frontend.sh` — сохранённая legacy Python/React реализация. Она не участвует в Quick Start; её тесты не заменяют Java/Python ML/browser проверки. Vite, React и порт 8000 не нужны целевому приложению.
+
+## Безопасность и границы сдачи
+
+Не публикуйте `.env`, SQLite/WAL, записи/аудио, DEV/CONTROL, signed URLs и официальные PDF. Guide содержит signed API URI. Реальные данные и Groq не используются описанными проверками. `.gitignore` снижает риск, но не удаляет уже опубликованное из истории; `python3 -B scripts/check-public-safety.py` проверяет tracked files и достижимую Git-историю без вывода найденных значений.
+
+Точный checklist PDF **отсутствует**: ожидается `data/official/chat_quality_checklist.pdf`. Seed из восьми критериев и его scoring сохранены, но полная официальная сверка не подтверждена. Динамический AI-сценарий требует отдельного согласования новой fixture-пары; текущий prompt v4 не имеет нового live quality pass. Полная готовность к официальному CONTROL не объявляется.

@@ -1,5 +1,9 @@
 # Freedom CQA — Java + Vanilla workspace
 
+Release entry points: [safe Quick Start](../README.md), [five-minute demo](../docs/DEMO.md),
+[T16/T18 evidence and blockers](../docs/RELEASE_READINESS.md). The task-number sections
+below retain implementation history; current AI behavior is described in T13 and T21.
+
 This module implements application liveness and a static Vanilla JS start page (T03),
 strict contract DTOs/validation and deterministic scoring (T04), and persistent SQLite,
 JSON import, versioned checklist REST and manual evaluation/history (T05), plus
@@ -152,7 +156,7 @@ All routes use the Java server and JSON. T12 consumes these existing routes.
 | `POST /api/evaluations/manual` | Required conversation_id, checklist_key, checklist_version, answers; returns 201 |
 | `GET /api/evaluations?conversation_id=...` | Stored history; omit filter for all evaluations |
 | `GET /api/evaluations/{id}` | Stored original answers/score and pinned version, without recalculation |
-| `POST /api/evaluations/auto` | Validate request_id/resources/version, then honest 501 EVALUATOR_UNCONFIGURED |
+| `POST /api/evaluations/auto` | Existing T13 ML HTTP + ledger; 501 if unconfigured, policy503 for unapproved pairs |
 
 Draft fields are title, description, sections and criteria; key/version are assigned by the
 server. Legacy optional defaults remain: absent description/error becomes an empty string,
@@ -167,7 +171,7 @@ conflicts 409 VERSION_CONFLICT and oversized bodies 413 PAYLOAD_TOO_LARGE. Struc
 errors use the existing detail envelope and preserve a valid auto request_id after strict
 parsing. Unexpected server faults return an empty 500, without inventing a new shared
 error code or exposing SQL, paths, source text or URLs. Unknown auto outcomes/request
-ledger and HTTP inference are not implemented; auto never saves an evaluation in T05.
+ledger and HTTP inference are implemented by T13; current behavior is documented below.
 
 Manual saves validate exact evidence against the pinned source/checklist, compute with
 T04, and persist original answers, ScoreResult and scoring_version in one short transaction.
@@ -402,7 +406,8 @@ and comment; confirm/change sends the loaded review_revision as expected_revisio
 reloads the evaluation, retains the decision draft and never replays the POST. If another
 reviewer already closed the appeal, its unsent draft is shown separately and cannot resolve
 that closed appeal. Current results always come from Java's original/final projection.
-T13 Java→Python inference and T14 real-AI appeal/review remain unimplemented by this task.
+T13 Java→Python inference and T14 model appeal/review are now implemented and tested;
+the new dynamic-criterion live scenario remains blocked by policy as described below.
 
 Modules have separate ownership: api/json transport, state/drafts, safe DOM helpers,
 datasets, conversations, checklists, answers, evaluations and review; app.js coordinates
