@@ -1,64 +1,48 @@
-// This module owns only connection status. Future views can use separate ES modules.
-const card = document.querySelector('#connection');
-const status = document.querySelector('#connection-status');
-const detail = document.querySelector('#connection-detail');
-const version = document.querySelector('#service-version');
-const button = document.querySelector('#check-connection');
-
-async function checkConnection() {
-  button.disabled = true;
-  button.textContent = 'Проверяем…';
-  card.dataset.state = 'checking';
-  status.textContent = 'Проверяем подключение…';
-  detail.textContent = 'Ожидаем ответ Java Backend.';
-  version.textContent = '—';
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-
-  try {
-    const response = await fetch('/api/health', {
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      status.textContent = 'Сервер вернул ошибку';
-      detail.textContent = `HTTP ${response.status}. Попробуйте проверить подключение ещё раз.`;
-      card.dataset.state = 'error';
-      return;
-    }
-    let health;
-    try {
-      health = await response.json();
-    } catch (error) {
-      if (controller.signal.aborted) throw error;
-      throw new Error('INVALID_HEALTH_RESPONSE');
-    }
-    if (health?.status !== 'ok' || health.service !== 'freedom-cqa-java'
-        || typeof health.version !== 'string' || !health.version.trim()) {
-      throw new Error('INVALID_HEALTH_RESPONSE');
-    }
-    card.dataset.state = 'ok';
-    status.textContent = 'Сервер доступен';
-    detail.textContent = 'Java Backend отвечает. Оценивание и ML пока недоступны.';
-    version.textContent = health.version;
-  } catch (error) {
-    card.dataset.state = 'error';
-    status.textContent = 'Нет подключения';
-    if (controller.signal.aborted) {
-      detail.textContent = 'Сервер не ответил за 5 секунд. Повторите проверку.';
-    } else if (error.message === 'INVALID_HEALTH_RESPONSE') {
-      status.textContent = 'Неожиданный ответ сервера';
-      detail.textContent = 'Не удалось подтвердить состояние Java Backend. Повторите проверку.';
-    } else {
-      detail.textContent = 'Не удалось связаться с Java Backend. Проверьте запуск сервера и повторите попытку.';
-    }
-  } finally {
-    clearTimeout(timeout);
-    button.disabled = false;
-    button.textContent = 'Проверить подключение';
+import {Drafts, Latest} from './state.js';
+import {el} from './ui.js';
+import {conversations} from './conversations.js';
+import {checklists} from './checklists.js';
+import {manual, evaluations} from './evaluations.js';
+import {datasets} from './datasets.js';
+const draftStatus=document.querySelector('#draft-status');
+const drafts=new Drafts(()=>{
+  draftStatus.textContent=drafts.pending?'Сохранение выполняется. Дождитесь результата перед сменой контекста.':
+    `Несохранённых черновиков: ${drafts.count()}. Переключение экранов сохраняет их в памяти; закрытие страницы — нет.`;
+});
+window.addEventListener('beforeunload',event=>{if(drafts.count()||drafts.pending||drafts.unknown.size){event.preventDefault();event.returnValue='';}});
+function canSwitch(){if(drafts.pending){draftStatus.textContent='Дождитесь завершения сохранения. Текущий черновик защищён.';return false;}return true;}
+const names={overview:'Обзор',conversations:'Диалоги',checklists:'Чек-листы',results:'Результаты и review',datasets:'Загрузка данных'};
+function show(name,internal=false){
+  if(!Object.hasOwn(names,name)||(!internal&&!canSwitch()))return;
+  for(const panel of document.querySelectorAll('[data-panel]'))panel.hidden=panel.dataset.panel!==name;
+  for(const b of document.querySelectorAll('[data-view]')){
+    if(b.dataset.view===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
   }
+  document.querySelector('#page-title').textContent=names[name];
+  history.replaceState(null,'','#'+name); window.scrollTo({top:0,behavior:'instant'});
 }
-
-button.addEventListener('click', checkConnection);
-checkConnection();
+for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('click',()=>show(b.dataset.view));
+document.querySelector('.brand').addEventListener('click',event=>{event.preventDefault();show('overview');});
+const totals={conversations:null,checklists:null,evaluations:null};
+function counts(key,rows){totals[key]=rows.length;document.querySelector('#overview-counts').replaceChildren(...Object.entries({conversations:'Диалогов в SQLite',checklists:'Чек-листов (latest)',evaluations:'Сохранённых оценок'}).map(([k,label])=>el('div',{class:'metric'},el('strong',{text:totals[k]??'—'}),el('span',{text:label}))));}
+const results=evaluations(document.querySelector('#evaluation-workspace'),{drafts,canSwitch,onList:rows=>counts('evaluations',rows)});
+const composer=manual(document.querySelector('#manual-workspace'),{drafts,onSaved:async id=>{show('results',true);await results.open(id);await results.load();}});
+const chats=conversations(document.querySelector('#conversation-workspace'),{canSwitch,onSelect:source=>composer.conversation(source),onList:rows=>{counts('conversations',rows);results.conversations(rows);}});
+const lists=checklists(document.querySelector('#checklist-picker'),document.querySelector('#checklist-editor'),{drafts,canSwitch,onSelect:list=>composer.checklist(list),onList:rows=>counts('checklists',rows)});
+const imports=datasets({drafts,onImported:()=>chats.load()});
+const healthReads=new Latest();
+async function health(){
+  const ticket=healthReads.next(), card=document.querySelector('#connection'), label=document.querySelector('#connection-status'), detail=document.querySelector('#connection-detail'), retry=document.querySelector('#check-connection');
+  retry.disabled=true;card.dataset.state='checking';label.textContent='Проверяем…';
+  const timer=setTimeout(()=>healthReads.controller.abort(),5000);
+  try{
+    const response=await fetch('/api/health',{cache:'no-store',signal:ticket.signal,headers:{Accept:'application/json'}});
+    const data=await response.json();if(!ticket.current())return;
+    if(!response.ok||data.status!=='ok'||data.service!=='freedom-cqa-java')throw new Error();
+    card.dataset.state='ok';label.textContent='Java доступен';document.querySelector('#service-version').textContent=data.version;
+    detail.textContent='Ручная оценка доступна. AI evaluation — после T13.';
+  }catch{if(ticket.current()){card.dataset.state='error';label.textContent='Нет подключения';detail.textContent='Проверьте запуск Java и повторите чтение.';}}
+  finally{clearTimeout(timer);if(ticket.current())retry.disabled=false;}
+}
+document.querySelector('#check-connection').addEventListener('click',health);
+show(location.hash.slice(1)||'overview');health();chats.load();lists.load();results.load();imports.load();drafts.changed();

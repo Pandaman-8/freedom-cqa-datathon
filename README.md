@@ -1,4 +1,17 @@
-# Freedom CQA — working foundation
+# Freedom CQA — current Java workspace
+
+The approved application is **Java21 + Spring Boot + SQLite**, serving HTML/CSS/Vanilla JS
+ES modules at localhost:8080. T07 organizer fetch is closed; T12 provides conversations,
+versioned checklist editing, manual evaluations, evidence, original/final scores and review,
+pending acceptance/peer review. AI integration remains T13.
+
+Start and verify using [server/README.md](server/README.md), including an isolated synthetic
+browser walkthrough. No Node build is required for the target application. The Python ML
+service is separate; the legacy instructions below describe the original reference only.
+
+---
+
+# Legacy foundation reference
 
 **Freedom Broker CQA Hackathon · 7–8 November 2026**
 

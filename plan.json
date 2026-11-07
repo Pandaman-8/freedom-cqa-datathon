@@ -3349,7 +3349,13 @@
       "files": [
         "server/src/main/resources/static/index.html",
         "server/src/main/resources/static/styles.css",
-        "server/src/main/resources/static/js/"
+        "server/src/main/resources/static/js/",
+        "server/src/test/js/workspace.test.mjs",
+        "server/src/test/browser/",
+        "server/src/test/python/workspace_smoke.py",
+        "server/README.md",
+        "README.md",
+        ".github/workflows/ci.yml"
       ],
       "inputs": [
         "Согласованный contract2.0.0; сохранённые требования/audit findings",
@@ -3366,23 +3372,102 @@
         "Native ES modules + fetch, pending/error/retry states; базовая защита stale responses/draft leakage/duplicate submits входитP0. Review forms integrated окончательноT14."
       ],
       "verification": [
-        "./server/mvnw -f server/pom.xml verify",
-        "Проверить все acceptance criteria; команды относятся к будущим файлам, сейчас не выполнялись."
+        "./server/mvnw -f server/pom.xml clean verify",
+        "python3 server/src/test/python/scoring_reference.py --check",
+        "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py",
+        "node --experimental-default-type=module server/src/test/js/workspace.test.mjs",
+        "python3 -B server/src/test/python/workspace_smoke.py",
+        "python3 -B server/src/test/python/organizer_smoke.py",
+        "python3 -B server/src/test/python/review_smoke.py",
+        "python3 -B server/src/test/python/workspace_smoke.py --serve; actual in-app browser runs /__tests/ and checks desktop/mobile workspace",
+        "Farhat acceptance and Nurtas peer review required before done."
       ],
       "estimate_hours": 3,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "in_progress",
       "risks_and_blockers": [
-        "Переписывание UI и drafts стоит времени; XSS из source text и stale selection нужно закрыть сразу.",
-        "Java target пока не реализован; новые пути обозначают будущие файлы.",
-        "Любое изменение JSON/API/полей/семантики/message IDs/validation согласовать Farhat и Nurtas ДО реализации."
+        "Technical implementation and local verification complete; Farhat acceptance and Nurtas peer review pending. T12 remains in_progress.",
+        "No real Organizer GET, real DEV/CONTROL external inference or live audio playback; browser checks use a temporary SQLite and synthetic sources only.",
+        "Drafts are in-memory, scoped and retained across view/context changes; not durable across page reload/close. beforeunload prompt behavior depends on the browser. Unknown outcomes require explicit manual reconciliation, not an exactly-once ledger.",
+        "Complete Java lists and transcripts are loaded without server pagination/virtualization; very large datasets/histories are outside tested performance scope.",
+        "T13 Java-to-Python real inference and T14 real-AI review remain unchanged/planned. No shared contract/API/scoring/ML changes."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-07",
+          "kind": "scope_and_base",
+          "branch": "codex/fs-T12-ui",
+          "base_commit": "e5abef1d57292dd4824676b603062ef66794836b",
+          "details": "T07 closed in its own commit and pushed to main after PR5 merge/explicit relayed peer approval; T12 branch created afterwards. Only T12 changed in plan in this commit. T13/T14 not started."
+        },
+        {
+          "kind": "implementation",
+          "details": [
+            "Native ES modules served by existing Java; no framework, Node build, CDN, external fonts, auth or client-side provider integration. Five connected views: real overview counts, conversations, checklist editor, results/review, dataset fetch/file import.",
+            "Original roles/timestamps/order/Unicode/message IDs; ID search and group/language/channel filters; exact evidence jump; HTTP(S)-only audio link/player connected only by user action.",
+            "Checklist key/historical version; arbitrary sections/criteria, wording, binary/scale/flag, weights, levels, NA; new key and append-only version via existing DTOs. Historical draft uses observed latest expected_version;409 retains draft and requires explicit base refresh/save.",
+            "Opaque decimal JSON lexemes preserve long BigDecimal and BigInteger tokens; discrete numeric equivalence without scoring in JS. Manual answers/explanations/exact quotes sent to Java; saved snapshot read back.",
+            "Every ScoreResult field, original/final, section totals, N/A and independent critical flags displayed from Java. Appeals, confirm/change with pinned checklist and expected_revision;409 reloads with draft retention, never automatic POST replay.",
+            "AbortController deadlines and generation guards, pending-write context lock/double-submit prevention, in-memory context-scoped drafts, beforeunload warning; unknown write outcomes block resend across context switches until explicit reconciliation acknowledgment.",
+            "textContent and safe DOM construction for source fields; safe fixed HTTP error messages; no localStorage/sessionStorage, telemetry, raw transcript logging or fake AI results."
+          ]
+        },
+        {
+          "kind": "clean_build",
+          "command": "./server/mvnw -f server/pom.xml clean verify",
+          "result": "BUILD SUCCESS;5900 JUnit tests,0 failures,0 errors,0 skipped on final application sources. Includes existing T04/T05/T06/T07 regressions. Java source/test semantics unchanged."
+        },
+        {
+          "kind": "contract_and_scoring",
+          "results": [
+            "PASS:4 Draft2020-12 schemas, plan extraction unchanged, contract2.0.0/POST /v1/evaluate and72 fixture expectations agree.",
+            "PASS:5184 independent exact Fraction scoring references, all fields."
+          ]
+        },
+        {
+          "kind": "javascript_tests",
+          "command": "node --experimental-default-type=module server/src/test/js/workspace.test.mjs",
+          "result": "PASS:8 dependency-free tests; exact BigInteger/BigDecimal JSON, invalid JSON/unsafe Number rejection, stale generations, draft isolation, audio protocol and exact quote guards, safe errors, bounded abort/no mutation replay,7==7.0 numeric level selection. Node is optional developer/CI tooling, not application runtime/build."
+        },
+        {
+          "kind": "packaged_http_smokes",
+          "result": "PASS: organizer_smoke.py, review_smoke.py and workspace_smoke.py against own JAR processes/temp databases. Synthetic import/query preservation, exact message IDs, historical checklist versions, manual70/applicable15/raw10.50/independent critical flag, confirm/change/CAS409, immutable original snapshots, actual process restart and honest auto501.",
+          "real_organizer_get": "NOT RUN",
+          "provider_requests": "NOT RUN"
+        },
+        {
+          "kind": "actual_browser",
+          "tool": "browser:control-in-app-browser",
+          "target": "Packaged JAR through temporary loopback test proxy; synthetic temporary SQLite; test harness outside production static resources.",
+          "result": "PASS:10 browser scenarios on final JAR; desktop visually inspected, mobile390x844 inspected with no horizontal document overflow and working KZ filter; viewport override reset.",
+          "scenarios": [
+            "Live overview/conversation APIs; RU/KZ/EN search/group/language/channel filters; exact transcript IDs/roles/repeated timestamps/Unicode/newlines/long text and literal img/script strings.",
+            "Delayed conversation A response cannot replace B, including transport ignoring AbortController.",
+            "Delayed checklist v1 cannot replace v2; manual drafts remain isolated and survive navigation/context switches.",
+            "Invalid quote rejected; double manual submit produces one POST; persisted Java result70 with N/A,critical flag and raw10.50.",
+            "Evidence navigates by exact m0003 despite repeated timestamps.",
+            "Appeal confirm sends expected_revision=1 and preserves original.",
+            "Concurrent appeal advances revision; stale review returns409, reloads, retains reason/replacement and makes no automatic replay. Explicit change yields Final0 with Original70.",
+            "Unknown mutation outcome retains quote and blocks another POST even after switching away/back; explicit reconciliation acknowledgment required.",
+            "UI-created arbitrary checklist with scale/levels/section and exact weight0.123456789012345678901;409 preserves draft,explicit base refresh then v3;v1 unchanged.",
+            "Audio has no src before action; organizer safe503; AI unavailable/no auto POST; imported HTML-like group_id rendered as text without image nodes."
+          ],
+          "test_limit": "Race/error tests intentionally inject transport delays/failures around real JAR reads; normal writes persist in Java. Actual external audio playback, cross-browser matrix and real AI not tested. Initial textarea rendering defect was fixed before final PASS; test timing was corrected to wait for pending mutation completion."
+        },
+        {
+          "kind": "ci_configuration",
+          "details": "Added java-workspace CI job:Java21/Maven clean verify,scoring reference,8 JS tests,three synthetic packaged HTTP smokes. Existing backend/frontend/ml-service jobs preserved; no real Groq/Organizer calls. GitHub run status is reported at delivery, not preclaimed before push. Browser suite is explicitly local, not claimed as CI."
+        },
+        {
+          "kind": "preservation_and_review",
+          "details": "Protected-file SHA256 checks confirm contracts/**,ml-service/**,all server/src/main/java/** (including scoring/T06/T07),legacy backend/frontend and frontend/package-lock.json unchanged. Synthetic fixtures only; no private PDFs, datasets, SQLite, signed credential URLs or secrets added. T12 acceptance/peer approval not claimed."
+        }
+      ],
       "requirement_ids": [
         "R01",
         "R05",

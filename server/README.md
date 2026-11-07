@@ -1,10 +1,12 @@
-# Freedom CQA — Java foundation and scoring
+# Freedom CQA — Java + Vanilla workspace
 
 This module implements application liveness and a static Vanilla JS start page (T03),
 strict contract DTOs/validation and deterministic scoring (T04), and persistent SQLite,
 JSON import, versioned checklist REST and manual evaluation/history (T05), plus
 immutable evaluations and atomic appeals/review (T06), and organizer dataset fetching
-with a minimal Vanilla group_id form (T07, pending peer review).
+with a Vanilla group_id form (T07, closed after peer approval), plus the T12 Vanilla
+workspace for conversations, versioned checklists, manual evaluations and T06 review.
+T12 remains in_progress pending acceptance and peer review.
 Java-to-ML HTTP integration is not implemented.
 The legacy backend/frontend and shared contract2.0.0 are unchanged.
 
@@ -72,11 +74,11 @@ protected against UPDATE/DELETE; later reviews must use separate records.
 
 ## Frontend and tests
 
-`src/main/resources/static/` contains index.html, styles.css and the native ES module
-js/app.js. It fetches `/api/health` on load and explicit retry, uses textContent for response
-text, and handles HTTP failures, malformed health responses, network errors and a5s timeout.
-Future modules can extend the static directory without a bundler. Planned features are
-labelled as unimplemented; no fake evaluations or customer statistics are displayed.
+`src/main/resources/static/` is a native ES-module application, served by Java without
+npm, a bundler, external fonts/CDNs or authentication. Overview counts come from Java;
+conversations, checklists, manual results and appeals use the existing same-origin APIs.
+Health indicates Java liveness; AI is explicitly unavailable until T13. Detailed T12
+architecture, verification and a synthetic manual walkthrough are below.
 
 `FoundationTest` starts a real embedded server on a random port and checks application
 context/SQLite driver via SELECT1, health JSON, HTML, and CSS/JS HTTP resources. Browser
@@ -133,7 +135,7 @@ compatibility is claimed by these tests.
 
 ## T05 local REST API
 
-All routes use the Java server and JSON. The browser remains the T03 start page.
+All routes use the Java server and JSON. T12 consumes these existing routes.
 
 | Route | Behavior |
 |---|---|
@@ -270,7 +272,7 @@ Farhat; Nurtas did not independently rerun the 5,841 passing JUnit tests. See pl
 The Java-served page now accepts group_id, shows loading/success/safe errors, accepted
 record count, and saved conversation counts grouped by dataset. It uses same-origin
 `POST /api/datasets/fetch` and `GET /api/conversations`; external text is rendered with
-textContent. It is not the T12 conversation viewer, checklist editor or review dashboard.
+textContent. T12 retains this workflow in the Загрузка данных screen.
 
 ```text
 POST /api/datasets/fetch
@@ -355,5 +357,125 @@ python3 -B server/src/test/python/organizer_smoke.py --serve
 ```
 
 Real organizer GET: **NOT RUN**; it requires explicit permission. Live availability,
-signature expiry and access to the organizer's CONTROL group remain unverified. T07 awaits
-its own peer review; T06 approval does not imply approval of the new organizer boundary.
+signature expiry and access to the organizer's CONTROL group remain unverified. Nurtas
+approved T07 after ed21ee0 on 2026-11-07, as explicitly relayed by Farhat in chat; PR5 was
+merged as 22d5b21. This is not claimed as a separate GitHub Review.
+
+
+## T12 Vanilla workspace
+
+Five screens: overview, conversations, checklist editor, results/review, and dataset fetch
+or file import. Conversation search and group/language/channel filters run over Java's
+current list. Transcript text, Unicode, role, timestamp and message_id remain exact;
+long messages wrap. Evidence opens the pinned transcript and focuses an exact message ID,
+including when timestamps/text repeat. Source audio offers an HTTP(S) link and a player
+that is connected only by explicit user action. No offsets, audio analysis or successful
+playback are invented.
+
+The global checklist picker selects key and explicit version (blank means latest).
+`GET /api/checklists` supplies latest versions only; historical versions are read by their
+number. Sections, arbitrary criterion IDs, wording, binary/scale/flag, weights, levels and
+N/A are editable. Each PUT uses an observed latest `expected_version`, even when the draft
+started from history. A 409 keeps the draft; **Обновить latest для черновика** explicitly
+refreshes its base without resubmitting or overwriting draft fields. Java validates all
+composition rules. Non-scale criteria send an empty levels list; flag requires zero weight
+and no N/A. Decimal inputs use a period and JSON number notation, not locale commas.
+
+`json.js` retains JSON numeric lexemes as opaque Decimal values, including BigInteger
+versions/revisions and long BigDecimal values. Serialization emits numeric JSON tokens,
+never numeric strings or silently rounded Number values. Numeric equivalence is used only
+to select configured scale levels (7 and 7.0); no score calculation happens in JavaScript.
+
+Manual evaluation requires an explicit answer and explanation for every criterion and at
+least one exact, nonblank quote per answer. Choose a source message, then copy its text or
+a selected exact fragment; no quote is generated automatically. Java validates, scores and
+persists; results are read back with GET. Original/Final show all emitted score fields,
+section totals, N/A, critical IDs, contract/scorer versions and review revision. Expand a
+criterion for weights, raw/earned points, explanation and evidence. `earned_points` is the
+server's normalized contribution; clients never sum rounded rows.
+
+Review uses the evaluation's pinned checklist and source. Create appeal sends criterion_id
+and comment; confirm/change sends the loaded review_revision as expected_revision. A 409
+reloads the evaluation, retains the decision draft and never replays the POST. If another
+reviewer already closed the appeal, its unsent draft is shown separately and cannot resolve
+that closed appeal. Current results always come from Java's original/final projection.
+T13 Java→Python inference and T14 real-AI appeal/review remain unimplemented by this task.
+
+Modules have separate ownership: api/json transport, state/drafts, safe DOM helpers,
+datasets, conversations, checklists, answers, evaluations and review; app.js coordinates
+screens. Reads have AbortController deadlines plus generation checks. Mutations have no
+automatic retries; pending writes lock context switching and prevent double submits.
+An unknown network outcome retains the draft and blocks resending, even after switching
+context, until the user explicitly acknowledges checking saved records. This is a local
+manual reconciliation aid, not an exactly-once request ledger (T13).
+
+Drafts are scoped by conversation/checklist version or evaluation/appeal and kept in memory
+across screen/context changes. beforeunload warns about unsaved drafts/pending/unknown writes.
+They are deliberately **not durable across reload/close**, and browsers control whether
+beforeunload prompts appear. There is no localStorage/sessionStorage, analytics or transcript
+logging. External text uses textContent; errors use fixed messages rather than raw bodies.
+The UI loads complete lists, without server pagination or transcript virtualization; very
+large datasets/histories can need a later performance task. Client substring checks do not
+establish semantic relevance. External audio availability/CORS is unverified.
+
+### Reproducible checks
+
+```bash
+./server/mvnw -f server/pom.xml clean verify
+python3 server/src/test/python/scoring_reference.py --check
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+python3 -B server/src/test/python/workspace_smoke.py
+python3 -B server/src/test/python/organizer_smoke.py
+python3 -B server/src/test/python/review_smoke.py
+# Optional developer tests; Node22 is not required to build or run the application.
+node --experimental-default-type=module server/src/test/js/workspace.test.mjs
+```
+
+Restore the isolated contract validator using `contracts/README.md` if needed.
+The java-workspace CI job runs Java, scoring reference, the dependency-free JS tests and
+synthetic packaged HTTP smokes. Existing ML CI independently validates the 72 contract
+fixtures. CI does not run a real browser; a Java build is not proof of UI execution.
+
+### Isolated browser / manual smoke
+
+```bash
+python3 -B server/src/test/python/workspace_smoke.py --serve
+```
+
+This script first verifies the actual JAR's HTTP flows, then prints **WORKSPACE** and
+**BROWSER TESTS** loopback URLs. It owns a temporary SQLite, sets Organizer URL empty, uses
+only synthetic RU/KZ/EN text and restarts only its own JVM. It does not open the user's DB.
+Open WORKSPACE for manual checks, or BROWSER TESTS and click **Run browser regression**.
+The test harness is outside production static assets; its routes exist only in the local
+Python test proxy. It tests real Java persistence; only race/error scenarios inject controlled
+browser transport delays/failures. No fake success results enter the production UI.
+
+Manual walkthrough:
+
+1. Open **Диалоги**, filter group UI-SYNTHETIC, language KZ/RU/EN and channel. Search by ID.
+   Select RU, verify m0001–m0005, repeated 00:01, operator/client/bot/system, literal HTML and
+   exact newlines/Unicode. EN is a call with ISO timestamps and an unloaded synthetic audio
+   link; do not expect its example.invalid audio to play.
+2. Pick `ui-synthetic`, version `1`. In **Чек-листы**, inspect sections and arbitrary IDs.
+   Create a new key with a weighted criterion and valid sections; edit levels/wording/N/A,
+   save v2, then open v1 and verify history. Saving from history appends after latest.
+3. In RU manual evaluation, set WELCOME_X=N/A, CLARITY_X=7, RISK_X=yes. For each, enter an
+   explanation, add evidence, choose m0003 and **Взять текст сообщения**. Save once. Expect
+   origin manual, overall70, applicable_weight15, raw_points10.50 for CLARITY_X and an
+   independent critical flag. Expand Original/Final criteria and jump to m0003.
+4. Appeal WELCOME_X and confirm with a reason. Appeal CLARITY_X, choose change and level0,
+   retain grounded evidence, and save with a reason. Original remains70, Final becomes0.
+   A second window can change review revision; submitting the stale first window must show
+   REVIEW_CONFLICT, preserve its draft and require an explicit new decision.
+5. Edit a manual/checklist/review draft, switch contexts and return. Verify isolation and
+   retention. Double-click submit: one write only. For checklist409, create a competing
+   version in another window; refresh latest explicitly, inspect the retained draft, save.
+6. In the smoke terminal type `restart` and press Enter. Refresh the browser to verify stored
+   checklist versions, evaluations and appeal history survive. Unsaved browser drafts are
+   not expected to survive a page reload. Press Enter with an empty line to stop/clean up.
+7. At ~390px width check navigation, forms and long-message wrapping. No transcript HTML
+   should create image/script elements. AI remains marked unavailable until T13.
+
+Real Organizer GET, real DEV/CONTROL→Groq, audio playback against external providers and
+real AI→review were **NOT RUN**. This scope tests manual Java workflows; it does not close
+T13/T14 or establish full official checklist-PDF verification.

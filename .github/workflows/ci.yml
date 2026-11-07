@@ -47,3 +47,34 @@ jobs:
         run: python -m pytest -q ml-service/tests
       - name: Validate 72 contract fixtures
         run: python -B contracts/validate.py
+
+  java-workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: server/pom.xml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Java regression and packaged Vanilla assets
+        run: ./server/mvnw -f server/pom.xml clean verify
+      - name: Exact scoring reference
+        run: python3 server/src/test/python/scoring_reference.py --check
+      - name: Dependency-free JavaScript unit tests
+        run: node --experimental-default-type=module server/src/test/js/workspace.test.mjs
+      - name: Synthetic packaged HTTP regressions
+        env:
+          CQA_ORGANIZER_URL: ''
+          GROQ_API_KEY: ''
+        run: |
+          python3 -B server/src/test/python/workspace_smoke.py
+          python3 -B server/src/test/python/organizer_smoke.py
+          python3 -B server/src/test/python/review_smoke.py
