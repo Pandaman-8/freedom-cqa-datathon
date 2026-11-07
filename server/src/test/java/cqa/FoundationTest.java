@@ -12,7 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "cqa.db-path=${java.io.tmpdir}/cqa-foundation-${random.uuid}/test.sqlite")
 class FoundationTest {
     @Autowired private TestRestTemplate http;
     @Autowired private ApplicationContext context;

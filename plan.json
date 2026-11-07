@@ -2489,7 +2489,7 @@
       ],
       "estimate_hours": 2.5,
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
-      "status": "planned",
+      "status": "done",
       "risks_and_blockers": [
         "Потеря исходных IDs/строк/version history или latest reread; весь legacy API переносится, а не уже работает в Java.",
         "Java target пока не реализован; новые пути обозначают будущие файлы.",
@@ -2500,7 +2500,164 @@
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-07",
+          "kind": "scope_and_base",
+          "branch": "codex/fs-T05-storage-api",
+          "base_commit": "5474668fad65e3df6fd8ec4f73df2636f5d7023e",
+          "details": "T03 and T04 were present and done at preflight. Implemented only T05. No contract/schema/legacy changes, no T06 review/appeals, T07 organizer fetch, T13 HTTP inference/request ledger or batch. No commit/push."
+        },
+        {
+          "kind": "components",
+          "paths": [
+            "server/src/main/java/cqa/api/ApiModels.java",
+            "server/src/main/java/cqa/api/RequestBodies.java",
+            "server/src/main/java/cqa/api/ResourceController.java",
+            "server/src/main/java/cqa/api/ApiErrors.java",
+            "server/src/main/java/cqa/api/ApiFailure.java",
+            "server/src/main/java/cqa/dataset/Dataset.java",
+            "server/src/main/java/cqa/service/ChecklistService.java",
+            "server/src/main/java/cqa/service/ConversationService.java",
+            "server/src/main/java/cqa/service/EvaluationService.java",
+            "server/src/main/java/cqa/repository/StorageConfiguration.java",
+            "server/src/main/java/cqa/repository/StorageInitializer.java",
+            "server/src/main/java/cqa/repository/StoredJson.java",
+            "server/src/main/java/cqa/repository/ChecklistRepository.java",
+            "server/src/main/java/cqa/repository/ConversationRepository.java",
+            "server/src/main/java/cqa/repository/EvaluationRepository.java",
+            "server/src/main/resources/db/schema.sql",
+            "server/src/test/java/cqa/StorageApiTest.java",
+            "server/src/test/python/storage_smoke.py"
+          ],
+          "modified_support": [
+            "server/pom.xml",
+            "server/src/main/resources/application.properties",
+            "server/src/test/java/cqa/FoundationTest.java",
+            "server/.gitignore",
+            "server/README.md"
+          ],
+          "dependencies": "No new library dependency; POM packages the original seed unchanged as a classpath resource."
+        },
+        {
+          "kind": "persistent_storage",
+          "default_path": "${user.home}/.local/share/freedom-cqa/java/cqa.sqlite",
+          "override": "Absolute CQA_DB_PATH or cqa.db-path; relative paths rejected",
+          "details": [
+            "One Hikari connection; SQLiteConfig applies foreign_keys=ON, busy_timeout=5000, WAL and IMMEDIATE write transactions on every connection, including replacement connections.",
+            "Startup creates directory/schema and inserts seed v1 without overwriting the latest pointer or any existing revision. Seed bytes in packaged JAR verified identical to backend/app/seed/chat_quality.json.",
+            "Composite keys, source uniqueness, foreign keys and indexes; immutable checklist/conversation/evaluation rows enforced by triggers. Version text preserves BigInteger range; latest version is an explicit pointer.",
+            "Import is one atomic transaction; identical source records are idempotent and changed content/audio returns409 VERSION_CONFLICT. All roles/text/order/timestamps retained; positional IDs generated without timestamp deduplication.",
+            "Manual scoring uses the pinned source and exact checklist version, validates T04 evidence/answers, persists answers and original ScoreResult with cqa-score/1. History reads stored snapshots; no latest lookup/recalculation. Future reviews remain separate."
+          ]
+        },
+        {
+          "kind": "rest_endpoints",
+          "implemented": [
+            "POST /api/datasets/import",
+            "GET /api/conversations",
+            "GET /api/conversations/{id}",
+            "GET /api/checklists",
+            "GET /api/checklists/{key} with optional version",
+            "POST /api/checklists/{key}",
+            "PUT /api/checklists/{key}?expected_version=N",
+            "POST /api/evaluations/manual",
+            "GET /api/evaluations with optional conversation_id",
+            "GET /api/evaluations/{id}",
+            "POST /api/evaluations/auto"
+          ],
+          "behavior": "Manual201; auto validates required request_id/resources/pinned version then returns501 EVALUATOR_UNCONFIGURED without inference or saved evaluation. Input422, missing404, conflict409, size413 use documented codes and safe detail envelopes. Bounded reads cover Content-Length and chunked requests. Unexpected500 has an empty body; no new shared error code introduced."
+        },
+        {
+          "kind": "clean_build_and_tests",
+          "command": "./server/mvnw -f server/pom.xml clean verify -B -ntp -o",
+          "result": "BUILD SUCCESS; tests5784, failures0, errors0, skipped0. Executable JAR built. Cached dependencies permitted offline build.",
+          "suites": [
+            {
+              "suite": "cqa.FoundationTest",
+              "tests": 4,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.StorageApiTest",
+              "tests": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dto.ContractFixturesTest",
+              "tests": 72,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.dto.StrictDtoTest",
+              "tests": 499,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            },
+            {
+              "suite": "cqa.scoring.ScoringEngineTest",
+              "tests": 5191,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "reports": "server/target/surefire-reports/",
+          "new_tests": "18 StorageApiTest methods exercise real loopback GET/POST/PUT, temporary SQLite, first/repeated seed, changed-content rollback, languages/roles/timestamps, version history/CAS, concurrent edits from one and two application instances, manual pinning before v2/save after v2, evidence/type errors, immutable snapshots, FK/trigger protection, pool replacement pragmas, chunked/oversize limits and application restart. FoundationTest uses a separate temporary DB; no automated JUnit test reads DEV/CONTROL."
+        },
+        {
+          "kind": "regression_and_contract",
+          "commands": [
+            "python3 server/src/test/python/scoring_reference.py --check",
+            "/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py"
+          ],
+          "results": [
+            "PASS:5184 independent exact Fraction references across every score field; Java5184 combinations plus custom scoring cases passed in clean verify.",
+            "PASS:72 fixtures in both Java and Python artifact checks;16positive/23shape-negative/28context-negative/5parser-negative. All4 Draft2020-12 schemas equal plan.json; contract2.0.0, POST /v1/evaluate and documented examples agree.",
+            "T03 actual HTTP health/HTML/CSS/JS tests pass; T04 DTO/scoring sources unchanged."
+          ]
+        },
+        {
+          "kind": "packaged_jar_and_private_dev_smoke",
+          "command": "python3 server/src/test/python/storage_smoke.py --dataset data/dev/invoke.json",
+          "result": "PASS. Isolated private temporary SQLite and free loopback port; only own Java child started/stopped. No external API, Python ML or paid inference.",
+          "synthetic_checks": [
+            "Packaged seed exact bytes; health and static assets",
+            "POST import twice, POST checklist v1, PUT v2, stale PUT409, GET v1/latest",
+            "Manual201 score100 with stored snapshot and pinned v1; auto501 with request_id and no extra evaluation",
+            "Real process restart from a different working directory retains source, v2 and evaluation history"
+          ],
+          "dev_aggregates": {
+            "conversations": 65,
+            "messages": 1268,
+            "languages": {
+              "RU": 35,
+              "KZ": 15,
+              "EN": 15
+            },
+            "channels": {
+              "agent chat": 60,
+              "voice call": 5
+            }
+          },
+          "dev_checks": "Imported twice without duplicates; GET of every conversation compared to original transcript/language/channel/audio URL and all positional message IDs before and after process restart. Only aggregate counts printed. Temporary DB/logs removed after smoke; no private payloads added to repository."
+        },
+        {
+          "kind": "fixes_and_preservation",
+          "details": "Initial REST tests caught decimal-scale formatting loss when re-reading snapshots and a connection reset instead of413 for a just-oversized upload. Fixed persisted JSON decimal preservation and bounded stream reading; all final tests pass without weakening checks. Protected file hashes unchanged (contracts, AGENTS, integration spec, seed, backend, frontend and existing package-lock). Only T05 status/completion_evidence changed in plan. No joint approvals invented."
+        },
+        {
+          "kind": "remaining_scope",
+          "details": "No blockers for T05. T06 still owns atomic appeals/reviews; current final fields equal originals and appeals is empty. T13 still owns real Java-to-Python HTTP inference and request ledger; auto intentionally501. No completed ML compatibility or official checklist-PDF verification claimed."
+        }
+      ],
       "requirement_ids": [
         "R03"
       ],

@@ -1,8 +1,9 @@
 # Freedom CQA — Java foundation and scoring
 
-This module implements application liveness, a static Vanilla JS start page (T03), and
-strict contract DTOs/validation plus a pure deterministic scoring engine (T04).
-There is no evaluation REST flow, checklist CRUD, appeal, dataset import or ML integration yet.
+This module implements application liveness and a static Vanilla JS start page (T03),
+strict contract DTOs/validation and deterministic scoring (T04), and persistent SQLite,
+JSON import, versioned checklist REST and manual evaluation/history (T05).
+Appeals, organizer API fetching and ML HTTP integration are not implemented.
 The legacy backend/frontend and shared contract2.0.0 are unchanged.
 
 ## Requirements and pinned versions
@@ -53,9 +54,19 @@ This is Java liveness only. It does not claim ML, scoring, durable persistence o
 assessment readiness. `cqa.version` is filled from the Maven project version during resource
 processing. No organizer/provider calls occur during startup or health checks.
 
-SQLite uses `jdbc:sqlite::memory:` with one Hikari connection to make JDBC autoconfiguration
-start without creating data files. No schema, migrations or repositories are implemented.
-This is intentionally ephemeral; durable SQLite configuration belongs toT05.
+SQLite uses one Hikari connection and the absolute default path
+`${user.home}/.local/share/freedom-cqa/java/cqa.sqlite`, independent of the working directory.
+Override with an **absolute** `CQA_DB_PATH` or `--cqa.db-path=/absolute/path/cqa.sqlite`.
+The Java database is separate from the legacy Python database; no legacy history is migrated.
+
+Every connection enables foreign keys, a 5-second busy timeout and WAL. Write transactions
+use SQLite IMMEDIATE mode; checklist version checking and insertion occur atomically.
+The database directory/schema are created on startup. The seed is packaged unchanged from
+`backend/app/seed/chat_quality.json` at build time; startup inserts v1 only if missing and
+never resets the latest-version pointer. The packaged JAR does not need a source checkout.
+Version numbers are stored as canonical integer text, with an explicit latest pointer, to
+preserve the shared DTO's BigInteger range. Original source/checklist/evaluation rows are
+protected against UPDATE/DELETE; later reviews must use separate records.
 
 ## Frontend and tests
 
@@ -117,3 +128,63 @@ provider calls or external HTTP. Offline Maven requires previously cached build 
 T03's tests still open a local HTTP port. The independent shared-contract check remains
 the command in `contracts/README.md`. No Python ML-service implementation or live HTTP
 compatibility is claimed by these tests.
+
+## T05 local REST API
+
+All routes use the Java server and JSON. The browser remains the T03 start page.
+
+| Route | Behavior |
+|---|---|
+| `POST /api/datasets/import` | Organizer JSON envelope, atomic/idempotent, 16 MiB limit |
+| `GET /api/conversations` | All imported conversation summaries |
+| `GET /api/conversations/{id}` | Original transcript, positional messages and local audio URL |
+| `GET /api/checklists` | Latest version of each checklist |
+| `GET /api/checklists/{key}?version=N` | Exact historical version; omit version for latest |
+| `POST /api/checklists/{key}` | Create v1 from editable draft fields |
+| `PUT /api/checklists/{key}?expected_version=N` | Append version; stale version returns 409 |
+| `POST /api/evaluations/manual` | Required conversation_id, checklist_key, checklist_version, answers; returns 201 |
+| `GET /api/evaluations?conversation_id=...` | Stored history; omit filter for all evaluations |
+| `GET /api/evaluations/{id}` | Stored original answers/score and pinned version, without recalculation |
+| `POST /api/evaluations/auto` | Validate request_id/resources/version, then honest 501 EVALUATOR_UNCONFIGURED |
+
+Draft fields are title, description, sections and criteria; key/version are assigned by the
+server. Legacy optional defaults remain: absent description/error becomes an empty string,
+absent audio_url becomes null. Explicit nulls, extra fields and wrong types are validated.
+The import result's imported_records counts accepted input records, including identical
+reimports. Changed content (including audio_url) under an existing composite ID returns
+409 VERSION_CONFLICT and rolls back the whole import. No organizer URL is fetched.
+
+Other request bodies have a 1 MiB bound; limits count actual bytes, including chunked
+requests. Validation errors use 422 INVALID_INPUT, missing resources 404 NOT_FOUND,
+conflicts 409 VERSION_CONFLICT and oversized bodies 413 PAYLOAD_TOO_LARGE. Structured
+errors use the existing detail envelope and preserve a valid auto request_id after strict
+parsing. Unexpected server faults return an empty 500, without inventing a new shared
+error code or exposing SQL, paths, source text or URLs. Unknown auto outcomes/request
+ledger and HTTP inference are not implemented; auto never saves an evaluation in T05.
+
+Manual saves validate exact evidence against the pinned source/checklist, compute with
+T04, and persist original answers, ScoreResult and scoring_version in one short transaction.
+No latest-version lookup occurs during save or history reads. final_answers/final_score
+currently equal the originals, appeals is empty and review_status is evaluated; there is
+no reviewer decision. T06 can add separate review tables without rewriting originals.
+
+`StorageApiTest` runs real HTTP against temporary SQLite files, tests rollback, two
+concurrent applications updating the same checklist, pool connection replacement,
+chunked limits and application restart. `FoundationTest` also uses a temporary file DB.
+No automated JUnit test reads DEV/CONTROL or launches Python ML.
+
+```bash
+./server/mvnw -f server/pom.xml clean verify
+python3 server/src/test/python/scoring_reference.py --check
+/tmp/freedom-cqa-t02-validation/bin/python -B contracts/validate.py
+```
+
+The optional local packaged-JAR smoke script creates an isolated private temporary DB,
+binds a free loopback port, checks synthetic GET/POST/PUT/manual/501 flows, and restarts
+only its own process. With `--dataset` it also imports that local file, checks every stored
+source and prints aggregate counts only. It performs no external network requests:
+
+```bash
+python3 server/src/test/python/storage_smoke.py
+python3 server/src/test/python/storage_smoke.py --dataset data/dev/invoke.json
+```
