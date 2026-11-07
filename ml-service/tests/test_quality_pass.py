@@ -56,6 +56,9 @@ def test_quality_pass_rejects_model_change_before_ledger_or_network(monkeypatch)
 
 
 def test_repeat_pass_keeps_baseline_and_cannot_overwrite_its_own_ledger(monkeypatch, tmp_path):
+    from app import prompt
+    # This ledger belongs to the historical v3 run, not the current prompt.
+    monkeypatch.setattr(prompt, "PROMPT_VERSION", "cqa-dynamic/3")
     monkeypatch.setattr(quality_pass, "ROOT", tmp_path)
     baseline = quality_pass.reserve_ledger("baseline")
     baseline.write_text('{"status": "complete", "synthetic_test_only": true}')
@@ -77,10 +80,11 @@ def test_repeat_pass_rejects_unknown_name_without_creating_ledger(monkeypatch, t
     assert not list(tmp_path.iterdir())
 
 
-def test_repeat_pass_rejects_wrong_prompt_version(monkeypatch, tmp_path):
+@pytest.mark.parametrize("version", ["cqa-dynamic/2", "cqa-dynamic/4"])
+def test_repeat_pass_rejects_wrong_prompt_version(monkeypatch, tmp_path, version):
     from app import prompt
     monkeypatch.setattr(quality_pass, "ROOT", tmp_path)
-    monkeypatch.setattr(prompt, "PROMPT_VERSION", "cqa-dynamic/2")
+    monkeypatch.setattr(prompt, "PROMPT_VERSION", version)
     with pytest.raises(ValueError, match="requires prompt"):
         quality_pass.reserve_ledger("prompt-v3")
     assert not list(tmp_path.iterdir())

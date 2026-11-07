@@ -1,0 +1,372 @@
+{
+  "proposal_id": "ru_dynamic_steps_proposal",
+  "status": "offline_proposal_only",
+  "registered_for_inference": false,
+  "human_review": "pending; not part of the 24 T09 labels accepted by Nurtas",
+  "proposed_answers_origin": "Assistant-authored discussion material, not model output and not a successful evaluation.",
+  "approval_required": "Farhat agreement before changing Java SyntheticPolicy or either service synthetic registry; separate authorization before any live call.",
+  "purpose": "One new fictional conversation, two checklist versions: a negative old greeting condition and a positive new ordered-steps condition. Demonstrate rubric changes without hardcoded IDs.",
+  "contrast": {
+    "old_criterion_id": "LOCAL_GREETING",
+    "old_answer": "no",
+    "new_criterion_id": "DEMO_STEP_ORDER",
+    "new_answer": "yes",
+    "checklist_key": "synthetic-demo-steps",
+    "versions": [
+      1,
+      2
+    ]
+  },
+  "request_v1": {
+    "contract_version": "2.0.0",
+    "request_id": "44444444-4444-4444-8444-444444444441",
+    "conversation": {
+      "id": "SYNTHETIC:ru_dynamic_steps_proposal",
+      "dataset_group_id": "SYNTHETIC",
+      "conversation_id": "ru_dynamic_steps_proposal",
+      "channel": "agent chat",
+      "language": "RU",
+      "messages": [
+        {
+          "id": "m0001",
+          "timestamp": "00:01",
+          "speaker": "client",
+          "text": "Как открыть справку в учебном приложении? Нужны два шага, без доступа к аккаунту."
+        },
+        {
+          "id": "m0002",
+          "timestamp": "00:02",
+          "speaker": "bot",
+          "text": "Здравствуйте! Сейчас подключится оператор."
+        },
+        {
+          "id": "m0003",
+          "timestamp": "00:03",
+          "speaker": "operator",
+          "text": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+        },
+        {
+          "id": "m0004",
+          "timestamp": "00:04",
+          "speaker": "client",
+          "text": "Спасибо, порядок понятен."
+        },
+        {
+          "id": "m0005",
+          "timestamp": "00:05",
+          "speaker": "operator",
+          "text": "Если останутся вопросы, напишите сюда. До свидания."
+        }
+      ]
+    },
+    "checklist": {
+      "key": "synthetic-demo-steps",
+      "version": 1,
+      "title": "Synthetic two-step help demo",
+      "description": "Fictional training app; proposal only, no external product facts or audio.",
+      "sections": [
+        {
+          "id": "quality",
+          "title": "Quality"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "LOCAL_GREETING",
+          "section_id": "quality",
+          "title": "LOCAL_GREETING",
+          "instruction": "Yes if the first operator response greets and introduces themselves in the customer language. A bot greeting does not count.",
+          "kind": "binary",
+          "weight": 25,
+          "allow_na": false,
+          "na_rule": null,
+          "levels": []
+        },
+        {
+          "id": "LOCAL_IDENTITY",
+          "section_id": "quality",
+          "title": "LOCAL_IDENTITY",
+          "instruction": "Yes if identity verification occurs before a protected account action.",
+          "kind": "binary",
+          "weight": 25,
+          "allow_na": true,
+          "na_rule": "Only a general public question is asked, without a protected account action.",
+          "levels": []
+        },
+        {
+          "id": "LOCAL_CLARITY",
+          "section_id": "quality",
+          "title": "LOCAL_CLARITY",
+          "instruction": "Rate understandable wording using the configured levels, independently of politeness and external company facts.",
+          "kind": "scale",
+          "weight": 50,
+          "allow_na": false,
+          "na_rule": null,
+          "levels": [
+            {
+              "value": 0,
+              "description": "No understandable response."
+            },
+            {
+              "value": 4,
+              "description": "Some ambiguous wording."
+            },
+            {
+              "value": 10,
+              "description": "Clear, understandable wording. Assess clarity separately from politeness and factual correctness."
+            }
+          ]
+        },
+        {
+          "id": "LOCAL_GROSS",
+          "section_id": "quality",
+          "title": "LOCAL_GROSS",
+          "instruction": "Yes if the operator explicitly insults the client; no otherwise. A separate weightless violation flag.",
+          "kind": "flag",
+          "weight": 0,
+          "allow_na": false,
+          "na_rule": null,
+          "levels": []
+        }
+      ]
+    }
+  },
+  "request_v2": {
+    "contract_version": "2.0.0",
+    "request_id": "44444444-4444-4444-8444-444444444442",
+    "conversation": {
+      "id": "SYNTHETIC:ru_dynamic_steps_proposal",
+      "dataset_group_id": "SYNTHETIC",
+      "conversation_id": "ru_dynamic_steps_proposal",
+      "channel": "agent chat",
+      "language": "RU",
+      "messages": [
+        {
+          "id": "m0001",
+          "timestamp": "00:01",
+          "speaker": "client",
+          "text": "Как открыть справку в учебном приложении? Нужны два шага, без доступа к аккаунту."
+        },
+        {
+          "id": "m0002",
+          "timestamp": "00:02",
+          "speaker": "bot",
+          "text": "Здравствуйте! Сейчас подключится оператор."
+        },
+        {
+          "id": "m0003",
+          "timestamp": "00:03",
+          "speaker": "operator",
+          "text": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+        },
+        {
+          "id": "m0004",
+          "timestamp": "00:04",
+          "speaker": "client",
+          "text": "Спасибо, порядок понятен."
+        },
+        {
+          "id": "m0005",
+          "timestamp": "00:05",
+          "speaker": "operator",
+          "text": "Если останутся вопросы, напишите сюда. До свидания."
+        }
+      ]
+    },
+    "checklist": {
+      "key": "synthetic-demo-steps",
+      "version": 2,
+      "title": "Synthetic two-step help demo",
+      "description": "Fictional training app; proposal only, no external product facts or audio.",
+      "sections": [
+        {
+          "id": "quality",
+          "title": "Quality"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "DEMO_STEP_ORDER",
+          "section_id": "quality",
+          "title": "Ordered next steps",
+          "instruction": "Yes if the operator gives two concrete next steps in explicit order: first open the Help section, then select Training help. No if either step or their order is missing. Bot instructions do not count. Judge only what is stated in the transcript, not whether the fictional app actually works.",
+          "kind": "binary",
+          "weight": 25,
+          "allow_na": false,
+          "na_rule": null,
+          "levels": []
+        },
+        {
+          "id": "LOCAL_IDENTITY",
+          "section_id": "quality",
+          "title": "LOCAL_IDENTITY",
+          "instruction": "Yes if identity verification occurs before a protected account action.",
+          "kind": "binary",
+          "weight": 25,
+          "allow_na": true,
+          "na_rule": "Only a general public question is asked, without a protected account action.",
+          "levels": []
+        },
+        {
+          "id": "LOCAL_CLARITY",
+          "section_id": "quality",
+          "title": "LOCAL_CLARITY",
+          "instruction": "Rate understandable wording using the configured levels, independently of politeness and external company facts.",
+          "kind": "scale",
+          "weight": 50,
+          "allow_na": false,
+          "na_rule": null,
+          "levels": [
+            {
+              "value": 0,
+              "description": "No understandable response."
+            },
+            {
+              "value": 4,
+              "description": "Some ambiguous wording."
+            },
+            {
+              "value": 10,
+              "description": "Clear, understandable wording. Assess clarity separately from politeness and factual correctness."
+            }
+          ]
+        },
+        {
+          "id": "LOCAL_GROSS",
+          "section_id": "quality",
+          "title": "LOCAL_GROSS",
+          "instruction": "Yes if the operator explicitly insults the client; no otherwise. A separate weightless violation flag.",
+          "kind": "flag",
+          "weight": 0,
+          "allow_na": false,
+          "na_rule": null,
+          "levels": []
+        }
+      ]
+    }
+  },
+  "proposed_answers_v1": {
+    "answers": [
+      {
+        "criterion_id": "LOCAL_GREETING",
+        "answer": "no",
+        "value": null,
+        "explanation": "В первой реплике оператор сразу перечисляет шаги, не приветствуя клиента и не представляясь. Приветствие бота не засчитывается.",
+        "evidence": [
+          {
+            "message_id": "m0003",
+            "quote": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+          }
+        ]
+      },
+      {
+        "criterion_id": "LOCAL_IDENTITY",
+        "answer": "na",
+        "value": null,
+        "explanation": "Клиент просит общую инструкцию для учебного приложения без доступа к аккаунту; защищённое действие не запрашивается.",
+        "evidence": [
+          {
+            "message_id": "m0001",
+            "quote": "Как открыть справку в учебном приложении? Нужны два шага, без доступа к аккаунту."
+          }
+        ]
+      },
+      {
+        "criterion_id": "LOCAL_CLARITY",
+        "answer": "scale",
+        "value": 10,
+        "explanation": "Оператор ясно перечисляет два последовательных шага. Фактическая работа учебного приложения не проверяется.",
+        "evidence": [
+          {
+            "message_id": "m0003",
+            "quote": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+          }
+        ]
+      },
+      {
+        "criterion_id": "LOCAL_GROSS",
+        "answer": "no",
+        "value": null,
+        "explanation": "Проверены обе реплики оператора: инструкция и завершение. Оскорблений клиента в этом участке нет.",
+        "evidence": [
+          {
+            "message_id": "m0003",
+            "quote": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+          },
+          {
+            "message_id": "m0005",
+            "quote": "Если останутся вопросы, напишите сюда. До свидания."
+          }
+        ]
+      }
+    ]
+  },
+  "proposed_answers_v2": {
+    "answers": [
+      {
+        "criterion_id": "DEMO_STEP_ORDER",
+        "answer": "yes",
+        "value": null,
+        "explanation": "Оператор указал оба действия в нужном порядке: сначала открыть раздел помощи, затем выбрать учебную справку.",
+        "evidence": [
+          {
+            "message_id": "m0003",
+            "quote": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+          }
+        ]
+      },
+      {
+        "criterion_id": "LOCAL_IDENTITY",
+        "answer": "na",
+        "value": null,
+        "explanation": "Клиент просит общую инструкцию для учебного приложения без доступа к аккаунту; защищённое действие не запрашивается.",
+        "evidence": [
+          {
+            "message_id": "m0001",
+            "quote": "Как открыть справку в учебном приложении? Нужны два шага, без доступа к аккаунту."
+          }
+        ]
+      },
+      {
+        "criterion_id": "LOCAL_CLARITY",
+        "answer": "scale",
+        "value": 10,
+        "explanation": "Оператор ясно перечисляет два последовательных шага. Фактическая работа учебного приложения не проверяется.",
+        "evidence": [
+          {
+            "message_id": "m0003",
+            "quote": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+          }
+        ]
+      },
+      {
+        "criterion_id": "LOCAL_GROSS",
+        "answer": "no",
+        "value": null,
+        "explanation": "Проверены обе реплики оператора: инструкция и завершение. Оскорблений клиента в этом участке нет.",
+        "evidence": [
+          {
+            "message_id": "m0003",
+            "quote": "1. Откройте раздел «Помощь».\n2. Выберите «Учебная справка»."
+          },
+          {
+            "message_id": "m0005",
+            "quote": "Если останутся вопросы, напишите сюда. До свидания."
+          }
+        ]
+      }
+    ]
+  },
+  "demo_steps": [
+    "After approval, import this one synthetic conversation and checklist v1 with exact source text/order/IDs.",
+    "Evaluate v1: proposed LOCAL_GREETING=no because only the bot greets.",
+    "In the checklist editor replace LOCAL_GREETING with DEMO_STEP_ORDER and append version 2; do not change the conversation or prompt.",
+    "Evaluate pinned v2: proposed DEMO_STEP_ORDER=yes from the two ordered steps. Confirm v1 history is unchanged.",
+    "In both versions inspect N/A evidence on the client question, no-violation evidence on both operator turns, and Russian explanations."
+  ],
+  "not_executed": [
+    "No Java/UI import or E2E performed for this proposal.",
+    "No Groq call or provider registration.",
+    "No authoritative scoring or fabricated model diagnostics."
+  ]
+}

@@ -43,10 +43,15 @@ behavior or a negative finding, quote real surrounding turns covering where the 
 expected and explain the omission; never invent an absence quote. Cite multiple turns when
 needed. Exact matches must also be relevant to the criterion, speaker and sequence.
 An existing quote is not sufficient unless it supports the selected answer or level.
-For na, cite the customer request or surrounding context establishing the exact na_rule;
-a greeting alone does not establish that no protected action was requested. For a finding
-that behavior is absent across a short conversation, cite turns covering the checked span,
-including its beginning and end, not only an unrelated polite closing sentence.
+For na based on the customer's request, cite the actual client question that directly
+establishes the configured na_rule. An operator's answer about the topic or a greeting
+is not a substitute for that client quote. For other na_rules, cite the actual context
+establishing that rule; never invent a client question if no such turn exists.
+For an absent violation, inspect every relevant operator turn in the checked span before
+choosing no. In a short conversation with two operator turns, cite both, not only one
+polite sentence. For longer spans, cite representative relevant turns and their boundaries,
+and explain the scope checked. If a violation occurs anywhere in that scope, do not hide
+it by citing only polite turns. Do not treat bot or client behavior as operator behavior.
 Use only IDs in allowed_message_ids, copying the complete ID including the m prefix
 and leading zeroes. For each quote, first choose its message_id, then copy from ONLY
 that message's text. Prefer a short complete sentence copied verbatim. Never concatenate
@@ -61,6 +66,12 @@ the protected action or never happened cannot accompany yes for verification-bef
 
 Write every explanation in conversation.language: RU means Russian, KZ means Kazakh,
 EN means English. English rubric wording does not change the explanation language.
+Write the explanation directly in that language, not an English explanation about it.
+Before returning, check every explanation sentence for the requested language; rewrite
+wrong-language prose without changing the answer, value, message_id or original quote.
+The language-specific examples below illustrate explanation style only. They are not
+evidence or preselected answers. Use their style only when the actual rubric and facts
+support it; never copy facts or evidence from an example into this conversation.
 Keep criterion IDs and answer enum tokens unchanged, and keep quotes in their original
 language verbatim; never translate evidence to match the explanation language.
 Assess completeness from the conversation;
