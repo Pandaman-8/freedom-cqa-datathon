@@ -1,3 +1,6 @@
+Команда: TOXIC
+Участники: Nurtas Amantay, Farhat Nurzhan
+
 # Freedom Lens
 
 Локальное рабочее место для оценки качества диалогов: **Java 21 + Spring Boot 3.5.16 + SQLite**, HTML/CSS/Vanilla JS и отдельный **Python HTTP ML service**. Java отвечает за проверку evidence, scoring, хранение, апелляции и историю. Python возвращает ответы по полному чек-листу через контракт **2.0.0**, `POST /v1/evaluate`.
