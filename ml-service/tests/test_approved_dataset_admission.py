@@ -1,13 +1,17 @@
 """Offline-only v2 approval checks. All conversations are freshly invented test data."""
 import hashlib
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.admission import ApprovedDatasetAdmission
 from app.config import Settings
 from app.errors import ServiceError
+from app.main import create_app
+from conftest import ScriptedProvider
 
 
 def make_context(tmp_path):
@@ -82,7 +86,10 @@ def test_scope_selected_source_and_dynamic_v1_v2(tmp_path):
     admission = ApprovedDatasetAdmission(settings)
     grant = admission.authorize(request, confirmed='true')
     assert grant.model == 'openai/gpt-oss-20b'
-    assert admission.health_fields()['admission_sha256'] == grant.sha256
+    assert admission.health_fields() == {
+        'admission_protocol': 2, 'policy_mode': 'approved_dataset',
+        'grant_sha256': grant.sha256, 'provider': 'groq', 'model': grant.model,
+    }
     request['checklist']['version'] = 2
     assert admission.authorize(request, confirmed='true', expected_sha256=grant.sha256).sha256 == grant.sha256
     request['checklist']['version'] = 3
@@ -92,6 +99,33 @@ def test_scope_selected_source_and_dynamic_v1_v2(tmp_path):
     rejects(lambda: admission.authorize(request, confirmed='True'))
     request['conversation']['messages'][0]['text'] += ' edited'
     rejects(lambda: admission.authorize(request, confirmed='true'))
+
+
+@pytest.mark.parametrize('state', ['unconfigured', 'synthetic', 'approved', 'revoked'])
+def test_health_fields_match_java_admission_v2_without_provider_calls(tmp_path, state):
+    _, _, _, settings, approval, _ = make_context(tmp_path)
+    grant_sha256 = hashlib.sha256(approval.read_bytes()).hexdigest()
+    reason = None
+    if state == 'unconfigured':
+        settings = Settings()
+        reason = 'EVALUATOR_UNCONFIGURED'
+    elif state == 'synthetic':
+        settings = replace(settings, data_policy='synthetic_only')
+    elif state == 'revoked':
+        approval.unlink()
+        reason = 'PRIVACY_POLICY_UNCONFIGURED'
+    provider = ScriptedProvider()
+    with TestClient(create_app(settings, provider)) as client:
+        response = client.get('/health')
+    assert response.status_code == (200 if reason is None else 503)
+    assert response.json() == {
+        'configured': reason is None, 'ready': reason is None,
+        'model': settings.model, 'contract_version': '2.0.0', 'reason': reason,
+        'admission_protocol': 2, 'policy_mode': settings.data_policy,
+        'grant_sha256': grant_sha256 if state == 'approved' else None,
+        'provider': 'groq',
+    }
+    assert not provider.messages
 
 
 def test_unselected_chat_rejected_and_no_group_shortcut(tmp_path):

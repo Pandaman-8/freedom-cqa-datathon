@@ -228,7 +228,7 @@ class ApprovedDatasetAdmission:
 
     def health_fields(self):
         grant = self.load()
-        # Public health exposes only protocol, mode, model, digest; never private paths/IDs.
+        # Public health exposes only protocol, mode, provider, model, digest; never private paths/IDs.
         return {"admission_protocol": ADMISSION_PROTOCOL,
-                "admission_mode": "approved_dataset", "admission_sha256": grant.sha256,
-                "admission_provider": "groq", "admission_model": grant.model}
+                "policy_mode": "approved_dataset", "grant_sha256": grant.sha256,
+                "provider": "groq", "model": grant.model}

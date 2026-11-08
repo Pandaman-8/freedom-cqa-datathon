@@ -43,9 +43,8 @@ def create_app(settings=None, provider=None, *, max_attempts=2):
     @app.get("/health")
     async def health():
         # Readiness is configuration-only; it does not prove credentials/quota/provider availability.
-        fields = {"admission_protocol": ADMISSION_PROTOCOL, "admission_mode": settings.data_policy,
-                  "admission_sha256": None, "admission_provider": "groq",
-                  "admission_model": settings.model}
+        fields = {"admission_protocol": ADMISSION_PROTOCOL, "policy_mode": settings.data_policy,
+                  "grant_sha256": None, "provider": "groq"}
         try:
             settings.check()
             if settings.data_policy == "approved_dataset":
