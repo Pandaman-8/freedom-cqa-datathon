@@ -1,9 +1,148 @@
 {
   "schema_version": "1.0",
-  "team_name": "Freedom Lens",
+  "team_name": "TOXIC",
   "model": {
-    "mode": "hybrid",
-    "name": "GPT-6 (ChatGPT assisted); DEV15 human review; Python scoring"
+    "mode": "external_api",
+    "name": "openai/gpt-oss-20b"
   },
-  "results": []
+  "results": [
+    {
+      "conversation_id": "p2-ru-001",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-ru-002",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-ru-003",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-ru-004",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-kz-001",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-kz-002",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-kz-003",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-kz-004",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    },
+    {
+      "conversation_id": "p2-en-001",
+      "status": "ok",
+      "criteria": [
+        {
+          "criterion_id": "contact",
+          "value": true,
+          "rationale": "Operator greeted and introduced himself in the first response.",
+          "evidence_turns": [
+            10
+          ]
+        },
+        {
+          "criterion_id": "discovery",
+          "value": true,
+          "rationale": "Operator acknowledged known detail and asked for missing information.",
+          "evidence_turns": [
+            10
+          ]
+        },
+        {
+          "criterion_id": "identification",
+          "value": null,
+          "rationale": "The client’s request did not require identity verification, and no verification was performed.",
+          "evidence_turns": [
+            10
+          ]
+        },
+        {
+          "criterion_id": "consultation",
+          "value": 20,
+          "rationale": "Operator provided a correct next step that fully addressed the client’s issue.",
+          "evidence_turns": [
+            14
+          ]
+        },
+        {
+          "criterion_id": "empathy",
+          "value": false,
+          "rationale": "No explicit empathy or response to dissatisfaction was observed.",
+          "evidence_turns": [
+            10
+          ]
+        },
+        {
+          "criterion_id": "dialogue",
+          "value": 10,
+          "rationale": "Dialogue was clear, timely, and the operator warned about waiting when necessary.",
+          "evidence_turns": [
+            10,
+            14
+          ]
+        },
+        {
+          "criterion_id": "closure",
+          "value": true,
+          "rationale": "Operator closed the chat with a farewell and offer of further help.",
+          "evidence_turns": [
+            16
+          ]
+        },
+        {
+          "criterion_id": "critical",
+          "value": false,
+          "rationale": "No insults, unauthorized offers, or confidential disclosures were made.",
+          "evidence_turns": [
+            10
+          ]
+        }
+      ],
+      "score": {
+        "final_score": 81.25,
+        "critical_flag": false
+      }
+    },
+    {
+      "conversation_id": "p2-en-002",
+      "status": "error",
+      "criteria": [],
+      "score": null,
+      "error": "Автоматическая оценка не завершена: лимит Groq (EVALUATOR_RATE_LIMITED)."
+    }
+  ]
 }
