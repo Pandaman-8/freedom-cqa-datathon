@@ -47,10 +47,67 @@ public class MlClient implements AutoCloseable {
         if (bytes.length>ContractJson.REQUEST_LIMIT) throw new MlFailure(413,"PAYLOAD_TOO_LARGE",false,false);
         return bytes;
     }
+    public record Health(boolean configured, boolean reachable, boolean ready, String reason,
+            Integer admissionProtocol, String policyMode, String grantSha256, String provider, String model) {
+        Health(boolean configured,boolean reachable,boolean ready,String reason) {
+            this(configured,reachable,ready,reason,null,null,null,null,null);
+        }
+    }
+    public static String admissionMismatch(Health health, String mode, SyntheticPolicy.Admission admission) {
+        if (!admission.allowed()) return admission.reason();
+        if (!health.configured() || !health.reachable()) return health.reason();
+        if (!mode.equals("approved_dataset")) {
+            if (health.policyMode()!=null && !mode.equals(health.policyMode())) return "PYTHON_POLICY_MISMATCH";
+            return health.ready()?null:health.reason();
+        }
+        if (!Integer.valueOf(2).equals(health.admissionProtocol())) return "PYTHON_ADMISSION_UNSUPPORTED";
+        if (!mode.equals(health.policyMode())) return "PYTHON_POLICY_MISMATCH";
+        if (!SyntheticPolicy.PROVIDER.equals(health.provider()) || !SyntheticPolicy.MODEL.equals(health.model()))
+            return "PYTHON_DESTINATION_MISMATCH";
+        if (!health.ready()) return "PRIVACY_POLICY_UNCONFIGURED".equals(health.reason()) ? "PYTHON_ADMISSION_DENIED" : health.reason();
+        if (!Objects.equals(admission.grantSha256(),health.grantSha256())) return "PYTHON_GRANT_MISMATCH";
+        return null;
+    }
+    /** Configuration/readiness probe only: never sends conversation, rubric or a provider POST. */
+    public Health health() {
+        URI uri;
+        try { uri = endpoint().resolve("/health"); }
+        catch (MlFailure absent) { return new Health(false, false, false, absent.code); }
+        var request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(3))
+                .header("Accept", "application/json").GET().build();
+        var future = client.sendAsync(request, info -> new LimitedBody(info));
+        try {
+            var response = future.get(3, TimeUnit.SECONDS);
+            var value = json.parse(response.body(), 8192);
+            if (!value.path("configured").isBoolean() || !value.path("ready").isBoolean()
+                    || !"2.0.0".equals(value.path("contract_version").asText())) throw MlFailure.invalid();
+            boolean ready = response.statusCode() == 200 && value.path("configured").booleanValue()
+                    && value.path("ready").booleanValue() && value.path("reason").isNull();
+            String reason = value.path("reason").asText("");
+            if (!Set.of("EVALUATOR_UNCONFIGURED", "PRIVACY_POLICY_UNCONFIGURED", "EVALUATOR_BUSY").contains(reason))
+                reason = "EVALUATOR_INVALID_OUTPUT";
+            var protocol=value.path("admission_protocol");
+            return new Health(true,true,ready,ready?null:reason,
+                    protocol.isIntegralNumber()&&protocol.canConvertToInt()?protocol.intValue():null,
+                    optionalText(value,"policy_mode"),optionalText(value,"grant_sha256"),
+                    optionalText(value,"provider"),optionalText(value,"model"));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); future.cancel(true);
+        } catch (Exception e) { future.cancel(true); }
+        return new Health(true, false, false, "EVALUATOR_BUSY");
+    }
+    private static String optionalText(com.fasterxml.jackson.databind.JsonNode value,String name) {
+        return value.path(name).isTextual()?value.path(name).textValue():null;
+    }
     public EvaluationResult evaluate(EvaluationRequest pinned, byte[] bytes) {
-        var request=HttpRequest.newBuilder(endpoint()).timeout(Duration.ofMillis(deadline))
+        return evaluate(pinned,bytes,false);
+    }
+    public EvaluationResult evaluate(EvaluationRequest pinned, byte[] bytes, boolean rubricConfirmed) {
+        var builder=HttpRequest.newBuilder(endpoint()).timeout(Duration.ofMillis(deadline))
             .header("Content-Type","application/json; charset=utf-8").header("Accept","application/json")
-            .header("Accept-Encoding","identity").POST(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
+            .header("Accept-Encoding","identity");
+        if (rubricConfirmed) builder.header("X-CQA-Rubric-Confirmed","true");
+        var request=builder.POST(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
         CompletableFuture<HttpResponse<byte[]>> future=client.sendAsync(request, info -> new LimitedBody(info));
         try {
             var response=future.get(deadline,TimeUnit.MILLISECONDS);

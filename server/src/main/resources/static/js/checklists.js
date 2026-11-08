@@ -5,21 +5,21 @@ import {el, button, field, select, note, status, messageNode, mutation} from './
 const editable = c => ({title:c.title, description:c.description, sections:c.sections.map(s => ({...s})),
   criteria:c.criteria.map(r => ({...r, weight:display(r.weight), levels:r.levels.map(l => ({...l,value:display(l.value)}))}))});
 const blank = () => ({title:'', description:'', sections:[], criteria:[]});
-export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch}) {
+export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch, onEvaluate}) {
   let latest = [], selected = null, activeDraft = null, loading = false;
   const reads = new Latest(), listReads = new Latest(); const feedback = messageNode();
-  const keySelect = select('Checklist key', [['','Выберите чек-лист']], '', key => load(key));
-  const versionField = field('Version (пусто = latest)', '', () => {}, {class:'version', inputMode:'numeric'});
+  const keySelect = select('Чек-лист', [['','Выберите чек-лист']], '', key => load(key));
+  const versionField = field('Версия (пусто = последняя)', '', () => {}, {class:'version', inputMode:'numeric'});
   const keyInput = keySelect.querySelector('select'), versionInput = versionField.querySelector('input');
   picker.append(el('div', {class:'picker-row'}, keySelect, versionField,
     button('Открыть версию', () => load(keyInput.value, versionInput.value || undefined)),
-    button('Latest', () => load(keyInput.value)), button('Обновить чек-листы', loadList)), feedback);
+    button('Последняя версия', () => load(keyInput.value)), button('Обновить чек-листы', loadList)), feedback);
   function touch() { drafts.touch(activeDraft); }
   async function loadList() {
     const ticket = listReads.next();
     try {
       const rows = await request('/api/checklists', ticket); if (!ticket.current()) return;
-      latest = rows; keyInput.replaceChildren(...rows.map(c => el('option', {value:c.key, text:`${c.key} · ${c.title}`})));
+      latest = rows; keyInput.replaceChildren(...rows.map(c => el('option', {value:c.key, text:c.title})));
       if (selected) keyInput.value = selected.key;
       onList(rows); if (!selected && !loading && !activeDraft && rows.length) await load(rows[0].key);
     } catch(e) { if(ticket.current()) status(feedback,e.message,'error'); }
@@ -35,7 +35,7 @@ export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch}
       selected=checklist; keyInput.value=key; versionInput.value=String(checklist.version);
       activeDraft='checklist:' + JSON.stringify([key,String(checklist.version)]);
       drafts.get(activeDraft, () => ({key,mode:'version',baseVersion:String(head.version),originVersion:String(checklist.version),draft:editable(checklist)}));
-      status(feedback, `Выбрано: ${key} / v${checklist.version}. Latest: v${head.version}. Исторические версии неизменны.`);
+      status(feedback, `Выбрано: ${key} / v${checklist.version}. Последняя: v${head.version}. Исторические версии неизменны.`);
       renderEditor(); onSelect(checklist);
     } catch(e) { if(ticket.current()) { status(feedback,e.message,'error'); editor.replaceChildren(note('Версия не загружена. Повторите чтение.')); } }
     finally { if(ticket.current()) loading=false; }
@@ -49,20 +49,20 @@ export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch}
     const form = el('form', {'data-draft-key':draftKey}), fields = el('fieldset'), output=messageNode();
     const edit = (obj,key,value) => { obj[key]=value; drafts.touch(draftKey); };
     const top=el('div', {class:'section-heading'}, el('h2', {text:data.mode==='create'?'Новый чек-лист':`${data.key} · редактор версии`}), button('Создать новый чек-лист',newChecklist));
-    const baseline=note(data.mode==='create'?'Новая версия v1 под новым key.':`Источник v${data.originVersion}. Сохранение добавит версию после latest v${data.baseVersion}; источник не изменится.`);
-    if (data.mode==='create') fields.append(field('Новый checklist key', data.key, v => edit(data,'key',v), {required:true}));
+    const baseline=note(data.mode==='create'?'Новый чек-лист начнётся с версии v1.':`Источник v${data.originVersion}. Сохранение добавит версию после последней версии v${data.baseVersion}; источник не изменится.`);
+    if (data.mode==='create') fields.append(field('Ключ нового чек-листа', data.key, v => edit(data,'key',v), {required:true}));
     fields.append(field('Название чек-листа',d.title,v=>edit(d,'title',v),{required:true}),field('Описание чек-листа',d.description,v=>edit(d,'description',v),{multiline:true}));
     const sections=el('div', {}, el('h3', {text:'Разделы'}));
     d.sections.forEach((section,index)=>sections.append(el('div',{class:'editor-card form-grid'},
-      field('Section ID', section.id,v=>edit(section,'id',v),{required:true}),field('Название раздела',section.title,v=>edit(section,'title',v),{required:true}),
+      field('ID раздела', section.id,v=>edit(section,'id',v),{required:true}),field('Название раздела',section.title,v=>edit(section,'title',v),{required:true}),
       button('Удалить раздел',()=>{d.sections.splice(index,1);touch();renderEditor();},'danger'))));
     sections.append(button('Добавить раздел',()=>{d.sections.push({id:'',title:''});touch();renderEditor();}));
-    fields.append(sections, el('h3',{text:'Критерии'}), note('Binary: yes/no. Scale: дискретные уровни с 0 и положительным максимумом. Flag: отдельный флаг, вес 0, без N/A. У других критериев вес > 0 и ≤ 100.'));
+    fields.append(sections, el('h3',{text:'Критерии'}), note('Да/нет: два варианта. Шкала: дискретные уровни с 0 и положительным максимумом. Флаг: отдельный флаг, вес 0, без N/A. У других критериев вес > 0 и ≤ 100.'));
     d.criteria.forEach((c,index)=>{
-      const grid=el('div',{class:'form-grid'},field('Criterion ID',c.id,v=>edit(c,'id',v),{required:true}),
-        field('Section ID критерия',c.section_id,v=>edit(c,'section_id',v),{required:true}),
+      const grid=el('div',{class:'form-grid'},field('ID критерия',c.id,v=>edit(c,'id',v),{required:true}),
+        field('ID раздела критерия',c.section_id,v=>edit(c,'section_id',v),{required:true}),
         field('Название критерия',c.title,v=>edit(c,'title',v),{required:true}),
-        select('Тип критерия',[['binary','binary'],['scale','scale'],['flag','flag']],c.kind,v=>{edit(c,'kind',v);renderEditor();}),
+        select('Тип критерия',[['binary','Да / нет'],['scale','Шкала'],['flag','Флаг нарушения']],c.kind,v=>{edit(c,'kind',v);renderEditor();}),
         field('Вес',c.weight,v=>edit(c,'weight',v),{required:true,inputMode:'decimal'}),
         field('Разрешить N/A',null,v=>{edit(c,'allow_na',v);renderEditor();},{type:'checkbox',checked:c.allow_na}));
       const card=el('div',{class:'editor-card','data-criterion-index':String(index)},el('h4',{text:`Критерий ${index+1}`}),grid,
@@ -84,8 +84,8 @@ export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch}
       try {
         const head=await getChecklist(data.key); if(activeDraft!==draftKey) return;
         data.baseVersion=String(head.version);
-        baseline.textContent=`Новая база: latest v${head.version}. Ваш черновик из v${data.originVersion} сохранён. Сравните изменения перед явным сохранением.`;
-        status(output,'Latest перечитан. Автоматической отправки не было.');
+        baseline.textContent=`Новая базовая версия: v${head.version}. Ваш черновик из v${data.originVersion} сохранён. Сравните изменения перед явным сохранением.`;
+        status(output,'Последняя версия перечитана. Автоматической отправки не было.');
       } catch(e) { if(activeDraft===draftKey) status(output,e.message,'error'); }
     }
     form.addEventListener('submit',event=>{
@@ -104,10 +104,16 @@ export function checklists(picker, editor, {drafts, onSelect, onList, canSwitch}
           // load() is deferred until mutation releases the navigation lock.
           savedVersion=saved;
         }
-      }).then(()=>{if(savedVersion && activeDraft===draftKey) load(savedVersion.key,String(savedVersion.version));});
+      }).then(async()=>{if(savedVersion && activeDraft===draftKey) {
+        await load(savedVersion.key,String(savedVersion.version));
+        if(selected?.key===savedVersion.key && String(selected.version)===String(savedVersion.version)) {
+          editor.prepend(el('div',{class:'notice'},note('Новая версия сохранена. Предыдущие оценки остались на прежней версии.'),
+            button('Оценить по новой версии',()=>onEvaluate?.(),'primary')));
+        }
+      }});
     });
     editor.replaceChildren(top,baseline,form);
-    if(data.mode==='version') editor.append(button('Обновить latest для черновика',refreshBase));
+    if(data.mode==='version') editor.append(button('Обновить базовую версию черновика',refreshBase));
     editor.append(note(entry.dirty?'Есть несохранённые изменения. Переключение сохраняет черновик в памяти.':'Изменения создают новую версию. Java проверяет состав и допустимые значения.'));
   }
   editor.append(button('Создать новый чек-лист',newChecklist));

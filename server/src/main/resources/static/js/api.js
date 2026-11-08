@@ -5,15 +5,29 @@ const messages = {
   VERSION_CONFLICT: 'Конфликт версии или исходных данных. Обновите данные и сравните их с сохранённым черновиком.',
   REVIEW_CONFLICT: 'Оценка уже изменена другим решением. Данные обновлены; проверьте черновик перед новым решением.',
   PAYLOAD_TOO_LARGE: 'Размер запроса превышает ограничение сервера.',
-  EVALUATOR_UNCONFIGURED: 'Локальный ML evaluator не настроен. Ручная оценка доступна.',
+  EVALUATOR_UNCONFIGURED: 'Сервис ИИ не настроен. Ручная оценка доступна.',
   EVALUATOR_INVALID_OUTPUT: 'ML ответ не прошёл строгую проверку. Оценка не сохранена.',
-  EVALUATOR_PROVIDER_ERROR: 'ML вызов завершился ошибкой. Проверьте статус request_id.',
-  EVALUATOR_TIMEOUT: 'Время ожидания ML истекло. Исход может быть неизвестен; проверьте статус request_id.',
-  EVALUATOR_BUSY: 'ML сервис занят или недоступен. Проверьте статус request_id.',
+  EVALUATOR_PROVIDER_ERROR: 'ML вызов завершился ошибкой. Проверьте состояние запроса.',
+  EVALUATOR_TIMEOUT: 'Время ожидания ML истекло. Исход может быть неизвестен; проверьте состояние запроса.',
+  EVALUATOR_BUSY: 'ML сервис занят или недоступен. Проверьте состояние запроса.',
   EVALUATOR_AUTH: 'ML сервис сообщил об ошибке доступа. Проверьте его серверную конфигурацию.',
   EVALUATOR_RATE_LIMITED: 'ML сервис сообщил об ограничении запросов. Автоматического повтора нет.',
-  PRIVACY_POLICY_UNCONFIGURED: 'Разрешены только точные пары диалог/чек-лист из собственных опубликованных ML fixtures.',
-  REQUEST_ID_CONFLICT: 'Этот request_id уже связан с другим запросом. Inference не запускался повторно.',
+  PRIVACY_POLICY_UNCONFIGURED: 'Обработка выбранного диалога и версии чек-листа не разрешена. Нужно согласование доступа к данным на сервере; переименование группы не даёт разрешения.',
+  EXTERNAL_INFERENCE_DISABLED: 'Внешняя обработка выключена на Java-сервере. Требуется отдельное разрешение и opt-in.',
+  JAVA_POLICY_MODE_INVALID: 'На Java-сервере выбран неподдерживаемый режим допуска.',
+  JAVA_SELECTION_DENIED: 'Этот диалог не входит в разрешённый набор или его содержимое не совпадает с проверенным исходником.',
+  APPROVAL_INVALID: 'Разрешение отсутствует, отозвано или не соответствует согласованному формату.',
+  APPROVAL_EXPIRED: 'Срок разрешения на обработку истёк.',
+  APPROVAL_CHANGED: 'Разрешение изменилось во время проверки. Повторите проверку готовности.',
+  DATASET_HASH_MISMATCH: 'Исходный набор не совпадает с разрешённым файлом.',
+  CHECKLIST_OUTSIDE_SCOPE: 'Ключ, версия или число критериев выходят за пределы разрешённой сессии.',
+  RUBRIC_CONFIRMATION_REQUIRED: 'Подтвердите отправку выбранной версии чек-листа вместе с диалогом.',
+  PYTHON_ADMISSION_UNSUPPORTED: 'Python ещё не поддерживает согласованный протокол допуска v2.',
+  PYTHON_ADMISSION_DENIED: 'Python отказал в допуске: проверьте его opt-in и действующее разрешение на набор.',
+  PYTHON_POLICY_MISMATCH: 'Режимы допуска Java и Python не совпадают.',
+  PYTHON_GRANT_MISMATCH: 'Java и Python используют разные разрешения или Python не подтвердил действующий grant.',
+  PYTHON_DESTINATION_MISMATCH: 'Провайдер или модель Python не совпадают с разрешённым Groq GPT-OSS 20B.',
+  REQUEST_ID_CONFLICT: 'Этот идентификатор уже связан с другим запросом. Повторная обработка не запускалась.',
   ORGANIZER_UNCONFIGURED: 'Подключение к API организаторов пока не настроено на сервере.',
   ORGANIZER_CONFIGURATION_ERROR: 'Проверьте настройку подключения к API организаторов на сервере.',
   ORGANIZER_ACCESS_DENIED: 'Организаторы отклонили доступ к набору.',
@@ -34,7 +48,7 @@ export class ApiError extends Error {
     this.status = status; this.code = code; this.unknown = unknown;
   }
 }
-export async function request(path, {method = 'GET', body, signal, timeout = 10000} = {}) {
+export async function request(path, {method = 'GET', body, signal, timeout = 10000, rubricConfirmed = false} = {}) {
   if (!path.startsWith('/api/')) throw new Error('Разрешён только Java API текущего сайта.');
   const controller = new AbortController();
   const abort = () => controller.abort(); signal?.addEventListener('abort', abort, {once:true});
@@ -46,7 +60,8 @@ export async function request(path, {method = 'GET', body, signal, timeout = 100
   catch (e) { clearTimeout(timer); signal?.removeEventListener('abort', abort); throw e; }
   try {
     const response = await fetch(path, {method, body:encoded, cache:'no-store', signal:controller.signal,
-      headers:{Accept:'application/json', ...(body !== undefined ? {'Content-Type':'application/json'} : {})}});
+      headers:{Accept:'application/json', ...(body !== undefined ? {'Content-Type':'application/json'} : {}),
+        ...(rubricConfirmed===true ? {'X-CQA-Rubric-Confirmed':'true'} : {})}});
     let data;
     try { data = parse(await response.text()); }
     catch { throw new ApiError(response.status, 'INVALID_RESPONSE', mutation && (response.ok || response.status >= 500)); }

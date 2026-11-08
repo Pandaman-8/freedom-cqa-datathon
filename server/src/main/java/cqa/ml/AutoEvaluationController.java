@@ -14,7 +14,8 @@ public class AutoEvaluationController {
     public AutoEvaluationController(AutoEvaluationService service,RequestBodies bodies) {this.service=service;this.bodies=bodies;}
     @PostMapping(value="/evaluations/auto",consumes="application/json")
     public ResponseEntity<?> evaluate(HttpServletRequest request) {
-        return service.evaluate(bodies.read(request,ApiModels.AutoRequest.class));
+        return service.evaluate(bodies.read(request,ApiModels.AutoRequest.class),
+                "true".equals(request.getHeader("X-CQA-Rubric-Confirmed")));
     }
     @GetMapping("/evaluation-requests/{id}")
     public RequestLedger.Status status(@PathVariable String id,HttpServletRequest request) {

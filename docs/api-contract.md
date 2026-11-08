@@ -5,6 +5,7 @@ Base: `http://127.0.0.1:8080`, JSON/UTF-8, same-origin с Vanilla UI. Java не 
 | Method / route | Body / условия | Успех |
 |---|---|---|
 | GET `/api/health` | Java liveness, не ML readiness | 200 |
+| GET `/api/ai/status` | Bounded Python health GET + selected admission/peer match; includes rubric_confirmation_required and confirmation_scope; see DYNAMIC_ADMISSION | 200 |
 | POST `/api/datasets/import` | `isSuccess`, `data.dataset_group_id`, `total_records`, `records[]`; organizer envelope, до 16 MiB | 200 |
 | POST `/api/datasets/fetch` | `{group_id}`; приватный URL только в Java config | 200 |
 | GET `/api/conversations` | Все summaries; фильтрация группы/языка в UI | 200 |
@@ -14,7 +15,7 @@ Base: `http://127.0.0.1:8080`, JSON/UTF-8, same-origin с Vanilla UI. Java не 
 | POST `/api/checklists/{key}` | ChecklistDraft, новый key → v1 | 200 |
 | PUT `/api/checklists/{key}?expected_version=N` | ChecklistDraft, CAS latest → новая версия | 200 |
 | POST `/api/evaluations/manual` | conversation_id, checklist_key, **checklist_version**, answers | 201 |
-| POST `/api/evaluations/auto` | **request_id UUID**, conversation_id, checklist_key, **checklist_version** | 200; повтор pending — 202 + Location |
+| POST `/api/evaluations/auto` | **request_id UUID**, conversation_id, checklist_key, **checklist_version**; approved_dataset requires `X-CQA-Rubric-Confirmed: true` | 200; повтор pending — 202 + Location |
 | GET `/api/evaluation-requests/{request_id}` | Только чтение persisted ledger | 200 |
 | GET `/api/evaluations?conversation_id=...` | Убрать filter для всех evaluations | 200 |
 | GET `/api/evaluations/{id}` | Original/final, pinned version, appeals, review_revision | 200 |

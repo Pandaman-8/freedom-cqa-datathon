@@ -32,6 +32,16 @@ def main():
         def log_message(self, *_):
             pass
 
+        def do_GET(self):
+            if self.path != '/health':
+                self.send_error(404)
+                return
+            payload = b'{"configured":true,"ready":true,"reason":null,"model":"fake-http","contract_version":"2.0.0"}'
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(payload)
+
         def do_POST(self):
             assert self.path == '/v1/evaluate'
             body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
@@ -97,7 +107,7 @@ def main():
             process = subprocess.Popen(['java', '-jar', str(ROOT / 'server/target/freedom-cqa-server-0.1.0.jar'),
                                         f'--server.port={port}', f'--cqa.db-path={database}',
                                         f'--cqa.ml-url=http://127.0.0.1:{fake.server_port}/v1/evaluate',
-                                        '--cqa.ml-response-timeout-ms=3000', '--cqa.organizer-url=',
+                                        '--cqa.ml-response-timeout-ms=3000', '--cqa.organizer-url=', '--cqa.ml-data-mode=synthetic_only', '--cqa.ml-approval-file=',
                                         '--spring.main.banner-mode=off', '--logging.level.root=WARN'], cwd=folder,
                                        env={**os.environ, 'GROQ_API_KEY': '', 'CQA_ML_URL': '', 'CQA_ORGANIZER_URL': ''}, stdout=log, stderr=subprocess.STDOUT)
             for _ in range(250):

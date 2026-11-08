@@ -16,6 +16,7 @@ dist/
 !.env.example
 *.pem
 *.key
+*.ml-approval.json
 
 # Datathon datasets, recordings and customer data
 /data/*

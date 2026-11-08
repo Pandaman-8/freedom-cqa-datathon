@@ -7,10 +7,11 @@ import {ApiError} from '../../main/resources/static/js/api.js';
 function setup() {
   const values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
   const rows=['A','B','C'].map(id=>({id:'OWN:'+id,dataset_group_id:'OWN'}));
-  const requests=[],ledger=new Map(),evaluations=new Map();let mode='ok',gate=null,locked=false,active=0,maxActive=0;
+  const requests=[],ledger=new Map(),evaluations=new Map();let mode='ok',admission={ready:true},gate=null,locked=false,active=0,maxActive=0;let idCount=0;
   const lock=async action=>{if(locked)throw new Error('another tab');locked=true;try{return await action();}finally{locked=false;}};
   const api=async(path,options={})=>{
     if(path==='/api/conversations')return rows;
+    if(path.startsWith('/api/ai/status'))return admission;
     if(path.startsWith('/api/checklists/'))return {key:'rubric',version:'9007199254740993'};
     if(path.startsWith('/api/evaluation-requests/')){
       const id=path.split('/').at(-1);if(!ledger.has(id))throw new ApiError(404,'NOT_FOUND');return ledger.get(id);
@@ -39,8 +40,8 @@ function setup() {
     }
     throw new Error('Unexpected path '+path);
   };
-  const factory=()=>new BatchRunner({storage,api,lock,newId:randomUUID});
-  return {storage,rows,requests,ledger,evaluations,factory,runner:factory(),set mode(v){mode=v;},set gate(v){gate=v;},get maxActive(){return maxActive;}};
+  const factory=()=>new BatchRunner({storage,api,lock,newId:()=>{idCount++;return randomUUID();}});
+  return {storage,rows,requests,ledger,evaluations,factory,runner:factory(),set mode(v){mode=v;},set gate(v){gate=v;},get maxActive(){return maxActive;},set admission(v){admission=v;},get idCount(){return idCount;}};
 }
 async function prepared(){const s=setup();await s.runner.create('OWN',{key:'rubric',version:'9007199254740993'});return s;}
 async function until(check){for(let i=0;i<100;i++){if(check())return;await new Promise(r=>setTimeout(r,2));}throw new Error('condition timeout');}
@@ -129,4 +130,27 @@ test('forget requires explicit confirmation and terminal rows; Java history rema
 test('Web Locks unavailable fails closed, without running the action',async()=>{
  if(globalThis.navigator?.locks)return;
  let called=false;await assert.rejects(batchLock(()=>{called=true;}));assert.equal(called,false);
+});
+
+
+test('known admission refusal never allocates an inference UUID or POST, persists across reload',async()=>{
+ const s=await prepared();const before=s.idCount;s.admission={ready:false,reason:'EXTERNAL_INFERENCE_DISABLED'};
+ await s.runner.resume();assert.equal(s.requests.length,0);assert.equal(s.idCount,before);
+ assert(s.runner.manifest.items.every(i=>itemState(i)==='blocked'&&i.attempts.length===0));
+ const r=s.factory();await r.refresh();await r.resume();assert.equal(s.requests.length,0);assert.equal(s.idCount,before);
+ s.admission={ready:true};await r.retry('OWN:A',true);assert.equal(s.requests.length,1);assert.equal(itemState(r.manifest.items[0]),'succeeded');
+});
+test('dynamic batch requires exact current grant confirmation and never persists consent',async()=>{
+ const s=await prepared();s.admission={ready:true,rubric_confirmation_required:true,confirmation_scope:'grant-a'};
+ await s.runner.resume();assert.equal(s.requests.length,0);assert(s.runner.manifest.items.every(i=>i.blocked_code==='RUBRIC_CONFIRMATION_REQUIRED'));
+ s.runner.rubricConsent=()=> 'grant-a';await s.runner.retry('OWN:A',true);assert.equal(s.requests.length,1);
+ const r=s.factory();await r.retry('OWN:B',true);assert.equal(s.requests.length,1,'reload has no consent');
+ s.admission={ready:true,rubric_confirmation_required:true,confirmation_scope:'grant-b'};
+ await s.runner.retry('OWN:B',true);assert.equal(s.requests.length,1,'changed grant invalidates earlier consent');
+});
+test('a denied retry must not hide the previous unknown outcome',async()=>{
+ const s=await prepared();s.mode='unknown';await s.runner.resume();assert.equal(s.requests.length,1);
+ s.admission={ready:false,reason:'APPROVAL_EXPIRED'};await s.runner.retry('OWN:A',true);
+ assert.equal(itemState(s.runner.manifest.items[0]),'unknown');assert.equal(s.requests.length,1);
+ await assert.rejects(s.runner.resume());
 });

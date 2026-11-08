@@ -10,7 +10,7 @@ public final class MlFailure extends RuntimeException {
     public MlFailure(int status, String code, boolean unknown, boolean retryable) {
         super(switch (code) {
             case "EVALUATOR_UNCONFIGURED" -> "Local ML endpoint is not configured correctly.";
-            case "PRIVACY_POLICY_UNCONFIGURED" -> "Only the bundled, verified synthetic fixture context is permitted.";
+            case "PRIVACY_POLICY_UNCONFIGURED" -> "The selected input is not authorized by the active data admission policy.";
             case "EVALUATOR_TIMEOUT" -> "Evaluation outcome is unknown. Check request status before an explicit new attempt.";
             case "REQUEST_ID_CONFLICT" -> "Request ID belongs to a different evaluation payload.";
             case "PAYLOAD_TOO_LARGE" -> "Evaluation request exceeds the allowed size.";

@@ -2,7 +2,9 @@
 
 Локальное рабочее место для оценки качества диалогов: **Java 21 + Spring Boot 3.5.16 + SQLite**, HTML/CSS/Vanilla JS и отдельный **Python HTTP ML service**. Java отвечает за проверку evidence, scoring, хранение, апелляции и историю. Python возвращает ответы по полному чек-листу через контракт **2.0.0**, `POST /v1/evaluate`.
 
-Работают импорт/Organizer fetch, RU/KZ/EN, редактор версий, ручная и разрешённая AI-оценка, original/final, evidence jump, review с CAS и последовательный batch с pause/resume/reload. Для AI Java разрешает только шесть точных fixture-пар; произвольные DEV/CONTROL и новые версии рубрики блокируются. Это ограничение безопасности, а не отсутствие импорта или ручной оценки.
+Работают импорт/Organizer fetch, RU/KZ/EN, редактор версий, ручная и разрешённая AI-оценка, original/final, evidence jump, review с CAS и последовательный batch с pause/resume/reload. По умолчанию AI разрешён для шести точных fixture-пар. Java поддерживает отдельный approval v2: точный dataset/IDs, ограниченный диапазон версий одного checklist key, выключенный по умолчанию opt-in и подтверждение рубрики через UI. Python admission v2 Нуртаса интегрирован; совместный DEV HTTP-прогон прошёл с изолированным offline provider. Это не проверка качества Groq. Это ограничение безопасности, а не отсутствие импорта или ручной оценки.
+
+Подробности BETA, настройки допуска и ML-blocker: [BETA_READINESS](docs/BETA_READINESS.md).
 
 ## Quick Start — без внешних модельных вызовов
 
@@ -82,4 +84,4 @@ python3 -B server/src/test/python/batch_smoke.py --serve
 
 Не публикуйте `.env`, SQLite/WAL, записи/аудио, DEV/CONTROL, signed URLs и официальные PDF. Guide содержит signed API URI. Реальные данные и Groq не используются описанными проверками. `.gitignore` снижает риск, но не удаляет уже опубликованное из истории; `python3 -B scripts/check-public-safety.py` проверяет tracked files и достижимую Git-историю без вывода найденных значений.
 
-Точный checklist PDF **отсутствует**: ожидается `data/official/chat_quality_checklist.pdf`. Seed из восьми критериев и его scoring сохранены, но полная официальная сверка не подтверждена. Динамический AI-сценарий требует отдельного согласования новой fixture-пары; текущий prompt v4 не имеет нового live quality pass. Полная готовность к официальному CONTROL не объявляется.
+Точный checklist PDF **отсутствует**: ожидается `data/official/chat_quality_checklist.pdf`. Seed из восьми критериев и его scoring сохранены, но полная официальная сверка не подтверждена. Динамический DEV AI через внешний Groq требует отдельного разрешения передачи; текущий prompt v4 не имеет нового live quality pass. Полная готовность к официальному CONTROL не объявляется.
