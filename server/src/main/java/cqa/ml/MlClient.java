@@ -47,6 +47,31 @@ public class MlClient implements AutoCloseable {
         if (bytes.length>ContractJson.REQUEST_LIMIT) throw new MlFailure(413,"PAYLOAD_TOO_LARGE",false,false);
         return bytes;
     }
+    public record Health(boolean configured, boolean reachable, boolean ready, String reason) {}
+    /** Configuration/readiness probe only: never sends conversation, rubric or a provider POST. */
+    public Health health() {
+        URI uri;
+        try { uri = endpoint().resolve("/health"); }
+        catch (MlFailure absent) { return new Health(false, false, false, absent.code); }
+        var request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(3))
+                .header("Accept", "application/json").GET().build();
+        var future = client.sendAsync(request, info -> new LimitedBody(info));
+        try {
+            var response = future.get(3, TimeUnit.SECONDS);
+            var value = json.parse(response.body(), 8192);
+            if (!value.path("configured").isBoolean() || !value.path("ready").isBoolean()
+                    || !"2.0.0".equals(value.path("contract_version").asText())) throw MlFailure.invalid();
+            boolean ready = response.statusCode() == 200 && value.path("configured").booleanValue()
+                    && value.path("ready").booleanValue() && value.path("reason").isNull();
+            String reason = value.path("reason").asText("");
+            if (!Set.of("EVALUATOR_UNCONFIGURED", "PRIVACY_POLICY_UNCONFIGURED", "EVALUATOR_BUSY").contains(reason))
+                reason = "EVALUATOR_INVALID_OUTPUT";
+            return new Health(true, true, ready, ready ? null : reason);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); future.cancel(true);
+        } catch (Exception e) { future.cancel(true); }
+        return new Health(true, false, false, "EVALUATOR_BUSY");
+    }
     public EvaluationResult evaluate(EvaluationRequest pinned, byte[] bytes) {
         var request=HttpRequest.newBuilder(endpoint()).timeout(Duration.ofMillis(deadline))
             .header("Content-Type","application/json; charset=utf-8").header("Accept","application/json")

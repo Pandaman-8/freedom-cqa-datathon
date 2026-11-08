@@ -746,3 +746,7 @@ Test control routes exist only in the disposable proxy. Run the browser suite on
 fresh smoke process, then press Enter in its terminal to stop it and remove its database.
 CI runs Node tests, Java integration tests and the HTTP smoke; actual browser runs are
 reported separately. No test invokes Groq or the real Organizer API.
+
+## Fullstack BETA
+
+[Доступ к DEV, точным версиям чек-листа, ML readiness и текущие ограничения](../docs/BETA_READINESS.md). Локальная проверка предоставленного набора: `python3 -B server/src/test/python/dev_local_smoke.py --dataset /absolute/private/invoke.json --serve` из корня. Внешних запросов/модельных результатов нет; ручные ответы — только техническая проверка.

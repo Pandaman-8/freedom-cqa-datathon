@@ -5,6 +5,7 @@ Base: `http://127.0.0.1:8080`, JSON/UTF-8, same-origin с Vanilla UI. Java не 
 | Method / route | Body / условия | Успех |
 |---|---|---|
 | GET `/api/health` | Java liveness, не ML readiness | 200 |
+| GET `/api/ai/status` | Bounded Python health GET + optional selected snapshot check; see BETA_READINESS | 200 |
 | POST `/api/datasets/import` | `isSuccess`, `data.dataset_group_id`, `total_records`, `records[]`; organizer envelope, до 16 MiB | 200 |
 | POST `/api/datasets/fetch` | `{group_id}`; приватный URL только в Java config | 200 |
 | GET `/api/conversations` | Все summaries; фильтрация группы/языка в UI | 200 |

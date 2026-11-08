@@ -5,6 +5,8 @@ import {checklists} from './checklists.js';
 import {manual, evaluations} from './evaluations.js';
 import {datasets} from './datasets.js';
 import {batch} from './batch.js';
+import {request, ApiError} from './api.js';
+import {aiStatusText} from './presentation.js';
 const draftStatus=document.querySelector('#draft-status');
 const drafts=new Drafts(()=>{
   draftStatus.textContent=drafts.pending?'Сохранение выполняется. Дождитесь результата перед сменой контекста.':
@@ -12,7 +14,7 @@ const drafts=new Drafts(()=>{
 });
 window.addEventListener('beforeunload',event=>{if(drafts.count()||drafts.pending||drafts.unknown.size){event.preventDefault();event.returnValue='';}});
 function canSwitch(){if(drafts.pending){draftStatus.textContent='Дождитесь завершения сохранения. Текущий черновик защищён.';return false;}return true;}
-const names={overview:'Обзор',conversations:'Диалоги',checklists:'Чек-листы',results:'Результаты и review',datasets:'Загрузка данных',batch:'Массовая AI-оценка'};
+const names={overview:'Обзор',conversations:'Диалоги',checklists:'Чек-листы',results:'Результаты и апелляции',datasets:'Загрузка данных',batch:'Массовая оценка'};
 function show(name,internal=false){
   if(!Object.hasOwn(names,name)||(!internal&&!canSwitch()))return;
   for(const panel of document.querySelectorAll('[data-panel]'))panel.hidden=panel.dataset.panel!==name;
@@ -29,8 +31,8 @@ function counts(key,rows){totals[key]=rows.length;document.querySelector('#overv
 const results=evaluations(document.querySelector('#evaluation-workspace'),{drafts,canSwitch,onList:rows=>counts('evaluations',rows)});
 const batches=batch(document.querySelector('#batch-workspace'),{drafts,onOpen:async id=>{show('results',true);await results.open(id);},onSaved:()=>results.load()});
 const composer=manual(document.querySelector('#manual-workspace'),{drafts,onSaved:async id=>{show('results',true);await results.open(id);await results.load();}});
-const chats=conversations(document.querySelector('#conversation-workspace'),{canSwitch,onSelect:source=>composer.conversation(source),onList:rows=>{counts('conversations',rows);results.conversations(rows);}});
-const lists=checklists(document.querySelector('#checklist-picker'),document.querySelector('#checklist-editor'),{drafts,canSwitch,onSelect:list=>{composer.checklist(list);batches.checklist(list);},onList:rows=>counts('checklists',rows)});
+const chats=conversations(document.querySelector('#conversation-workspace'),{canSwitch,composerNode:document.querySelector('#manual-workspace'),onSelect:source=>composer.conversation(source),onList:rows=>{counts('conversations',rows);results.conversations(rows);}});
+const lists=checklists(document.querySelector('#checklist-picker'),document.querySelector('#checklist-editor'),{drafts,canSwitch,onSelect:list=>{composer.checklist(list);batches.checklist(list);},onEvaluate:()=>{show('conversations');document.querySelector('#manual-workspace')?.scrollIntoView({block:'center'});},onList:rows=>counts('checklists',rows)});
 const imports=datasets({drafts,onImported:()=>chats.load()});
 const healthReads=new Latest();
 async function health(){
@@ -42,8 +44,11 @@ async function health(){
     const data=await response.json();if(!ticket.current())return;
     if(!response.ok||data.status!=='ok'||data.service!=='freedom-cqa-java')throw new Error();
     card.dataset.state='ok';label.textContent='Java доступен';document.querySelector('#service-version').textContent=data.version;
-    detail.textContent='Ручная оценка доступна. AI требует настроенного локального ML и проверенной собственной синтетики.';
-  }catch{if(ticket.current()){card.dataset.state='error';label.textContent='Нет подключения';detail.textContent='Проверьте запуск Java и повторите чтение.';}}
+    detail.textContent='Ручная оценка доступна.';
+    const ai=await request('/api/ai/status',ticket);if(!ticket.current())return;
+    document.querySelector('#ai-connection').textContent=aiStatusText(ai);
+    if(ai.reason)detail.textContent=new ApiError(0,ai.reason).message;
+  }catch{if(ticket.current()){if(card.dataset.state!=='ok'){card.dataset.state='error';label.textContent='Java недоступен';}document.querySelector('#ai-connection').textContent='Готовность ИИ не подтверждена';detail.textContent='Проверьте запуск сервисов и повторите чтение.';}}
   finally{clearTimeout(timer);if(ticket.current())retry.disabled=false;}
 }
 document.querySelector('#check-connection').addEventListener('click',health);

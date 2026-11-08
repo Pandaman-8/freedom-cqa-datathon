@@ -124,10 +124,15 @@ React build is not a prerequisite for the new Vanilla frontend.
   Use same-origin/backend integration, never browser credentials to work around CORS.
 - Agree provider/data policy/budget before real-data external inference; until then use
   own synthetic data or an authorized local model. No fake successful AI fallback.
-- Current Java SyntheticPolicy permits exactly six bundled conversation/checklist pairs;
+- Default Java synthetic_only policy permits exactly six bundled conversation/checklist pairs;
   Python independently checks conversation fingerprints. Group names alone grant nothing.
   New conversation IDs/text or rubric versions require separate reviewed approval; never
   expand or mock these policies to turn a release-test failure into a success.
+- BETA adds explicit Java approved_dataset mode with a private expiring, endpoint-bound grant:
+  exact dataset hash, explicit conversation IDs and full checklist snapshots; see docs/BETA_READINESS.md.
+  Changing the grant can approve a reviewed new version without source edits. This is not permission
+  to send DEV externally. Python still independently rejects DEV until Nurtas implements and reviews
+  its corresponding gate. Never manufacture approvals or treat the model choice as data consent.
 - Release tests may inject an offline provider through Python's existing test seam, with
   external networking forbidden. This is test infrastructure, not a runtime fake mode or
   evidence of model quality. Distinguish 65 operations over six approved inputs from 65

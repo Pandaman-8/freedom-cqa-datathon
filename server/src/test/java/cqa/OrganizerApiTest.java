@@ -276,7 +276,7 @@ class OrganizerApiTest {
     }
     @Test void frontendContainsFormButNoUpstreamUrlOrSecret() throws Exception {
         var html = call(base, "GET", "/", null).raw(); var js = call(base, "GET", "/js/datasets.js", null).raw();
-        assertTrue(html.contains("id=\"group-id\"")); assertTrue(html.contains("Fetch dataset"));
+        assertTrue(html.contains("id=\"group-id\"")); assertTrue(html.contains("Загрузить группу"));
         assertTrue(js.contains("textContent")); assertFalse(js.contains("innerHTML")); assertTrue(js.contains("'/api/datasets/fetch'"));
         safe(html); safe(js);
     }

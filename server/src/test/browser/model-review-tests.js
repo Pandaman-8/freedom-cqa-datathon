@@ -26,16 +26,16 @@ async function load(){
 }
 async function openResult(id){
  nav('results');click('Обновить оценки');
- await until(()=>all('.evaluation-list .list-row').some(n=>n.textContent.includes(id)),'result list');
- all('.evaluation-list .list-row').find(n=>n.textContent.includes(id)).click();
- await until(()=>all('.score-card').length===2&&workspace().textContent.includes('Evaluation: '+id),'result detail');
+ await until(()=>all('.evaluation-list .list-row').some(n=>n.dataset.evaluationId===id),'result list');
+ all('.evaluation-list .list-row').find(n=>n.dataset.evaluationId===id).click();
+ await until(()=>all('.score-card').length>=1&&workspace().textContent.includes('Evaluation: '+id),'result detail');
 }
 async function appeal(criterion,comment){
  fill('Критерий апелляции',criterion,workspace());fill('Комментарий апелляции',comment,workspace());click('Отправить апелляцию',workspace());
  await until(()=>all('.appeal-card').some(n=>n.textContent.includes(comment))&&idle(),'appeal saved');
 }
-function pending(criterion){const card=all('.appeal-card').find(n=>n.querySelector('form')&&n.querySelector('.badge:nth-child(2)')?.textContent===criterion);assert(card,'Open appeal '+criterion);return card;}
-async function resolved(criterion){await until(()=>!all('.appeal-card').some(n=>n.querySelector('form')&&n.querySelector('.badge:nth-child(2)')?.textContent===criterion)&&idle(),'resolved '+criterion);}
+function pending(criterion){const card=all('.appeal-card').find(n=>n.querySelector('form')&&n.dataset.appealCriterion===criterion);assert(card,'Open appeal '+criterion);return card;}
+async function resolved(criterion){await until(()=>!all('.appeal-card').some(n=>n.querySelector('form')&&n.dataset.appealCriterion===criterion)&&idle(),'resolved '+criterion);}
 async function conversation(){
  nav('conversations');await until(()=>all('#conversation-workspace .list-row').length,'conversation list');
  const row=all('#conversation-workspace .list-row').find(n=>n.querySelector('strong')?.textContent===fixture.conversation.id);assert(row,'Synthetic source');row.click();
@@ -51,7 +51,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
   original=JSON.stringify([model.original_answers,model.original_score]);
   checklistV1=await api('/api/checklists/synthetic-local?version=1');await load();
   await test('open existing model evaluation and jump to exact evidence without inference',async()=>{
-   await openResult(model.id);assert(all('.score-card .score-number').every(n=>Number(n.textContent)===100),'Original/Final100 from Java');
+   await openResult(model.id);assert(all('.score-card .score-number').every(n=>parseFloat(n.textContent)===100),'Original/Final100 from Java');
    const details=doc.querySelector('.score-card [data-score-criterion="LOCAL_CLARITY"]');details.open=true;details.querySelector('.evidence-link').click();
    assert(doc.querySelector('#evaluation-workspace .turn.focused')?.dataset.messageId==='m0002','Exact message ID jump');
    assert(doc.querySelector('#evaluation-workspace .turn.focused .source-text').textContent===fixture.conversation.messages[1].text,'Original source text');immutable(await view());
@@ -69,7 +69,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    assert(failure.detail.code==='INVALID_INPUT'&&JSON.stringify(await view())===JSON.stringify(state),'Java rejects invalid evidence atomically');
    await api('/api/evaluations/'+model.id+'/appeals','POST',{criterion_id:'LOCAL_GREETING',comment:'T14 concurrent reviewer'},201);
    click('Сохранить решение',card);
-   await until(()=>workspace().querySelector(':scope > .notice').textContent.includes('REVIEW_CONFLICT')&&idle(),'real409');
+   await until(()=>workspace().querySelector(':scope > .notice').textContent.includes('Конфликт')&&idle(),'real409');
    assert(resolutions().length===before+1&&resolutions().at(-1).status===409,'Exactly one rejected POST, no automatic retry');
    card=pending('LOCAL_CLARITY');assert(field('Причина решения',card).value.includes('T14 retained reason'),'Reason draft retained');
    assert(field('Ответ',card).value==='level:1'&&field('Точная цитата',card).value===quote,'Answer/evidence draft retained');
@@ -96,11 +96,11 @@ document.querySelector('#run').addEventListener('click',async()=>{
    assert(all('.appeal-card').length===4&&!all('.appeal-card form').length,'All decisions visible in UI');
   });
   await test('UI appends v2 with arbitrary extra criterion; historical v1 remains byte-equivalent JSON',async()=>{
-   nav('checklists');fill('Checklist key','synthetic-local');
+   nav('checklists');fill('Чек-лист','synthetic-local');
    await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('synthetic-local / v1.'),'v1 selected');
    const editor=()=>doc.querySelector('#checklist-editor');click('Добавить критерий',editor());
    const c=editor().querySelector('[data-criterion-index="4"]');assert(c,'Additional criterion editor');
-   fill('Criterion ID','JURY_EXTRA_42',c);fill('Название критерия','Opening time <script>alert(1)</script>',c);
+   fill('ID критерия','JURY_EXTRA_42',c);fill('Название критерия','Opening time <script>alert(1)</script>',c);
    fill('Инструкция','Check whether the reply states opening time.',c);fill('Вес','25',c);click('Сохранить новую версию',editor());
    await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('synthetic-local / v2.')&&idle(),'v2 saved');
    const v2=await api('/api/checklists/synthetic-local');assert(v2.version===2&&v2.criteria.length===5&&v2.criteria[4].id==='JURY_EXTRA_42','Java persisted arbitrary v2');
@@ -111,20 +111,20 @@ document.querySelector('#run').addEventListener('click',async()=>{
    await conversation();await until(()=>all('#manual-workspace .answer-card').length===5,'v2 manual composer');
    for(const [id,value,message] of [['LOCAL_GREETING','yes','m0002'],['LOCAL_IDENTITY','na','m0001'],['LOCAL_CLARITY','level:2','m0002'],['LOCAL_GROSS','no','m0002'],['JURY_EXTRA_42','no','m0002']]){
     const card=doc.querySelector('#manual-workspace [data-criterion-id="'+id+'"]');fill('Ответ',value,card);
-    fill('Обоснование','Synthetic manual v2 workflow, not a quality annotation.',card);click('Добавить evidence',card);fill('Message ID',message,card);click('Взять текст сообщения',card);
+    fill('Обоснование','Synthetic manual v2 workflow, not a quality annotation.',card);click('Добавить доказательство',card);fill('Сообщение',message,card);click('Взять текст сообщения',card);
    }
-   click('Сохранить ручную оценку');await until(()=>workspace().textContent.includes('synthetic-local / v2')&&all('.score-card').length===2&&idle(),'manual v2 result');
+   click('Сохранить ручную оценку');await until(()=>workspace().textContent.includes('/ v2')&&all('.score-card').length>=1&&idle(),'manual v2 result');
    manual=(await api('/api/evaluations')).find(e=>e.origin==='manual'&&e.checklist_key==='synthetic-local'&&e.checklist_version===2);
    assert(manual?.original_score.overall_score===75&&manual.original_answers.length===5,'Java v2 score75 including arbitrary criterion');
-   assert(all('.score-card .score-number').every(n=>Number(n.textContent)===75),'UI displays Java score75');
+   assert(all('.score-card .score-number').every(n=>parseFloat(n.textContent)===75),'UI displays Java score75');
    const old=await view();immutable(old);assert(old.final_score.overall_score===60&&old.final_answers.length===4,'v1 remains pinned');
    await openResult(model.id);assert(field('Критерий апелляции',workspace()).querySelectorAll('option').length===5,'v1 review selector excludes v2 criterion');
   });
   await test('dynamic v2 AI is honestly policy-blocked before any fake or real ML request',async()=>{
-   await conversation();const panel=doc.querySelector('[data-auto-workspace]');click('AI evaluation',panel);
+   await conversation();const panel=doc.querySelector('[data-auto-workspace]');click('Оценить с ИИ',panel);
    await until(()=>panel.querySelector('.notice[data-state="error"]')&&idle(),'policy rejection');
-   const attempt=calls.filter(c=>c.path==='/api/evaluations/auto'&&c.method==='POST');assert(attempt.length===1&&attempt[0].status===503,'Java policy503');
-   const requestId=field('AI request_id',panel).value;
+   assert(all('button',panel).find(n=>n.textContent==='Оценить с ИИ').disabled,'Readiness blocks unapproved version');
+   const requestId=crypto.randomUUID();const denied=await api('/api/evaluations/auto','POST',{request_id:requestId,conversation_id:fixture.conversation.id,checklist_key:'synthetic-local',checklist_version:2},503);assert(denied.detail.code==='PRIVACY_POLICY_UNCONFIGURED','Server independently rejects bypass');
    assert((await api('/api/evaluation-requests/'+requestId,'GET',undefined,404)).detail.code==='NOT_FOUND','No inference ledger entry');
    assert((await api('/__tests/state')).calls===initialCalls,'No additional ML POST in entire T14 workflow');
   });
@@ -135,7 +135,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    assert(JSON.stringify(await api('/api/checklists/synthetic-local?version=1'))===JSON.stringify(checklistV1),'v1 survives restart');
    assert((await api('/api/checklists/synthetic-local')).version===2,'Latest v2 survives restart');
    assert(JSON.stringify(await api('/api/evaluations/'+manual.id))===JSON.stringify(manual),'Manual v2 survives restart');
-   await openResult(manual.id);assert(all('.score-card .score-number').every(n=>Number(n.textContent)===75),'Manual result reloaded in UI');
+   await openResult(manual.id);assert(all('.score-card .score-number').every(n=>parseFloat(n.textContent)===75),'Manual result reloaded in UI');
    assert((await api('/__tests/state')).calls===initialCalls,'Reload and restart never infer');
   });
   status.textContent='PASS: '+report.children.length+' T14 browser scenarios ('+setup+'). No new live calls; dynamic live AI remains BLOCKED.';

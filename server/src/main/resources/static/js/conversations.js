@@ -7,7 +7,7 @@ export function transcript(conversation) {
   const turns = el('div', {class:'transcript', 'aria-label':'Исходные сообщения'});
   for (const m of conversation.messages) {
     const turn = el('article', {class:'turn', tabIndex:-1, 'data-message-id':m.id, 'data-speaker':m.speaker},
-      el('div', {class:'turn-meta'}, el('strong', {text:m.speaker}), el('span', {class:'mono', text:m.id}), el('span', {text:m.timestamp})),
+      el('div', {class:'turn-meta'}, el('strong', {title:m.speaker,text:({operator:'Оператор',client:'Клиент',bot:'Бот',system:'Система'})[m.speaker]??m.speaker}), el('span', {class:'mono', text:m.id}), el('span', {text:m.timestamp})),
       el('p', {class:'source-text', text:m.text}));
     nodes.set(m.id, turn); turns.append(turn);
   }
@@ -22,18 +22,20 @@ export function transcript(conversation) {
       audio.append(load, el('a', {href:source, target:'_blank', rel:'noopener noreferrer', referrerPolicy:'no-referrer', text:'Открыть источник аудио'}), player, info);
     } else audio.append(note('Аудио недоступно: неподдерживаемый адрес.'));
   } else if (conversation.channel === 'voice call') audio.append(note('Аудио недоступно.'));
-  const node = el('div', {}, el('div', {class:'toolbar'}, badge(conversation.language), badge(conversation.channel), badge(conversation.dataset_group_id)),
-    el('h3', {class:'inline-id', text:conversation.id}), note('Исходные роли, время и ID сохранены. Выделите точный фрагмент для evidence.'), audio, feedback, turns);
-  return {node, jump(messageId, quote) {
+  const actions=el('div');
+  const node = el('div', {}, el('div', {class:'toolbar'}, badge(conversation.language), badge(conversation.channel==='voice call'?'Звонок':'Чат'), badge(conversation.dataset_group_id)),
+    el('h3', {class:'inline-id', text:conversation.id}), note('Исходные роли, время и ID сохранены. Выделите точный фрагмент для доказательства.'), audio, feedback, turns);
+  node.insertBefore(actions,turns);
+  return {node, actions, jump(messageId, quote) {
     for (const turn of nodes.values()) turn.classList.remove('focused');
     const turn = nodes.get(messageId);
-    if (!turn) { status(feedback, 'Evidence ссылается на отсутствующий message_id.', 'error'); return false; }
+    if (!turn) { status(feedback, 'Доказательство ссылается на отсутствующее сообщение.', 'error'); return false; }
     if (!conversation.messages.find(m => m.id === messageId).text.includes(quote)) { status(feedback, 'Цитата не совпадает с исходным сообщением.', 'error'); return false; }
-    turn.classList.add('focused'); status(feedback, `Evidence · ${messageId}\n${quote}`);
+    turn.classList.add('focused'); status(feedback, `Доказательство · ${messageId}\n${quote}`);
     turn.scrollIntoView({behavior:'auto', block:'center'}); turn.focus({preventScroll:true}); return true;
   }};
 }
-export function conversations(root, {onSelect, onList, canSwitch}) {
+export function conversations(root, {onSelect, onList, canSwitch, composerNode}) {
   let rows = [], selected = null, currentId = null, view = null;
   const detailRead = new Latest(), listRead = new Latest();
   const filters = {search:'', group:'', language:'', channel:''};
@@ -43,7 +45,7 @@ export function conversations(root, {onSelect, onList, canSwitch}) {
   const groupField = select('Группа', [['','Все группы']], '', v => { filters.group = v; renderList(); });
   const toolbar = el('div', {class:'toolbar'}, field('Поиск по ID', '', v => { filters.search=v; renderList(); }, {type:'search'}), groupField,
     select('Язык', [['','Все языки'],['RU','RU'],['KZ','KZ'],['EN','EN']], '', v => { filters.language=v; renderList(); }),
-    select('Канал', [['','Все каналы'],['agent chat','agent chat'],['voice call','voice call']], '', v => { filters.channel=v; renderList(); }),
+    select('Канал', [['','Все каналы'],['agent chat','Чат'],['voice call','Звонок']], '', v => { filters.channel=v; renderList(); }),
     button('Обновить диалоги', load));
   root.append(toolbar, feedback, el('div', {class:'conversation-grid'}, list, detail));
   function renderList() {
@@ -51,7 +53,7 @@ export function conversations(root, {onSelect, onList, canSwitch}) {
       (!filters.group || r.dataset_group_id === filters.group) && (!filters.language || r.language === filters.language) && (!filters.channel || r.channel === filters.channel));
     list.replaceChildren(note(`${found.length} из ${rows.length} диалогов`));
     for (const row of found) list.append(el('button', {type:'button', class:'list-row', 'aria-pressed':row.id === currentId, onclick:() => choose(row.id)},
-      el('strong', {text:row.id}), el('small', {text:`${row.language} · ${row.channel} · ${display(row.message_count)} сообщений`}))) ;
+      el('strong', {text:row.id}), el('small', {text:`${row.language} · ${row.channel==='voice call'?'Звонок':'Чат'} · ${display(row.message_count)} сообщений`}))) ;
     if (!found.length) list.append(el('p', {class:'empty', text:'Диалоги не найдены. Измените фильтры или загрузите набор.'}));
   }
   async function load() {
@@ -70,7 +72,7 @@ export function conversations(root, {onSelect, onList, canSwitch}) {
     const ticket = detailRead.next(); detail.replaceChildren(detailFeedback); status(detailFeedback, 'Загружаем исходные сообщения…', 'loading');
     try {
       const result = await request('/api/conversations/' + pathId(id), ticket); if (!ticket.current()) return;
-      selected=result; view=transcript(result); detail.replaceChildren(view.node); onSelect(result);
+      selected=result; view=transcript(result); detail.replaceChildren(view.node);if(composerNode)view.actions.append(composerNode);onSelect(result);
     } catch(e) { if (ticket.current()) { status(detailFeedback,e.message,'error'); detail.append(button('Повторить чтение диалога', () => choose(id))); } }
   }
   return {load, choose, get selected() { return selected; }};

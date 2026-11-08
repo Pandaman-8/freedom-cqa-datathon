@@ -14,10 +14,10 @@ function source(id){const button=all('.list-row',doc.querySelector('#conversatio
 async function selectedSource(id){await until(()=>doc.querySelector('#conversation-workspace .conversation-grid > :last-child h3')?.textContent===id,'selected conversation '+id);}
 async function api(path,method='GET',body){const response=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:stringify(body)});const data=parse(await response.text());assert(response.ok,'Harness HTTP '+response.status);return data;}
 async function test(name,fn){await until(idle,'ready before '+name);await fn();await until(idle,'settled after '+name);const li=document.createElement('li');li.textContent='PASS: '+name;report.append(li);}
-async function checklistVersion(version){fill('Version (пусто = latest)',version);click('Открыть версию');await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('/ v'+version+'.'),'checklist version '+version);}
+async function checklistVersion(version){fill('Версия (пусто = последняя)',version);click('Открыть версию');await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('/ v'+version+'.'),'checklist version '+version);}
 function answer(id){const card=all('#manual-workspace .answer-card').find(c=>c.dataset.criterionId===id);assert(card,'criterion '+id);return card;}
 async function appeal(criterion,comment){const root=doc.querySelector('#evaluation-workspace');fill('Критерий апелляции',criterion,root);fill('Комментарий апелляции',comment,root);click('Отправить апелляцию',root);await until(()=>all('.appeal-card',root).some(c=>c.textContent.includes(comment))&&idle(),'appeal saved');}
-function pendingReview(criterion){const card=all('.appeal-card').find(c=>c.querySelector('form')&&c.querySelector('.badge:nth-child(2)')?.textContent===criterion);assert(card,'pending review '+criterion);return card;}
+function pendingReview(criterion){const card=all('.appeal-card').find(c=>c.querySelector('form')&&c.dataset.appealCriterion===criterion);assert(card,'pending review '+criterion);return card;}
 
 document.querySelector('#run').addEventListener('click',async()=>{
  document.querySelector('#run').disabled=true;status.textContent='RUNNING';report.replaceChildren();
@@ -49,10 +49,10 @@ document.querySelector('#run').addEventListener('click',async()=>{
    source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');
   });
   await test('historical checklist selection and version race; context drafts are not overwritten',async()=>{
-   fill('Checklist key','ui-synthetic');await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('ui-synthetic / v2.'),'custom checklist');
+   fill('Чек-лист','ui-synthetic');await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('ui-synthetic / v2.'),'custom checklist');
    let release;const before=win.fetch;
    win.fetch=async(path,options={})=>{if(String(path)==='/api/checklists/ui-synthetic?version=1'){const response=await nativeFetch(path,{...options,signal:undefined});await new Promise(resolve=>release=resolve);return response;}return before(path,options);};
-   fill('Version (пусто = latest)','1');click('Открыть версию');await until(()=>release,'delayed checklist');await checklistVersion('2');release();await sleep(100);
+   fill('Версия (пусто = последняя)','1');click('Открыть версию');await until(()=>release,'delayed checklist');await checklistVersion('2');release();await sleep(100);
    assert(doc.querySelector('#checklist-picker .notice').textContent.includes('/ v2.'),'late v1 discarded');win.fetch=before;await checklistVersion('1');
    fill('Обоснование','Keep draft A',answer('WELCOME_X'));source('UI-SYNTHETIC:KZ');await selectedSource('UI-SYNTHETIC:KZ');assert(named('Обоснование',answer('WELCOME_X')).value==='','no A draft leakage');
    fill('Обоснование','Keep draft B',answer('WELCOME_X'));source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');assert(named('Обоснование',answer('WELCOME_X')).value==='Keep draft A','draft A retained');
@@ -60,12 +60,12 @@ document.querySelector('#run').addEventListener('click',async()=>{
   });
   await test('manual validation, exact evidence, duplicate POST prevention, persisted70/N-A/critical/raw10.5',async()=>{
    for(const [id,value] of [['WELCOME_X','na'],['CLARITY_X','level:1'],['RISK_X','yes']]){
-    fill('Ответ',value,answer(id));fill('Обоснование','Synthetic explanation <img src=x onerror=alert(1)>',answer(id));click('Добавить evidence',answer(id));fill('Message ID','m0003',answer(id));click('Взять текст сообщения',answer(id));
+    fill('Ответ',value,answer(id));fill('Обоснование','Synthetic explanation <img src=x onerror=alert(1)>',answer(id));click('Добавить доказательство',answer(id));fill('Сообщение','m0003',answer(id));click('Взять текст сообщения',answer(id));
    }
    fill('Точная цитата','NOT IN SOURCE',answer('WELCOME_X'));click('Сохранить ручную оценку');await until(()=>doc.querySelector('#manual-workspace .notice[data-state="error"]'),'local validation');
    assert(!calls.some(c=>c.path==='/api/evaluations/manual'&&c.method==='POST'),'invalid quote not posted');
    click('Взять текст сообщения',answer('WELCOME_X'));const form=doc.querySelector('#manual-workspace form');form.requestSubmit();form.requestSubmit();
-   await until(()=>all('#evaluation-workspace .score-card').length===2&&idle(),'saved results');
+   await until(()=>all('#evaluation-workspace .score-card').length===1&&idle(),'saved results');
    assert(calls.filter(c=>c.path==='/api/evaluations/manual'&&c.method==='POST').length===1,'exactly one manual POST');
    const rows=await api('/api/evaluations?conversation_id=UI-SYNTHETIC%3ARU');saved=rows.find(e=>e.original_answers[0].explanation.includes('<img'));
    assert(saved&&String(saved.original_score.overall_score)==='70.00','real Java snapshot70');originalScore=stringify(saved.original_score);
@@ -73,7 +73,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    assert(all('#evaluation-workspace img').length===0,'explanation safe');
   });
   await test('evidence jumps to exact message_id with duplicate timestamps',async()=>{
-   const original=doc.querySelector('.score-card');const detail=original.querySelector('details');detail.open=true;detail.querySelector('.evidence-link').click();
+   const original=doc.querySelector('.score-card');original.querySelector('.evidence-link').click();
    assert(doc.querySelector('#evaluation-workspace .turn.focused')?.dataset.messageId==='m0003','exact message focused');
    assert(doc.querySelector('#evaluation-workspace .turn.focused .source-text').textContent===fixture.quote,'exact source retained');
   });
@@ -87,10 +87,10 @@ document.querySelector('#run').addEventListener('click',async()=>{
    await appeal('CLARITY_X','Browser change appeal');let card=pendingReview('CLARITY_X');fill('Решение','change',card);fill('Причина решения','Retain conflict reason',card);fill('Ответ','level:0',card);
    await api('/api/evaluations/'+saved.id+'/appeals','POST',{criterion_id:'RISK_X',comment:'Concurrent synthetic appeal'});
    const before=calls.filter(c=>c.path.includes('/resolve')).length;click('Сохранить решение',card);
-   await until(()=>doc.querySelector('#evaluation-workspace > .notice').textContent.includes('REVIEW_CONFLICT'),'conflict displayed');await until(idle,'mutation settled');
+   await until(()=>doc.querySelector('#evaluation-workspace > .notice').textContent.includes('Конфликт'),'conflict displayed');await until(idle,'mutation settled');
    card=pendingReview('CLARITY_X');assert(named('Причина решения',card).value==='Retain conflict reason','reason retained');assert(named('Ответ',card).value==='level:0','replacement retained');
    assert(calls.filter(c=>c.path.includes('/resolve')).length===before+1,'no automatic replay');click('Сохранить решение',card);
-   await until(()=>!all('.appeal-card form').some(f=>f.querySelector('h3')?.textContent==='Решение по CLARITY_X'),'change saved');
+   await until(()=>!all('.appeal-card').some(c=>c.dataset.appealCriterion==='CLARITY_X'&&c.querySelector('form')),'change saved');
    const view=await api('/api/evaluations/'+saved.id);assert(String(view.final_score.overall_score)==='0.00','final0');assert(stringify(view.original_score)===originalScore,'original70 immutable');
   });
   await test('unknown mutation outcome keeps draft and blocks repeat across context switches',async()=>{
@@ -107,10 +107,10 @@ document.querySelector('#run').addEventListener('click',async()=>{
   });
   await test('new arbitrary checklist editor, decimal precision, levels, sections and immutable versions',async()=>{
    nav('checklists');click('Создать новый чек-лист',doc.querySelector('#checklist-editor'));key='browser-'+Date.now();
-   const editor=()=>doc.querySelector('#checklist-editor');fill('Новый checklist key',key,editor());fill('Название чек-листа','Browser <script>alert(1)</script>',editor());fill('Описание чек-листа','Synthetic browser-created rubric',editor());
-   click('Добавить раздел',editor());fill('Section ID','custom-section',editor());fill('Название раздела','Custom section',editor());
+   const editor=()=>doc.querySelector('#checklist-editor');fill('Ключ нового чек-листа',key,editor());fill('Название чек-листа','Browser <script>alert(1)</script>',editor());fill('Описание чек-листа','Synthetic browser-created rubric',editor());
+   click('Добавить раздел',editor());fill('ID раздела','custom-section',editor());fill('Название раздела','Custom section',editor());
    click('Добавить критерий',editor());let c=editor().querySelector('[data-criterion-index="0"]');
-   fill('Criterion ID','ARBITRARY_SCALE',c);fill('Название критерия','Custom scale',c);fill('Инструкция','Choose a level from actual source.',c);fill('Тип критерия','scale',c);
+   fill('ID критерия','ARBITRARY_SCALE',c);fill('Название критерия','Custom scale',c);fill('Инструкция','Choose a level from actual source.',c);fill('Тип критерия','scale',c);
    c=editor().querySelector('[data-criterion-index="0"]');fill('Вес','0.123456789012345678901',c);
    for(const v of ['0','7','10']){click('Добавить уровень',c);c=editor().querySelector('[data-criterion-index="0"]');const row=all('.level-row',c).at(-1);fill('Значение уровня',v,row);fill('Описание уровня','Level '+v,row);}
    click('Создать чек-лист',editor());await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes(key+' / v1.'),'new checklist');
@@ -120,7 +120,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    const external=await api('/api/checklists/'+key);const draft={title:'Concurrent v2',description:external.description,sections:external.sections,criteria:external.criteria};
    await api('/api/checklists/'+key+'?expected_version=1','PUT',draft);const writes=calls.filter(c=>c.method==='PUT').length;
    click('Сохранить новую версию',editor());await until(()=>editor().querySelector('.notice[data-state="error"]'),'checklist conflict');assert(named('Название чек-листа',editor()).value==='Unsaved retained draft','checklist draft retained');
-   assert(calls.filter(c=>c.method==='PUT').length===writes+1,'PUT not replayed');click('Обновить latest для черновика',editor());await until(()=>editor().textContent.includes('Новая база: latest v2'),'base refreshed');
+   assert(calls.filter(c=>c.method==='PUT').length===writes+1,'PUT not replayed');click('Обновить базовую версию черновика',editor());await until(()=>editor().textContent.includes('Новая базовая версия: v2'),'base refreshed');
    click('Сохранить новую версию',editor());await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes(key+' / v3.'),'v3 saved');
    assert((await api('/api/checklists/'+key+'?version=1')).title==='Browser <script>alert(1)</script>','v1 immutable');
   });
@@ -131,21 +131,21 @@ document.querySelector('#run').addEventListener('click',async()=>{
    fill('Название чек-листа','Unrelated version draft',editor());
    function newBlank(){
     click('Создать новый чек-лист',editor());
-    for(const label of ['Новый checklist key','Название чек-листа','Описание чек-листа'])assert(named(label,editor()).value==='','New is blank: '+label);
+    for(const label of ['Ключ нового чек-листа','Название чек-листа','Описание чек-листа'])assert(named(label,editor()).value==='','New is blank: '+label);
     assert(!editor().querySelector('.editor-card'),'New has no saved sections or criteria');
    }
    function populate(newKey,title){
-    fill('Новый checklist key',newKey,editor());fill('Название чек-листа',title,editor());fill('Описание чек-листа','Synthetic create lifecycle',editor());
-    click('Добавить раздел',editor());fill('Section ID','section',editor());fill('Название раздела','Section',editor());
+    fill('Ключ нового чек-листа',newKey,editor());fill('Название чек-листа',title,editor());fill('Описание чек-листа','Synthetic create lifecycle',editor());
+    click('Добавить раздел',editor());fill('ID раздела','section',editor());fill('Название раздела','Section',editor());
     click('Добавить критерий',editor());const criterion=editor().querySelector('[data-criterion-index="0"]');
-    fill('Criterion ID','BINARY',criterion);fill('Название критерия','Binary criterion',criterion);fill('Инструкция','Use synthetic source evidence.',criterion);
+    fill('ID критерия','BINARY',criterion);fill('Название критерия','Binary criterion',criterion);fill('Инструкция','Use synthetic source evidence.',criterion);
    }
    async function submitCreated(newKey){
     click('Создать чек-лист',editor());await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes(newKey+' / v1.')&&idle(),'created '+newKey);
    }
    const snapshot=()=>stringify(all('input,textarea,select',editor()).map(n=>({value:n.value,checked:!!n.checked})));
    async function reopen(){
-    nav('overview');nav('checklists');fill('Checklist key',keyA);
+    nav('overview');nav('checklists');fill('Чек-лист',keyA);
     await until(()=>editor().querySelector('h2')?.textContent===keyA+' · редактор версии','switch to existing checklist');
     click('Создать новый чек-лист',editor());
    }
@@ -158,10 +158,10 @@ document.querySelector('#run').addEventListener('click',async()=>{
    win.fetch=async(path,options={})=>{const response=await before(path,options);if(options.method==='POST'&&String(path).startsWith('/api/checklists/'))lastStatus=response.status;return response;};
    click('Создать чек-лист',editor());await until(()=>lastStatus===422&&idle(),'Java rejects zero binary weight');
    await reopen();assert(snapshot()===invalid,'failed POST retains complete create draft');
-   fill('Вес','1',editor());fill('Новый checklist key',keyA,editor());const duplicate=snapshot();lastStatus=undefined;
+   fill('Вес','1',editor());fill('Ключ нового чек-листа',keyA,editor());const duplicate=snapshot();lastStatus=undefined;
    click('Создать чек-лист',editor());await until(()=>lastStatus===409&&idle(),'Java duplicate key409');
    await reopen();assert(snapshot()===duplicate,'409 retains complete create draft');
-   fill('Новый checklist key',keyB,editor());const pending=snapshot();let attempts=0;
+   fill('Ключ нового чек-листа',keyB,editor());const pending=snapshot();let attempts=0;
    win.fetch=async(path,options={})=>{if(String(path)==='/api/checklists/'+keyB&&options.method==='POST'){attempts++;throw new TypeError('Synthetic lost create response');}return before(path,options);};
    click('Создать чек-лист',editor());await until(()=>editor().querySelector('form').dataset.unknown==='true'&&idle(),'unknown create outcome');
    await reopen();assert(snapshot()===pending,'unknown result retains complete create draft');
@@ -171,14 +171,14 @@ document.querySelector('#run').addEventListener('click',async()=>{
    const a=await api('/api/checklists/'+keyA),b=await api('/api/checklists/'+keyB);
    assert(String(a.version)==='1'&&String(b.version)==='1'&&a.title==='Create A'&&b.title==='Create B','A and B are separate Java v1 checklists');
    assert(stringify(a)===originalA,'A remains unchanged');newBlank();
-   fill('Checklist key',key);await until(()=>editor().querySelector('h2')?.textContent===key+' · редактор версии','return to unrelated draft');
+   fill('Чек-лист',key);await until(()=>editor().querySelector('h2')?.textContent===key+' · редактор версии','return to unrelated draft');
    assert(named('Название чек-листа',editor()).value==='Unrelated version draft','successful creates remove only their create draft');
   });
   await test('audio stays unloaded until explicit action, organizer safe503 and honest AI state',async()=>{
    nav('conversations');source('UI-SYNTHETIC:EN');await selectedSource('UI-SYNTHETIC:EN');const audio=doc.querySelector('#conversation-workspace audio');
    assert(audio&&!audio.getAttribute('src')&&audio.preload==='none','no automatic audio request');
-   assert(doc.querySelector('#manual-workspace').textContent.includes('Без настройки Java возвращает 501'),'honest AI state');
-   nav('datasets');doc.querySelector('#group-id').value='SYNTHETIC';click('Fetch dataset');await until(()=>doc.querySelector('#dataset-result').dataset.state==='error','safe organizer error');
+   await until(()=>doc.querySelector('[data-auto-workspace]')?.dataset.aiState==='blocked','honest AI readiness');assert(all('button',doc.querySelector('[data-auto-workspace]')).find(n=>n.textContent==='Оценить с ИИ').disabled,'AI disabled without readiness');
+   nav('datasets');doc.querySelector('#group-id').value='SYNTHETIC';click('Загрузить группу');await until(()=>doc.querySelector('#dataset-result').dataset.state==='error','safe organizer error');
    assert(doc.querySelector('#dataset-result').textContent.includes('не настроено'),'fixed error');
    assert(!calls.some(c=>c.path.includes('/api/evaluations/auto')),'no AI requests');
    const hostile=parse(stringify(fixture.dataset));hostile.data.dataset_group_id='<img src=x onerror=alert(1)>';

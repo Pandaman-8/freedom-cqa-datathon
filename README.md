@@ -2,7 +2,9 @@
 
 Локальное рабочее место для оценки качества диалогов: **Java 21 + Spring Boot 3.5.16 + SQLite**, HTML/CSS/Vanilla JS и отдельный **Python HTTP ML service**. Java отвечает за проверку evidence, scoring, хранение, апелляции и историю. Python возвращает ответы по полному чек-листу через контракт **2.0.0**, `POST /v1/evaluate`.
 
-Работают импорт/Organizer fetch, RU/KZ/EN, редактор версий, ручная и разрешённая AI-оценка, original/final, evidence jump, review с CAS и последовательный batch с pause/resume/reload. Для AI Java разрешает только шесть точных fixture-пар; произвольные DEV/CONTROL и новые версии рубрики блокируются. Это ограничение безопасности, а не отсутствие импорта или ручной оценки.
+Работают импорт/Organizer fetch, RU/KZ/EN, редактор версий, ручная и разрешённая AI-оценка, original/final, evidence jump, review с CAS и последовательный batch с pause/resume/reload. По умолчанию AI разрешён для шести точных fixture-пар. Добавлен отдельный режим допуска проверенных dataset/checklist snapshots через приватное согласование; текущий Python ещё требует согласованной поддержки DEV. Это ограничение безопасности, а не отсутствие импорта или ручной оценки.
+
+Подробности BETA, настройки допуска и ML-blocker: [BETA_READINESS](docs/BETA_READINESS.md).
 
 ## Quick Start — без внешних модельных вызовов
 

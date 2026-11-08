@@ -3735,10 +3735,9 @@
       "estimate_basis": "Активные часы двух разработчиков; Joint занимает обоих. Условная оценка миграции, внешнее ожидание/inference отдельно; не результат измеренной Java реализации.",
       "status": "in_progress",
       "risks_and_blockers": [
-        "BLOCKER: new arbitrary criterion/v2 AI is not approved by SyntheticPolicy. Java returns503 PRIVACY_POLICY_UNCONFIGURED before ML HTTP and ledger claim. Farhat/Nurtas must agree a new exact own-synthetic fixture, reviewed fixture-set expansion and separate provider/budget/live-run authorization. No weakening of policy or existing fixture changes in T14.",
         "Peer review of T14 and dynamic-criterion live AI acceptance remain outstanding; T14 must not be marked done.",
         "Workflow tests intentionally change clarity/flag answers to exercise review and scoring. Exact evidence grounding does not establish semantic relevance or model accuracy.",
-        "No new Groq/Organizer/real DEV/CONTROL/audio requests. Shared contract, scoring, ML prompt, fixtures and production Java/Vanilla implementation are unchanged."
+        "BETA Java reviewed snapshot admission implemented; Python admission for DEV remains unimplemented in this branch. See docs/BETA_READINESS.md. External transfer consent, per-version approval and peer review remain required."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
@@ -3773,6 +3772,24 @@
             "PASS:4/4 existing T13 AI browser scenarios on a fresh fixture server after the test-proxy extension; no changes to production integration."
           ],
           "limits": "New dynamic-criterion ML E2E NOT RUN/BLOCKED pending joint fixture and live authorization. Browser checks are local, not claimed as CI browser coverage; no new responsive/cross-browser matrix. Remote CI result will be checked after push."
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "fullstack_beta_implementation",
+          "base_commit": "cbd77711f07110f184bcb562b5f9f7d7b9174520",
+          "branch": "codex/T14-dynamic-ai",
+          "details": [
+            "User authorized Java approved_dataset mode and UX work; Nurtas ML plan relayed in chat: Groq GPT-OSS20B, first15 existing chats (5RU/5KZ/5EN), calls/transfer conditions separate. This is not external DEV consent.",
+            "Default six-pair synthetic policy retained. Explicit private approval binds dataset SHA256, exact conversation IDs/content and full checklist snapshots, endpoint, expiry and both named approvers. Hot grant updates/revocation; unknown modes fail closed. No source edit for a separately reviewed new rubric version.",
+            "Java GET /api/ai/status probes Python health without inference and checks selected snapshot. Contract2.0.0, Python, scoring and SQLite schema unchanged. Existing service still pins complete input and uses durable ledger.",
+            "Vanilla AI-first conversation flow, collapsed manual/technical details, Russian criteria/results/review, single result when original/final identical, preserved original history, exact evidence jumps and new-version action."
+          ],
+          "limits": "T14 remains in_progress. Python still only permits synthetic fingerprints; Nurtas independent gate and actual external-data consent are required before DEV AI, dynamic live E2E or the planned15-chat run. No live calls performed.",
+          "verification": [
+            "Java clean verify:5982 JUnit PASS,0 failures/errors/skipped; JS:27 PASS; contracts:72 PASS and drift clean; scoring reference:5184 PASS; offline Python:332 PASS.",
+            "Actual local browser:37/37 PASS (workspace11,auto4,model review7,batch9,private DEV6). Fixture/fake tests are not Groq E2E.",
+            "Packaged HTTP/JAR workspace/organizer/review/auto/batch and private DEV import/manual/version/restart PASS. Details and boundaries in docs/BETA_READINESS.md."
+          ]
         }
       ],
       "requirement_ids": [
@@ -3984,7 +4001,18 @@
         "Второй участник проверил shared boundaries и результаты тестов; contract/dependency changes согласованы.",
         "Diff без private data/secrets; completion evidence записан в plan.json."
       ],
-      "completion_evidence": [],
+      "completion_evidence": [
+        {
+          "date": "2026-11-08",
+          "kind": "local_dev_verification",
+          "results": [
+            "Existing private invoke.json only:65/65 conversations,1268 messages,35RU/15KZ/15EN,60chats/5calls; exact import, roles/timestamps/IDs and5audio locators preserved; idempotent repeat.",
+            "Private temporary SQLite:technical manual scoring/evidence, appeal/change/CAS, original immutability, v1/v2 and JVM restart PASS. All65 single-item AI requests denied before ML/ledger.",
+            "Actual browser6/6 DEV scenarios PASS: filters/source/audio locators;C01-C08;collapsed manual/readiness;manual/NA/evidence;appeal;UI rubric replacement/history;batch accounts for65 explicit policy failures. ML POST=0."
+          ],
+          "limits": "T17 stays planned: no real provider results, CONTROL capacity/cost, external-data authorization or audio playback verification. Manual test answers are not quality annotations. No raw DEV/transcripts/locators stored in Git."
+        }
+      ],
       "requirement_ids": [
         "R04",
         "R21",

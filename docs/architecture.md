@@ -33,8 +33,10 @@ Manifest содержит IDs/status, не transcripts/answers/credentials. Эт
 
 ## Политика данных и пределы
 
-Java допускает ровно шесть bundled conversation/checklist pairs из `ml-service/tests/fixtures/*/request.json`; среди них есть v1 и одна существующая v2. Python отдельно проверяет fingerprints разговоров. Любые другие текст/IDs/checklist fields не становятся разрешёнными от имени группы SYNTHETIC. Новый динамический AI-criterion и реальные DEV/CONTROL требуют отдельного согласования, текущая policy не отключается.
+По умолчанию Java допускает ровно шесть bundled conversation/checklist pairs из `ml-service/tests/fixtures/*/request.json`; среди них есть v1 и одна существующая v2. Python отдельно проверяет fingerprints разговоров. Любые другие текст/IDs/checklist fields не становятся разрешёнными от имени группы SYNTHETIC. Новый динамический AI-criterion и реальные DEV/CONTROL требуют отдельного согласования, текущая policy не отключается.
 
 Оба приложения слушают loopback, UI использует same-origin Java. Нет auth/production deployment, server-side batch workers, анализа интонации/дикции и достоверной company KB. Audio только по явному действию пользователя. Python health проверяет configuration/busy, Java health — только liveness. Safe Quick Start оставляет Python без ключа и честно недоступным для inference.
 
 [Release evidence](RELEASE_READINESS.md) разделяет unit/integration/browser, fake provider и исторический live E2E. Direct dependencies и Maven pinned; транзитивные Python зависимости не зафиксированы полным hash lock. [Исторический аудит](CODEX_AUDIT.md) не описывает текущий runtime целиком.
+
+BETA: отдельный `approved_dataset` режим проверяет приватный grant и точные snapshots; [правила и независимый Python blocker](BETA_READINESS.md). `/api/ai/status` читает ML health без inference.
