@@ -318,6 +318,24 @@ does **not** guarantee that it authorizes another group:401/403 are reported hon
 All redirects are rejected, including same-origin redirects. No request body, transcript,
 audio locator or provider input is sent upstream; only the GET query is sent.
 
+Both successful fetch and manual import preserve the **exact received JSON bytes** before
+committing conversations. No parse/serialize round trip is used for this archive. The default
+directory is `dataset-sources/` beside `CQA_DB_PATH`; override with an absolute
+`CQA_DATASET_SOURCE_DIR` (Spring `cqa.dataset-source-dir`) outside the repository and web root.
+Use a private local POSIX filesystem: directory0700, files0600, owned by the Java user.
+The filename is `<SHA-256>.dataset-source.json`. Re-importing identical bytes reuses it;
+different whitespace produces a separate source hash even when conversations are idempotent.
+No download endpoint, raw path or additional API response field is added.
+
+Use that private file's absolute path and filename hash in approval v2 `dataset_path` and
+`dataset_sha256`; Java and Python must both be able to read it as the same local user.
+Do not copy the source or grant into Git. Snapshot publication is atomic and never overwrites
+an existing file. A corrupt/insecure/unwritable archive fails with a safe empty500 and no
+conversation commit. A subsequent SQLite failure can leave a valid private source snapshot;
+its presence alone is not proof of a successful import or an ML permission. Rejected malformed,
+wrong-group or conflicting imports do not publish new snapshots. Existing imports made before
+this change must be re-imported from their original bytes to obtain a verifiable source archive.
+
 `CQA_ORGANIZER_CONNECT_TIMEOUT_MS` defaults to3000 (bounded1..5000).
 `CQA_ORGANIZER_RESPONSE_TIMEOUT_MS` defaults to10000 (bounded1..30000), including headers
 and the entire streamed body. The UI waits up to35s, then asks to refresh before retrying.

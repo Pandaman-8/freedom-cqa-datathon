@@ -122,6 +122,10 @@ React build is not a prerequisite for the new Vanilla frontend.
   The guide PDF itself contains a signed API URI and must not be published.
 - Organizer credentials belong in Java configuration; provider secrets in Python.
   Use same-origin/backend integration, never browser credentials to work around CORS.
+- Successful fetch/upload archives exact JSON bytes in private `dataset-sources/` beside
+  SQLite, or absolute `CQA_DATASET_SOURCE_DIR`. Directory0700/files0600, hash filenames;
+  use the archived path/hash for approval v2, never serialize DB records to reconstruct a source.
+  Archive failure must prevent the conversation commit; no raw-source download API exists.
 - Agree provider/data policy/budget before real-data external inference; until then use
   own synthetic data or an authorized local model. No fake successful AI fallback.
 - Default Java synthetic_only policy permits exactly six bundled conversation/checklist pairs;

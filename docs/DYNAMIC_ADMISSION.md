@@ -6,6 +6,36 @@ external DEV transfer consent. Applies to PR #14; evaluation contract 2.0.0/scor
 
 ## Scope
 
+CONTROL follow-up (after main `4c20692`): policy proposal awaiting Nurtas acknowledgment.
+Keep the v2 JSON fields unchanged; derive `dataset_group_id` from the exact hash-verified
+source and require every explicit composite `conversation_id` to belong to that dataset.
+Remove Python's literal DEV/15 restrictions, without adding wildcards, voice permission,
+changing expiry/revocation, provider/model/endpoint, rubric confirmation or external opt-ins.
+The source/grant byte limits still bound the input. This proposal is not implemented or
+authorized for external transfer merely by documenting it. Current Python still enforces DEV/15.
+Agreement requested from Nurtas (`namantai`) in
+[PR14 comment](https://github.com/Pandaman-8/freedom-cqa-datathon/pull/14#issuecomment-6716314799);
+no acknowledgment received as of this verification. CONTROL inference readiness is BLOCKED.
+
+Java now archives exact Organizer fetch/manual-import transport bytes in a private local
+content-addressed store; see [source storage](../server/README.md). The existing grant fields
+can reference this archive without changing contract2.0.0 or approval-v2 JSON.
+
+CONTROL preparation verification on 2026-11-08 (branch `codex/control-readiness`):
+
+- Java clean verify:5996 JUnit PASS; JS30 PASS; Python350 PASS (one existing Starlette/httpx
+  deprecation warning); contract72 fixtures PASS; scoring5184 references PASS.
+- Exact-byte fetch/upload archive, permissions, idempotency/restart, corrupt/symlink/insecure
+  destination refusal and no SQLite commit on archive failure verified in Java tests.
+- Existing private `invoke.json`: actual Java/Python HTTP uses Java's archived bytes and the
+  same private grant;15 selected chats admitted,50 denied, missing opt-ins/confirmation,
+  wrong/expired/deleted grants, peer mismatch, dynamic v1/v2 and ledger restart PASS.
+- Actual browser:5/5 PASS, including exact evidence/NA, immutable Original with appeal/review,
+  criterion replacement through UI and pinned v2 batch pause/reload/resume (15 succeed,
+  50 policy-blocked). Provider is offline and rejects external networking; Groq calls0.
+- New group and >15 approved IDs remain NOT RUN/POLICY BLOCKED pending the agreement above.
+  No source/permission/model-quality claim is inferred from these offline checks.
+
 Keep `synthetic_only` as the default. In `approved_dataset`, both services independently
 load the same private, expiring approval file and verify its exact bytes/hash and the
 approved dataset hash. Match the full audio-free source projection and explicit chat IDs.

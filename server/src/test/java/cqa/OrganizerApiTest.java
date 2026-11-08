@@ -18,7 +18,8 @@ import java.io.IOException;
 import java.net.*;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,6 +34,7 @@ class OrganizerApiTest {
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
     private final AtomicReference<String> mode = new AtomicReference<>("ok");
     private final AtomicInteger requests = new AtomicInteger(), redirects = new AtomicInteger();
+    private final AtomicReference<byte[]> receivedSource = new AtomicReference<>();
     private volatile String query, method;
     private HttpServer upstream;
     private ExecutorService workers;
@@ -120,12 +122,13 @@ class OrganizerApiTest {
                     ((ObjectNode)record.at("/transcript/0")).put("text", "SYNTHETIC_TRANSCRIPT changed content");
                 }
             }
-            byte[] bytes = json.writeValueAsBytes(body);
+            byte[] bytes = (" \r\n" + json.writerWithDefaultPrettyPrinter().writeValueAsString(body) + "\n ").getBytes(StandardCharsets.UTF_8);
             if (current.equals("invalid_json")) bytes = "{bad SYNTHETIC_SIGNATURE".getBytes(StandardCharsets.UTF_8);
             if (current.equals("duplicate_key")) bytes = "{\"isSuccess\":true,\"isSuccess\":false}".getBytes(StandardCharsets.UTF_8);
             if (current.equals("invalid_utf8")) bytes = new byte[]{(byte)0xc3, (byte)0x28};
             if (current.equals("trailing")) bytes = (body + " {}").getBytes(StandardCharsets.UTF_8);
             if (current.equals("gzip")) exchange.getResponseHeaders().set("Content-Encoding", "gzip");
+            receivedSource.set(bytes);
             exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
             exchange.sendResponseHeaders(200, current.equals("slow_body") ? 0 : bytes.length);
             if (current.equals("slow_body")) { exchange.getResponseBody().write('{'); exchange.getResponseBody().flush(); Thread.sleep(2600); }
@@ -154,6 +157,7 @@ class OrganizerApiTest {
     }
     @Test void getPreservesRawQueryAndImportsAllSourceFieldsExactly() throws Exception {
         assertEquals(200, fetch().status()); assertEquals("GET", method);
+        assertArchived(receivedSource.get());
         assertEquals(RAW_QUERY.replace("group_id=OLD", "group_id=" + group), query); assertEquals(1, requests.get());
         for (JsonNode record : dataset(group).at("/data/records")) {
             var response = call(base, "GET", "/api/conversations/" + group + ":" + record.get("conversation_id").asText(), null);
@@ -163,6 +167,36 @@ class OrganizerApiTest {
                 ObjectNode turn = record.get("transcript").get(i).deepCopy(); turn.put("id", "m000" + (i+1));
                 assertEquals(turn, saved.get("messages").get(i));
             }
+        }
+    }
+    private void assertArchived(byte[] source) throws Exception {
+        String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source));
+        Path saved = directory.resolve("dataset-sources").resolve(hash + ".dataset-source.json");
+        assertArrayEquals(source, Files.readAllBytes(saved));
+        assertEquals("rw-------", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(saved)));
+        assertEquals(404, call(base, "GET", "/" + saved.getFileName(), null).status());
+    }
+    @Test void uploadAlsoPreservesWhitespaceAndUtf8WithoutReserialization() throws Exception {
+        byte[] source = (" \n" + json.writerWithDefaultPrettyPrinter().writeValueAsString(dataset(group)) + "\r\n")
+            .getBytes(StandardCharsets.UTF_8);
+        var request = HttpRequest.newBuilder(URI.create(base + "/api/datasets/import"))
+            .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofByteArray(source)).build();
+        assertEquals(200, http.send(request, HttpResponse.BodyHandlers.ofString()).statusCode());
+        assertArchived(source);
+    }
+    @Test void archiveFailureCannotCommitImportOrLeakPrivatePaths(CapturedOutput output) throws Exception {
+        Path blocked = Files.writeString(directory.resolve("not-a-directory"), "synthetic");
+        try (var failed = (ServletWebServerApplicationContext) new SpringApplicationBuilder(Application.class).run(
+                "--server.port=0", "--cqa.db-path=" + directory.resolve("archive-failure.sqlite"),
+                "--cqa.dataset-source-dir=" + blocked, "--cqa.organizer-url=" + configured,
+                "--spring.main.banner-mode=off", "--logging.level.root=WARN")) {
+            var reply = call(url(failed), "POST", "/api/datasets/fetch", Map.of("group_id", group));
+            assertEquals(500, reply.status()); assertEquals("", reply.raw());
+            assertEquals(0, call(url(failed), "GET", "/api/conversations", null).body().size());
+            assertEquals(500, call(url(failed), "POST", "/api/datasets/import", dataset(group)).status());
+            assertEquals(0, call(url(failed), "GET", "/api/conversations", null).body().size());
+            assertEquals(200, call(url(failed), "GET", "/api/health", null).status());
+            safe(output.getAll());
         }
     }
     @Test void repeatAndUploadShareIdempotencyWhileGroupsStayIndependent() throws Exception {

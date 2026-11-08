@@ -3097,7 +3097,8 @@
           "ci": "PASS, reported explicitly by Farhat with final peer approval.",
           "real_organizer_get": "NOT RUN",
           "real_data_external_inference": "NOT RUN"
-        }
+        },
+        "CONTROL preparation 2026-11-08, branch codex/control-readiness from main4c20692: fetch and upload retain exact transport JSON in a private SHA-256-addressed local archive (0700/0600); archive failure prevents SQLite commit. No API JSON/scoring/schema changes. Java clean verify5996 PASS, JS30 PASS, Python350 PASS, contract72 PASS, scoring5184 PASS. Existing DEV actual Java/Python offline HTTP and browser5/5 PASS using the archived source. No actual Organizer/Groq calls. See docs/DYNAMIC_ADMISSION.md for scope and policy blocker."
       ],
       "requirement_ids": [
         "R04",
@@ -3838,7 +3839,8 @@
             "Default synthetic_only actual Java/Python offline HTTP regression PASS:65 distinct inputs6 accepted/59 denied,65 operations over6 approved inputs, restart/replay0 additional calls; original/final, CAS409 and history preserved. Separate from existing DEV approved_dataset E2E."
           ],
           "limits": "Real Groq calls0. Offline provider proves transport/admission/validation/persistence/UI behavior, not model understanding, quality, cost or quota. No real Organizer/audio calls. Existing DEV source/grants/databases remain private and disposable; package-lock untouched. T14 remains in_progress for joint review and separately authorized live acceptance."
-        }
+        },
+        "CONTROL admission expansion proposal requested from Nurtas before validation changes: https://github.com/Pandaman-8/freedom-cqa-datathon/pull/14#issuecomment-6716314799 . Keep approval-v2 JSON; derive group from hash-verified source and explicit composite IDs, remove Python DEV/15 limits while retaining all other gates. No acknowledgment received at this verification; Python unchanged and new-group inference remains BLOCKED. Existing DEV15/50 and UI v1-v2/batch5 scenarios reverified offline after the exact-byte archive fix; no external-transfer consent or live calls."
       ],
       "requirement_ids": [
         "R01",

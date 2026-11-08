@@ -52,7 +52,7 @@ def main():
         def http(base,method,route,body=None,expected=200,confirmed=False):
             headers={'Content-Type':'application/json'}
             if confirmed:headers['X-CQA-Rubric-Confirmed']='true'
-            request=Request(base+route,method=method,data=None if body is None else json.dumps(body).encode(),headers=headers)
+            request=Request(base+route,method=method,data=None if body is None else body if isinstance(body,bytes) else json.dumps(body).encode(),headers=headers)
             try:response=urlopen(request,timeout=80)
             except HTTPError as error:response=error
             with response:
@@ -101,7 +101,13 @@ def main():
             projection={k:source[k] for k in ('id','dataset_group_id','conversation_id','channel','language','messages')}
             return {'contract_version':'2.0.0','request_id':str(uuid.uuid4()),'conversation':projection,'checklist':rubric}
         try:
-            start_java(False);http(java_url,'POST','/api/datasets/import',envelope)
+            start_java(False);http(java_url,'POST','/api/datasets/import',raw)
+            archived=folder/'dataset-sources'/(hashlib.sha256(raw).hexdigest()+'.dataset-source.json')
+            assert archived.read_bytes()==raw, 'Java must retain exact source transport bytes'
+            assert archived.stat().st_mode & 0o777 == 0o600
+            assert archived.parent.stat().st_mode & 0o777 == 0o700
+            grant['dataset_path']=str(archived);write_grant(grant)
+            print('PASS: exact existing source archived privately by Java; shared grant uses archived SHA-256.',flush=True)
             assert http(java_url,'GET',status_route(selected[0]))['reason']=='EXTERNAL_INFERENCE_DISABLED'
             http(java_url,'POST','/api/evaluations/auto',auto_body(selected[0]),expected=503,confirmed=True)
             assert counts()['ml_posts']==0
