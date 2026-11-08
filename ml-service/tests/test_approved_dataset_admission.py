@@ -183,3 +183,50 @@ def test_rejects_extra_grant_fields_symlinks_and_wrong_permissions(tmp_path):
                       data_policy='approved_dataset', approval_file=str(symlink),
                       external_transfer_authorized=True)
     rejects(lambda: ApprovedDatasetAdmission(linked).authorize(request, confirmed='true'))
+
+
+@pytest.mark.parametrize('group', ['DEV', 'CONTROL-SESSION', 'Новая группа:2'])
+def test_explicit_more_than_fifteen_ids_and_arbitrary_hash_bound_group(tmp_path, group):
+    info, write, request, settings, _, dataset = make_context(tmp_path)
+    envelope = json.loads(dataset.read_bytes())
+    template = envelope['data']['records'][0]
+    records = [{**template, 'conversation_id': f'approved-{n}'} for n in range(20)]
+    envelope['data'].update(dataset_group_id=group, total_records=len(records), records=records)
+    raw = json.dumps(envelope).encode(); dataset.write_bytes(raw)
+    info.update(dataset_sha256=hashlib.sha256(raw).hexdigest(),
+                conversation_ids=[group+':'+r['conversation_id'] for r in records])
+    write()
+    admission = ApprovedDatasetAdmission(settings)
+    for record in records:
+        request['conversation'].update(id=group+':'+record['conversation_id'],
+                                       dataset_group_id=group, conversation_id=record['conversation_id'])
+        assert len(admission.authorize(request, confirmed='true').sources) == 20
+    original = list(info['conversation_ids'])
+    for invalid in [['*'], [group+':*'], original+['OTHER:approved-0'], original+['missing'], original+original[:1], []]:
+        info['conversation_ids'] = invalid; write()
+        rejects(lambda: admission.authorize(request, confirmed='true'))
+    info['conversation_ids'] = original; write()
+    # A group rename without a newly bound hash is not permission.
+    envelope['data']['dataset_group_id'] = 'RENAMED'
+    dataset.write_text(json.dumps(envelope))
+    rejects(lambda: admission.authorize(request, confirmed='true'))
+
+
+@pytest.mark.parametrize('group', [None, '', ' ', 7])
+def test_invalid_source_group_cannot_form_an_approved_projection(tmp_path, group):
+    info, write, request, settings, _, dataset = make_context(tmp_path)
+    envelope = json.loads(dataset.read_bytes()); envelope['data']['dataset_group_id'] = group
+    raw = json.dumps(envelope).encode(); dataset.write_bytes(raw)
+    info['dataset_sha256'] = hashlib.sha256(raw).hexdigest(); write()
+    rejects(lambda: ApprovedDatasetAdmission(settings).authorize(request, confirmed='true'))
+
+
+@pytest.mark.parametrize('field,value', [('channel', 'voice call'), ('audio_url', 'https://example.invalid/test.wav')])
+def test_explicit_id_cannot_authorize_calls_or_audio_in_new_group(tmp_path, field, value):
+    info, write, request, settings, _, dataset = make_context(tmp_path)
+    envelope = json.loads(dataset.read_bytes()); envelope['data']['dataset_group_id'] = 'NEXT'
+    envelope['data']['records'][0][field] = value
+    raw = json.dumps(envelope).encode(); dataset.write_bytes(raw)
+    info.update(dataset_sha256=hashlib.sha256(raw).hexdigest(), conversation_ids=['NEXT:fake-001']); write()
+    request['conversation'].update(id='NEXT:fake-001', dataset_group_id='NEXT')
+    rejects(lambda: ApprovedDatasetAdmission(settings).authorize(request, confirmed='true'))

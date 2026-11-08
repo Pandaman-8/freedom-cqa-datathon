@@ -26,7 +26,7 @@ public class OrganizerService {
         try {
             var envelope = bodies.dataset(bytes);
             if (!envelope.data().dataset_group_id().equals(request.group_id())) throw new OrganizerFailure(GROUP_MISMATCH);
-            return conversations.importDataset(envelope);
+            return conversations.importDataset(envelope, bytes);
         } catch (ContractViolation e) {
             throw new OrganizerFailure(INVALID_RESPONSE);
         } catch (ApiFailure e) {

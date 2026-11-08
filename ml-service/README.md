@@ -135,12 +135,13 @@ failure. `SCHEMA_INVALID` means the full canonical schema failed; `EXACT_EVIDENC
 means the selected quote is not a nonblank exact substring of its source message.
 Neither logs nor a substring match establish semantic correctness.
 
-Only exact conversations registered in the bundled synthetic fixtures are admitted;
-changing just the dataset label cannot authorize real transcripts. Checklist edits
-are accepted dynamically, but must also contain no private data. To add **own
-synthetic** text, add a reviewed synthetic request in `tests/fixtures/<case>/request.json`
-and restart. This is not a production access-control boundary. Real-data mode is
-intentionally unavailable pending policy approval.
+Default `synthetic_only` admits exact conversations registered in the bundled synthetic
+fixtures; changing a dataset label cannot authorize real transcripts. Java additionally
+restricts its default conversation/checklist pairs. The separate `approved_dataset` mode
+uses an exact private source hash, explicit chat IDs, bounded checklist scope, expiry,
+revocation, external opt-in and rubric confirmation. See the PR17 update below and the
+[shared admission specification](../docs/DYNAMIC_ADMISSION.md). Technical agreement does
+not authorize external DEV/CONTROL transfer. Do not add real data to synthetic fixtures.
 
 ## Tests and acceptance limits
 
@@ -456,8 +457,9 @@ PYTHONPATH=ml-service ml-service/.venv/bin/python ml-service/scripts/quality_pas
 
 ## T09: проверка Нуртаса и готовность Prompt v3 к PR
 
-Источник — [T09_Нуртас_review.json](reports/T09_Нуртас_review.json), точная копия
-предоставленного экспорта из Downloads. Его SHA-256:
+Исторический источник — локальный `T09_Нуртас_review.json`, предоставленный экспорт
+из Downloads; в текущем публичном checkout этого файла нет. Публичный сводный отчёт:
+[t09-human-review-report.json](reports/t09-human-review-report.json). Зафиксированный SHA-256 экспорта:
 `47debaaa039441359da0d5bd6cd1cfe02f44ef77c3f9274384a6b76c68d2db8a`.
 Время создания экспорта: `2026-11-07T16:03:23.688Z`. Единственный human reviewer —
 **Нуртас**. Пользователь отдельно подтвердил личную проверку всех 24 меток и отсутствие
@@ -656,3 +658,17 @@ PYTHONPATH=ml-service /tmp/freedom-cqa-ml-validation/bin/python -m pytest -q ml-
 Warning — прежняя депрекация httpx в Starlette TestClient. Все 12 хешей исходных
 request/expected совпали с отчётом T09. Для v4 нет новых измерений latency/tokens
 или доказательства улучшения языка модели; Java E2E повторно не выполнялся.
+
+## CONTROL admission v2 update (PR #17)
+
+Technical approval for arbitrary explicitly selected groups/ID counts was relayed by Farhat
+from Nurtas in FINAL ACCEPTANCE & CONTROL READINESS. This is not external-transfer consent.
+`approved_dataset` derives the group from the SHA-256-verified source and requires every
+explicit composite ID to exist. DEV/15 is no longer hardcoded; calls/audio remain excluded.
+Both opt-ins, private expiring grant, provider/model/endpoint, scope and rubric confirmation
+remain mandatory. Prompt v4 and contract2.0.0 are unchanged.
+
+Operator commands, actual environment names and the private source/grant procedure are in
+[README](../README.md#новый-набор-и-approval-v2) and [DYNAMIC_ADMISSION](../docs/DYNAMIC_ADMISSION.md).
+The helper makes no provider calls. Existing historical live reports above do not authorize
+new DEV/CONTROL transfers or establish current live quality/cost.

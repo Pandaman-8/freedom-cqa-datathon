@@ -58,6 +58,18 @@ test('bounded fetch abort reports unknown mutation, without a retry', async () =
   }finally{globalThis.fetch=original;}
 });
 
+test('dataset upload sends the original UTF-8 bytes including BOM and whitespace once', async () => {
+  const original=globalThis.fetch;let calls=0;
+  const bytes=new TextEncoder().encode('\ufeff {\r\n "text": "Қ / é / 😀", "n": 1.00 } \n');
+  const file=new Blob([bytes],{type:'application/json'});
+  try {
+    globalThis.fetch=async(path,options)=>{calls++;assert.equal(path,'/api/datasets/import');
+      assert.equal(options.headers['Content-Type'],'application/json');assert.equal(options.body,file);
+      assert.deepEqual(new Uint8Array(await options.body.arrayBuffer()),bytes);return new Response('{"imported_records":1}');};
+    await request('/api/datasets/import',{method:'POST',body:file});assert.equal(calls,1);
+  }finally{globalThis.fetch=original;}
+});
+
 test('discrete levels compare numerically without decimal rounding', () => {
   assert.equal(equalDecimal(decimal('7'),decimal('7.000')),true);
   assert.equal(equalDecimal(decimal('1e-30'),decimal('0.000000000000000000000000000001')),true);

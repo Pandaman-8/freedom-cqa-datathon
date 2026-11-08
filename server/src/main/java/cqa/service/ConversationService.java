@@ -2,6 +2,7 @@ package cqa.service;
 
 import cqa.api.ApiFailure;
 import cqa.dataset.Dataset;
+import cqa.dataset.DatasetSourceStore;
 import cqa.dto.ContractJson;
 import cqa.repository.ConversationRepository;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,9 @@ public class ConversationService {
     private final ConversationRepository repository;
     private final TransactionTemplate writes;
     private final ContractJson json;
-    public ConversationService(ConversationRepository repository, TransactionTemplate writes, ContractJson json) {
-        this.repository = repository; this.writes = writes; this.json = json;
+    private final DatasetSourceStore sources;
+    public ConversationService(ConversationRepository repository, TransactionTemplate writes, ContractJson json, DatasetSourceStore sources) {
+        this.repository = repository; this.writes = writes; this.json = json; this.sources = sources;
     }
     public List<Dataset.Summary> list() { return repository.list(); }
     public Dataset.Conversation get(String id) {
@@ -25,7 +27,7 @@ public class ConversationService {
         if (found == null) throw ApiFailure.missing();
         return found;
     }
-    public Dataset.ImportResult importDataset(Dataset.Envelope envelope) {
+    public Dataset.ImportResult importDataset(Dataset.Envelope envelope, byte[] source) {
         json.validateShape(envelope);
         var data = envelope.data();
         if (!envelope.isSuccess() || !envelope.error().isEmpty()
@@ -44,6 +46,13 @@ public class ConversationService {
                 var record = data.records().get(i);
                 String previous = repository.hash(data.dataset_group_id() + ":" + record.conversation_id());
                 if (previous != null && !previous.equals(hashes.get(i))) throw ApiFailure.conflict();
+            }
+            // Archive before committing any rows. A failed DB commit may leave a valid private
+            // source snapshot; a successful import can never lack its exact source bytes.
+            sources.save(source);
+            for (int i=0; i<data.records().size(); i++) {
+                var record = data.records().get(i);
+                String previous = repository.hash(data.dataset_group_id() + ":" + record.conversation_id());
                 if (previous == null) repository.insert(data.dataset_group_id(), record, hashes.get(i));
             }
         });

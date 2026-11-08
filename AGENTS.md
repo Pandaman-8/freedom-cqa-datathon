@@ -122,6 +122,10 @@ React build is not a prerequisite for the new Vanilla frontend.
   The guide PDF itself contains a signed API URI and must not be published.
 - Organizer credentials belong in Java configuration; provider secrets in Python.
   Use same-origin/backend integration, never browser credentials to work around CORS.
+- Successful fetch/upload archives exact JSON bytes in private `dataset-sources/` beside
+  SQLite, or absolute `CQA_DATASET_SOURCE_DIR`. Directory0700/files0600, hash filenames;
+  use the archived path/hash for approval v2, never serialize DB records to reconstruct a source.
+  Archive failure must prevent the conversation commit; no raw-source download API exists.
 - Agree provider/data policy/budget before real-data external inference; until then use
   own synthetic data or an authorized local model. No fake successful AI fallback.
 - Default Java synthetic_only policy permits exactly six bundled conversation/checklist pairs;
@@ -134,7 +138,11 @@ React build is not a prerequisite for the new Vanilla frontend.
   defaults false; UI confirmation and matching Python admission metadata are required. A valid new
   rubric inside scope needs no grant edit. Nurtas admission v2 branch through b03ecf8 is integrated;
   Python uses ML_EXTERNAL_TRANSFER_AUTHORIZED and ML_ADMISSION_URL. Shared grants are private0600
-  with UTC/Z expiry; Python first-phase restrictions include DEV chats only and at most15 IDs.
+  with UTC/Z expiry. CONTROL expansion was technically approved by Nurtas, relayed by Farhat
+  in FINAL ACCEPTANCE & CONTROL READINESS (chat, not a GitHub Review). Both services bind
+  the group to exact source bytes and explicit composite IDs; Python no longer hardcodes DEV/15.
+  Only chats without audio locators are eligible. `scripts/prepare-approval.py` prepares private
+  selections/grants without inference; explicit IDs and actual transfer attestation are required.
   This is not DEV transfer consent. Never manufacture approvals or treat model choice as consent.
 - Release tests may inject an offline provider through Python's existing test seam, with
   external networking forbidden. This is test infrastructure, not a runtime fake mode or

@@ -29,30 +29,38 @@ def main():
     parser.add_argument('--dataset', type=Path, required=True)
     parser.add_argument('--ml-python', type=Path, required=True)
     parser.add_argument('--serve', action='store_true')
+    parser.add_argument('--all-chats', action='store_true', help='Explicitly select every existing chat for this OFFLINE test')
+    parser.add_argument('--group-id', help='Test-only copy: change group metadata, never the source conversations')
     args = parser.parse_args()
     dataset_path=args.dataset.resolve()
     raw=dataset_path.read_bytes(); envelope=json.loads(raw)
+    if args.group_id:
+        envelope['data']['dataset_group_id']=args.group_id
+        raw=json.dumps(envelope,ensure_ascii=False).encode()
     group=envelope['data']['dataset_group_id']; rows=envelope['data']['records']
     selected=[]
     for language in ('RU','KZ','EN'):
         candidates=[r for r in rows if r['channel']=='agent chat' and r['language']==language]
         assert len(candidates)>=5, 'Existing source must contain five chats per language'
-        selected.extend(group+':'+r['conversation_id'] for r in candidates[:5])
+        selected.extend(group+':'+r['conversation_id'] for r in (candidates if args.all_chats else candidates[:5]))
     def port():
         with socket.socket() as s:
             s.bind(('127.0.0.1',0));return s.getsockname()[1]
     jp,mp=port(),port();java_url=f'http://127.0.0.1:{jp}';ml_url=f'http://127.0.0.1:{mp}'
     env={k:v for k,v in os.environ.items() if not any(w in k for w in ('GROQ','CQA_','ML_','SPRING_','JAVA_TOOL_OPTIONS','JDK_JAVA_OPTIONS','_JAVA_OPTIONS'))}
     with tempfile.TemporaryDirectory(prefix='cqa-admission-private-') as temporary:
-        folder=Path(temporary);grant_path=folder/'shared.ml-approval.json';peer_path=folder/'mismatch.ml-approval.json';counter=folder/'counts.log'
-        log=(folder/'services.log').open('wb');java=None;python=None;proxy=None;db=folder/'cqa.sqlite'
+        folder=Path(temporary)
+        if args.group_id:
+            dataset_path=folder/'relabeled-private-source.json';dataset_path.write_bytes(raw);dataset_path.chmod(0o600)
+        grant_path=folder/'shared.ml-approval.json';peer_path=folder/'mismatch.ml-approval.json';counter=folder/'counts.log'
+        log=(folder/'services.log').open('wb');java=None;python=None;proxy=None;db=folder/'cqa.sqlite';behavior=folder/'offline-behavior'
         def counts():
             lines=counter.read_text().splitlines() if counter.exists() else []
             return {'ml_posts':lines.count('ml_http_post'),'offline_provider_calls':lines.count('offline_provider'),'groq_calls':0}
         def http(base,method,route,body=None,expected=200,confirmed=False):
             headers={'Content-Type':'application/json'}
             if confirmed:headers['X-CQA-Rubric-Confirmed']='true'
-            request=Request(base+route,method=method,data=None if body is None else json.dumps(body).encode(),headers=headers)
+            request=Request(base+route,method=method,data=None if body is None else body if isinstance(body,bytes) else json.dumps(body).encode(),headers=headers)
             try:response=urlopen(request,timeout=80)
             except HTTPError as error:response=error
             with response:
@@ -69,18 +77,18 @@ def main():
                 process.terminate()
                 try:process.wait(timeout=20)
                 except subprocess.TimeoutExpired:process.kill();process.wait(timeout=5)
-        def start_java(enabled=True):
+        def start_java(enabled=True,timeout=70000):
             nonlocal java
             java=subprocess.Popen(['java','-jar',str(ROOT/'server/target/freedom-cqa-server-0.1.0.jar'),f'--server.port={jp}',f'--cqa.db-path={db}',
                 f'--cqa.ml-url={ml_url}/v1/evaluate','--cqa.ml-data-mode=approved_dataset',f'--cqa.ml-approval-file={grant_path}',
-                '--cqa.ml-external-inference-enabled='+str(enabled).lower(),'--cqa.organizer-url=','--logging.level.root=WARN','--spring.main.banner-mode=off'],env=env,cwd=folder,stdout=log,stderr=log)
+                '--cqa.ml-external-inference-enabled='+str(enabled).lower(),f'--cqa.ml-response-timeout-ms={timeout}','--cqa.organizer-url=','--logging.level.root=WARN','--spring.main.banner-mode=off'],env=env,cwd=folder,stdout=log,stderr=log)
             wait_ready(java_url,java,'/api/health',200)
         def start_python(enabled=True,expected=200,approval=None):
             nonlocal python
             ml_env={**env,'ML_DATA_POLICY':'approved_dataset','ML_APPROVAL_FILE':str(approval or grant_path),
                     'ML_EXTERNAL_TRANSFER_AUTHORIZED':str(enabled).lower(),'ML_ADMISSION_URL':ml_url+'/v1/evaluate'}
             python=subprocess.Popen([str(args.ml_python.absolute()),'-B',str(ROOT/'server/src/test/python/admission_offline_ml.py'),
-                '--port',str(mp),'--counter',str(counter)],env=ml_env,cwd=folder,stdout=log,stderr=log)
+                '--port',str(mp),'--counter',str(counter),'--behavior',str(behavior)],env=ml_env,cwd=folder,stdout=log,stderr=log)
             return wait_ready(ml_url,python,'/health',expected)
         def write_grant(value,path=None):
             # One grant file is shared by both processes. A second is used only for the mismatch test.
@@ -101,14 +109,33 @@ def main():
             projection={k:source[k] for k in ('id','dataset_group_id','conversation_id','channel','language','messages')}
             return {'contract_version':'2.0.0','request_id':str(uuid.uuid4()),'conversation':projection,'checklist':rubric}
         try:
-            start_java(False);http(java_url,'POST','/api/datasets/import',envelope)
+            start_java(False);http(java_url,'POST','/api/datasets/import',raw)
+            archived=folder/'dataset-sources'/(hashlib.sha256(raw).hexdigest()+'.dataset-source.json')
+            assert archived.read_bytes()==raw, 'Java must retain exact source transport bytes'
+            assert archived.stat().st_mode & 0o777 == 0o600
+            assert archived.parent.stat().st_mode & 0o777 == 0o700
+            grant_path.unlink()
+            selection_path=folder/'selected.approval-selection.json'
+            def prepare(*arguments):
+                result=subprocess.run([str(args.ml_python.absolute()),'-B',str(ROOT/'scripts/prepare-approval.py'),*arguments],
+                    env=env,cwd=folder,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                assert result.returncode==0, 'Private approval CLI failed; no customer data echoed'
+            prepare('inspect','--source',str(archived),'--output',str(selection_path))
+            selection=json.loads(selection_path.read_bytes());assert selection['selected_ids']==[]
+            selection['selected_ids']=selected;selection_path.write_text(json.dumps(selection))
+            prepare('create','--source',str(archived),'--selection',str(selection_path),'--output',str(grant_path),
+                '--session-id','OFFLINE-REGRESSION-NOT-CONSENT','--approval-reference','TEST ONLY: no external permission',
+                '--expires-at',grant['expires_at'],'--ml-url',ml_url+'/v1/evaluate','--checklist-key','chat-quality',
+                '--min-version','1','--max-version','10','--max-criteria','100','--confirm-external-transfer')
+            grant=json.loads(grant_path.read_bytes())
+            print('PASS: exact existing source archived privately by Java; shared grant uses archived SHA-256.',flush=True)
             assert http(java_url,'GET',status_route(selected[0]))['reason']=='EXTERNAL_INFERENCE_DISABLED'
             http(java_url,'POST','/api/evaluations/auto',auto_body(selected[0]),expected=503,confirmed=True)
             assert counts()['ml_posts']==0
             stop(java);start_java()
             local_allowed=sum(http(java_url,'GET',status_route(group+':'+r['conversation_id']))['selection_allowed'] for r in rows)
-            assert local_allowed==15
-            print('PASS: Java admission on existing DEV: exactly15 selected chats; opt-in absent denies before ML. Groq calls=0.',flush=True)
+            assert local_allowed==len(selected)
+            print(f'PASS: Java admission: {len(selected)} explicit existing chats; opt-in absent denies before ML. Groq calls=0.',flush=True)
             # This must use Nurtas's independently implemented admission; no gate monkeypatching.
             peer_health=start_python(False,503)
             if peer_health.get('admission_protocol')!=2:
@@ -124,14 +151,21 @@ def main():
             for row in rows:
                 state=http(java_url,'GET',status_route(group+':'+row['conversation_id']))
                 approved_count+=state['ready']
-            assert approved_count==15, 'Only selected chats may be ready; calls and other chats must be blocked'
-            print('PASS: Java/Python opt-in gates; exact selected15 existing chats; all other source IDs and calls denied.',flush=True)
-            for field,value in [('approval_version',1),('expires_at','2000-01-01T00:00:00Z'),('dataset_sha256','0'*64),('provider','other'),('model','openai/gpt-oss-120b')]:
+            assert approved_count==len(selected), 'Only selected chats may be ready; calls and other chats must be blocked'
+            print(f'PASS: Java/Python opt-ins; {len(selected)} admitted/{len(rows)-len(selected)} denied; calls excluded.',flush=True)
+            call_id=next(group+':'+r['conversation_id'] for r in rows if r['channel']=='voice call')
+            for field,value in [('approval_version',1),('expires_at','2000-01-01T00:00:00Z'),('dataset_sha256','0'*64),('provider','other'),('model','openai/gpt-oss-120b'),('conversation_ids',['NOT-IN-DATASET']),('conversation_ids',[call_id])]:
                 invalid=copy.deepcopy(grant);invalid[field]=value;write_grant(invalid)
                 assert not http(java_url,'GET',status_route(selected[0]))['ready']
                 http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503,confirmed=True)
                 assert counts()['offline_provider_calls']==0
-            write_grant(grant);grant_path.unlink();assert not http(java_url,'GET',status_route(selected[0]))['ready']
+            write_grant(grant)
+            archived.write_bytes(raw+b' ')
+            assert not http(java_url,'GET',status_route(selected[0]))['ready']
+            http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503,confirmed=True)
+            assert counts()['offline_provider_calls']==0
+            archived.write_bytes(raw)
+            grant_path.unlink();assert not http(java_url,'GET',status_route(selected[0]))['ready']
             http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503,confirmed=True)
             assert not http(java_url,'GET',status_route(selected[0]))['ready'];write_grant(grant)
             # Check the actual Python gate, not only Java's interpretation of /health.
@@ -161,18 +195,31 @@ def main():
             assert second['checklist_version']==2 and second['original_answers'][0]['criterion_id']=='OFFLINE_DYNAMIC_CRITERION'
             assert http(java_url,'GET','/api/evaluations/'+first['id'])==first
             assert counts()['offline_provider_calls']==2
+            if args.all_chats:
+                for cid in selected[1:]:
+                    result=http(java_url,'POST','/api/evaluations/auto',auto_body(cid,2),confirmed=True)
+                    assert len(result['original_answers'])==8 and result['checklist_version']==2
+                assert counts()['offline_provider_calls']==len(selected)+1
+                print(f'PASS: {len(selected)} distinct existing chats evaluated via real Java/Python/offline HTTP.',flush=True)
             assert http(ml_url,'GET','/health')['grant_sha256']==hashlib.sha256(grant_path.read_bytes()).hexdigest()
             stop(java);start_java();assert http(java_url,'GET','/api/evaluations/'+first['id'])==first
             assert http(java_url,'GET','/api/evaluations/'+second['id'])==second
             print('PASS: real Java/Python HTTP admission, missing confirmation/invalid grants/mismatched peer, offline v1-v2, immutable v1, ledger replay/restart. Groq calls=0.',flush=True)
             if args.serve:
-                stop(java);db=folder/'browser.sqlite';start_java();http(java_url,'POST','/api/datasets/import',envelope)
+                stop(java);db=folder/'browser.sqlite';archived.unlink();start_java()
                 class Proxy(BaseHTTPRequestHandler):
                     def log_message(self,*_):pass
                     def handle_request(self):
                         body=self.rfile.read(int(self.headers.get('Content-Length','0'))) or None
                         if self.path=='/__tests/state':
-                            out=json.dumps({**counts(),'selected':selected,'group':group}).encode();code=200;ctype='application/json'
+                            out=json.dumps({**counts(),'selected':selected,'group':group,'total':len(rows),'source_sha256':hashlib.sha256(raw).hexdigest(),'archive_verified':archived.exists() and archived.read_bytes()==raw}).encode();code=200;ctype='application/json'
+                        elif self.path=='/__tests/source':
+                            out=raw;code=200;ctype='application/json'
+                        elif self.path=='/__tests/fault' and self.command=='POST':
+                            mode=json.loads(body)['mode'];assert mode in ('invalid','slow','normal')
+                            behavior.write_text(mode)
+                            stop(java);start_java(timeout=200 if mode=='slow' else 70000)
+                            out=b'{}';code=200;ctype='application/json'
                         elif self.path in ('/__tests/','/__tests/admission-dev-tests.js'):
                             name='admission-dev.html' if self.path=='/__tests/' else 'admission-dev-tests.js'
                             out=(ROOT/'server/src/test/browser'/name).read_bytes();code=200;ctype='text/html' if name.endswith('.html') else 'text/javascript'

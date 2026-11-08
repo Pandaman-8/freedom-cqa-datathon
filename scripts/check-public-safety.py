@@ -25,6 +25,7 @@ def private_path(name):
     return (p.name == '.env' or (p.name.startswith('.env.') and p.name != '.env.example')
             or p.suffix.lower() in {'.pdf', '.sqlite', '.sqlite3', '.db', '.wav', '.mp3', '.m4a', '.pem', '.key'}
             or re.search(r'\.(?:sqlite3?|db)-(?:wal|shm|journal)$', name)
+            or p.name.endswith(('.ml-approval.json', '.approval-selection.json', '.dataset-source.json'))
             or p.name.lower() == 'invoke.json' or p.parts[0] in {'uploads', 'recordings'}
             or (p.parts[0] == 'data' and p.name != '.gitkeep'))
 

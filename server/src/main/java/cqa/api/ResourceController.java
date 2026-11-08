@@ -20,7 +20,10 @@ public class ResourceController {
         this.bodies=bodies; this.conversations=conversations; this.checklists=checklists; this.evaluations=evaluations;
     }
     @PostMapping(value="/datasets/import", consumes="application/json")
-    public Dataset.ImportResult importDataset(HttpServletRequest request) { return conversations.importDataset(bodies.read(request, Dataset.Envelope.class)); }
+    public Dataset.ImportResult importDataset(HttpServletRequest request) {
+        byte[] source = bodies.readBytes(request, RequestBodies.DATASET_LIMIT);
+        return conversations.importDataset(bodies.dataset(source), source);
+    }
     @GetMapping("/conversations") public List<Dataset.Summary> conversations() { return conversations.list(); }
     @GetMapping("/conversations/{id}") public Dataset.Conversation conversation(@PathVariable String id) { return conversations.get(id); }
     @GetMapping("/checklists") public List<Checklist> checklists() { return checklists.list(); }

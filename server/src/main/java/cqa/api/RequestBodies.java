@@ -19,15 +19,19 @@ public class RequestBodies {
         int limit = type == Dataset.Envelope.class ? DATASET_LIMIT : ContractJson.REQUEST_LIMIT;
         // Bound actual bytes, including chunked requests. Reading this bounded prefix
         // also avoids an early response resetting uploads just over the limit.
-        byte[] bytes;
-        try { bytes = request.getInputStream().readNBytes(limit + 1); }
-        catch (IOException e) { throw ApiFailure.invalid(); }
-        if (bytes.length > limit) throw ApiFailure.tooLarge();
+        byte[] bytes = readBytes(request, limit);
         JsonNode node = json.parse(bytes, limit);
         if (type == ApiModels.AutoRequest.class && node.path("request_id").isTextual()
                 && node.get("request_id").textValue().matches(ContractJson.UUID_PATTERN))
             request.setAttribute(REQUEST_ID_ATTRIBUTE, node.get("request_id").textValue());
         return shapeWithDefaults(node, type);
+    }
+    public byte[] readBytes(HttpServletRequest request, int limit) {
+        try {
+            byte[] bytes = request.getInputStream().readNBytes(limit + 1);
+            if (bytes.length > limit) throw ApiFailure.tooLarge();
+            return bytes;
+        } catch (IOException e) { throw ApiFailure.invalid(); }
     }
     /** Upload and organizer fetch use the same bounded parser and legacy optional defaults. */
     public Dataset.Envelope dataset(byte[] bytes) {

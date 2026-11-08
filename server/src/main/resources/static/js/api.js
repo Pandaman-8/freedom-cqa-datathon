@@ -56,7 +56,7 @@ export async function request(path, {method = 'GET', body, signal, timeout = 100
   const timer = setTimeout(abort, timeout); const mutation = method !== 'GET';
   // Serialize before sending: local validation failures never imply an unknown saved outcome.
   let encoded;
-  try { if (body !== undefined) encoded = stringify(body); }
+  try { if (body !== undefined) encoded = body instanceof Blob ? body : stringify(body); }
   catch (e) { clearTimeout(timer); signal?.removeEventListener('abort', abort); throw e; }
   try {
     const response = await fetch(path, {method, body:encoded, cache:'no-store', signal:controller.signal,
