@@ -22,23 +22,25 @@ class Evaluator:
         self.provider = provider
         self.max_attempts = max_attempts
 
-    async def evaluate(self, request):
+    async def evaluate(self, request, *, before_provider_call=None):
         # Pin the full input before the first await; no latest/checklist reload on save.
         start = time.monotonic()
         pinned = copy.deepcopy(request)
         try:
             async with asyncio.timeout(TOTAL_SECONDS):
-                return await self._run(pinned, start)
+                return await self._run(pinned, start, before_provider_call)
         except TimeoutError:
             raise ServiceError("EVALUATOR_TIMEOUT", retryable=True) from None
 
-    async def _run(self, request, start):
+    async def _run(self, request, start, before_provider_call=None):
         input_tokens = output_tokens = 0
         feedback = None
         for attempt in range(1, self.max_attempts + 1):
             reply = None
             messages = build_messages(request, feedback)
             self._check_deadline(start)
+            if before_provider_call is not None:
+                before_provider_call()
             attempt_start = time.monotonic()
             try:
                 async with asyncio.timeout(ATTEMPT_SECONDS):
