@@ -5,7 +5,7 @@ async function until(check,label){for(let i=0;i<400;i++){if(await check())return
 const all=(selector,root=doc)=>[...root.querySelectorAll(selector)];
 const batch=()=>doc.querySelector('#batch-workspace'),idle=()=>doc.querySelector('#draft-status')?.textContent.startsWith('Несохранённых');
 const manifest=()=>JSON.parse(win.localStorage.getItem(KEY));
-const state=item=>item.attempts.at(-1)?.state||'queued';
+const state=item=>item.blocked_code?'blocked':item.attempts.at(-1)?.state||'queued';
 function button(text,root=doc){const rows=all('button',root).filter(n=>n.textContent.trim()===text);assert(rows.length===1,'Unique button '+text);return rows[0];}
 const click=(text,root=doc)=>button(text,root).click();
 function field(label,root=doc){const rows=all('label',root).filter(n=>n.querySelector('span')?.textContent===label);assert(rows.length===1,'Unique label '+label);return rows[0].querySelector('input,select,textarea');}
@@ -15,7 +15,7 @@ async function api(path,method='GET',body,expected=200){const r=await fetch(path
 const fake=()=>api('/__tests/state');
 const mode=value=>api('/__tests/mode','POST',{mode:value});
 const ack=()=>fill('Я проверил статусы и допускаю повторную стоимость; разрешаю продолжение при неизвестном исходе',true,batch());
-const queued=()=>manifest().items.filter(i=>!i.attempts.length).length;
+const queued=()=>manifest().items.filter(i=>!i.attempts.length&&!i.blocked_code).length;
 async function load(){
  frame.src='/?batch-regression='+(++loads)+'#batch';await new Promise(r=>frame.addEventListener('load',r,{once:true}));doc=frame.contentDocument;win=frame.contentWindow;
  await until(()=>doc.querySelector('#connection').dataset.state==='ok'&&doc.querySelector('#checklist-picker .notice').textContent.includes('Выбрано:'),'app initialized');
@@ -98,10 +98,10 @@ document.querySelector('#run').addEventListener('click',async()=>{
    ack();await runDone();assert((await api('/api/evaluation-requests/'+id)).status==='unknown','interrupted UUID unchanged');
    ack();click('Новая попытка для этого диалога',batch().querySelector('.batch-item'));await until(()=>idle()&&state(manifest().items[0])==='succeeded','new deliberate attempt');await forget();
   });
-  await test('v2 policy failures have no ML calls and remain failed after reload, with minimal private manifest',async()=>{
-   await prepare(2);baseline=(await fake()).calls.length;await runDone();assert(manifest().items.every(i=>state(i)==='failed'),'policy failures shown');
-   assert(manifest().items.every(i=>i.attempts[0].code==='PRIVACY_POLICY_UNCONFIGURED'),'safe policy code');await load();
-   assert(manifest().items.every(i=>state(i)==='failed')&&(await fake()).calls.length===baseline,'no model calls or implicit retry');
+  await test('v2 policy blocks have no UUID/POST and remain blocked after reload, with minimal private manifest',async()=>{
+   await prepare(2);baseline=(await fake()).calls.length;await runDone();assert(manifest().items.every(i=>state(i)==='blocked'),'policy blocks shown');
+   assert(manifest().items.every(i=>i.blocked_code==='JAVA_SELECTION_DENIED'&&i.attempts.length===0),'safe policy code');await load();
+   assert(manifest().items.every(i=>state(i)==='blocked')&&(await fake()).calls.length===baseline,'no model calls or implicit retry');
    const stored=win.localStorage.getItem(KEY);assert(!/"(?:messages|transcript|answers|evidence|audio_url|diagnostics|criteria)"/.test(stored),'manifest contains no source/output/secrets');await forget();
   });
   await test('HTML-like group/IDs stay text, Java rejects unapproved own synthetic source before ML',async()=>{

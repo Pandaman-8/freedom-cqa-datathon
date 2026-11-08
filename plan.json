@@ -3737,7 +3737,7 @@
       "risks_and_blockers": [
         "Peer review of T14 and dynamic-criterion live AI acceptance remain outstanding; T14 must not be marked done.",
         "Workflow tests intentionally change clarity/flag answers to exercise review and scoring. Exact evidence grounding does not establish semantic relevance or model accuracy.",
-        "BETA Java reviewed snapshot admission implemented; Python admission for DEV remains unimplemented in this branch. See docs/BETA_READINESS.md. External transfer consent, per-version approval and peer review remain required."
+        "Dynamic admission v2 technical format accepted via Farhat chat. Java scope/opt-in/confirmation implemented; Nurtas Python-only admission patch has not been received. Exact /health names and Python environment mapping remain to be verified against that patch. Joint approved_dataset HTTP/browser acceptance is BLOCKED; actual external DEV transfer consent is also absent."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
@@ -3790,6 +3790,29 @@
             "Actual local browser:37/37 PASS (workspace11,auto4,model review7,batch9,private DEV6). Fixture/fake tests are not Groq E2E.",
             "Packaged HTTP/JAR workspace/organizer/review/auto/batch and private DEV import/manual/version/restart PASS. Details and boundaries in docs/BETA_READINESS.md."
           ]
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "dynamic_admission_v2_java_and_ui",
+          "branch": "codex/T14-dynamic-ai",
+          "base_commit": "a32deba7ab621b2ef4c585ac93efcae7758ef4f1",
+          "agreement": "User relayed joint technical v2 agreement and acceptance of all four Nurtas comments in FINAL DYNAMIC AI INTEGRATION; chat evidence, not GitHub Review or external-data consent.",
+          "details": [
+            "Replaced full checklist_snapshots grant with approval_version2 checklist_scope: one key, bounded versions, max100 criteria and mandatory confirmation. Exact source bytes/hash and allowed chat IDs, expiry, endpoint, provider groq/model openai/gpt-oss-20b, named approvals and session checked. Voice calls excluded. Separate external inference opt-in defaults false. Synthetic-only six pairs unchanged.",
+            "Java compares peer protocol2/mode/grant SHA256/provider/model before ledger claim and forwards X-CQA-Rubric-Confirmed only after local admission and explicit confirmation. Existing identity/evidence validation, pinned snapshots, scoring, SQLite schema and contract2.0.0 unchanged.",
+            "Vanilla explicit outgoing rubric confirmation resets on grant/context/reload. Batch pins version, does per-item readiness before request UUID, persists known refusals without attempts and never auto-retries. Consent is not persisted.",
+            "Nurtas owns Python patch; ml-service sources untouched. New private existing-DEV HTTP/browser harness uses actual Python app/admission with an isolated offline provider and blocks all external networking. It does not substitute a gate or prove Groq quality."
+          ],
+          "verification": [
+            "Java clean verify:5989 JUnit PASS,0 failures/errors/skipped. After final health reason prioritization,25 targeted JUnit tests plus package verify PASS.",
+            "Vanilla units:30 PASS (batch19,presentation3,workspace8). Contract fixtures72 and schema/drift PASS; scoring reference5184 PASS.",
+            "Actual local browser:AI6/6 PASS including explicit confirmation and changed-grant no-UUID/no-POST (readiness metadata simulated); batch9/9 PASS. These use fake HTTP, not Python/Groq approval v2.",
+            "Existing private DEV with temporary approval:Java locally admits exactly15 selected chats (5RU/5KZ/5EN), rejects all others including all calls; absent opt-in rejects before ML. Actual Python health lacks admission_protocol2, so joint test stops before inference. Groq calls0.",
+            "Existing DEV packaged HTTP/manual/review/CAS/version/restart PASS; actual private DEV browser6/6 PASS, including65 policy-blocked batch items without inference. ML POST0; technical manual results, not model judgments.",
+            "Actual Java/Python default synthetic_only release smoke PASS with offline provider:65 distinct existing test inputs accounted as6 accepted/59 blocked;65 sequential operations over6 approved inputs PASS, restart/replay0 additional calls, immutable original/final and CAS409. This is not approved_dataset or live Groq evidence.",
+            "PASS:git diff --check and public tracked-content/reachable-history pattern scan; no private data, active grants, credentials or database staged. Python/contract/scoring/SQLite-schema and user package lock untouched."
+          ],
+          "limits": "T14 remains in_progress. Python v2 and agreed flat health field names cannot be verified without Nurtas patch/branch/SHA. Joint approved_dataset HTTP and DEV browser v1→v2/batch acceptance NOT RUN/BLOCKED. Real Groq calls0; no new live quality evidence. Separate transfer consent required for subsequent one-chat v1/v2 then15-chat live checks."
         }
       ],
       "requirement_ids": [

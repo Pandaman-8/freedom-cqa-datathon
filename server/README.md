@@ -502,18 +502,21 @@ Java configuration (no provider credentials):
 | Variable / Spring property | Default / bounds |
 |---|---|
 | `CQA_ML_URL` / `cqa.ml-url` | Empty:501; intended value `http://127.0.0.1:8001/v1/evaluate` |
+| `CQA_ML_DATA_MODE` / `cqa.ml-data-mode` | `synthetic_only`; explicit `approved_dataset` uses approval v2 |
+| `CQA_ML_APPROVAL_FILE` / `cqa.ml-approval-file` | Empty; absolute private approval v2 path in approved_dataset |
+| `CQA_ML_EXTERNAL_INFERENCE_ENABLED` / `cqa.ml-external-inference-enabled` | `false`; separate opt-in, not data consent |
 | `CQA_ML_CONNECT_TIMEOUT_MS` / `cqa.ml-connect-timeout-ms` | 3000; clamped1..3000ms |
 | `CQA_ML_RESPONSE_TIMEOUT_MS` / `cqa.ml-response-timeout-ms` | 70000; clamped1..70000ms, headers plus entire body |
 
 The first release accepts only explicit HTTP loopback127.0.0.1 URLs with a port and exact
-`/v1/evaluate` path; no credentials, query, fragment, redirects or proxy. Startup/health
-make no network requests. Missing/invalid URL returns501 without a ledger entry or inference.
+`/v1/evaluate` path; no credentials, query, fragment, redirects or proxy. Startup and
+`/api/health` make no network requests. `/api/ai/status` probes Python health without inference. Missing/invalid URL returns501 without a ledger entry or inference.
 Connect refusal maps to503 EVALUATOR_BUSY; connection loss after sending is conservatively
 unknown502; deadline is unknown504. Java makes one POST, with no application retry. Python
 continues to own its maximum two provider attempts. Browser timeout is75s and never replays.
 Request/response bounds are1MiB/256KiB, including streamed bodies and strict UTF-8 decoding.
 
-**First live phase safety gate:** Maven packages the six existing
+**Default synthetic_only gate:** Maven packages the six existing
 `ml-service/tests/fixtures/*/request.json` inputs into the JAR. Java compares the entire
 conversation projection AND checklist to a bundled fixture pair, excluding only request_id.
 The SYNTHETIC group label alone grants nothing. IDs, original text/order/roles/timestamps,
@@ -666,12 +669,12 @@ This verifies review of a real saved AI result, not a new live model E2E. Only s
 identity/diagnostic evidence is recorded in plan.json; no database or raw model output is
 committed. Automated Java/CI tests remain synthetic and provider-free.
 
-**Remaining T14 blocker:** arbitrary v2 AI returns503 PRIVACY_POLICY_UNCONFIGURED before
-any ML request or ledger claim. This is verified, not bypassed. To complete dynamic ML
-acceptance, Farhat and Nurtas must agree a new own-synthetic conversation+checklist fixture,
-review its exact contents and permission to expand the fixture set, and separately approve
-the provider/model, attempt budget and live run. Existing fixtures and SyntheticPolicy are
-unchanged. T14 stays in_progress until that scenario and peer review are complete.
+**Current T14 blocker:** default synthetic_only still rejects arbitrary v2. The jointly
+accepted approval v2 format now has a Java scoped implementation; see
+[DYNAMIC_ADMISSION](../docs/DYNAMIC_ADMISSION.md). Joint approved_dataset acceptance awaits
+Nurtas's Python-only patch and exact health metadata alignment. Separate external DEV
+transfer consent is required before any live run. Existing fixtures are unchanged;
+T14 remains in_progress until dynamic AI acceptance and peer review are complete.
 
 ## T21 sequential batch
 
@@ -719,10 +722,11 @@ browser runner, not a server-wide scheduler: separately invoked single evaluatio
 external API clients are not part of its browser lock. The existing Python busy/ledger
 semantics remain authoritative. Do not run multiple Java processes against one ML database.
 
-Java scoring, SyntheticPolicy and contract2.0.0 are unchanged. The runner can select
-imported groups, but only exact approved fixture pairs reach ML. DEV/CONTROL, arbitrary
-synthetic text and edited checklist versions fail safely before inference. A batch UI does
-not authorize external transfer or additional Groq calls.
+Java scoring and contract2.0.0 are unchanged. Default synthetic_only still permits only
+exact fixture pairs. The new approval v2 mode uses scoped versions, explicit outgoing-rubric
+confirmation and matching peer admission; known per-item refusals allocate no inference UUID.
+Reload never restores consent or starts a POST. A batch UI does not authorize external transfer
+or additional Groq calls. Python v2 integration remains pending; see DYNAMIC_ADMISSION.
 
 Verification (all local inference uses a fake HTTP peer):
 
@@ -749,4 +753,4 @@ reported separately. No test invokes Groq or the real Organizer API.
 
 ## Fullstack BETA
 
-[Доступ к DEV, точным версиям чек-листа, ML readiness и текущие ограничения](../docs/BETA_READINESS.md). Локальная проверка предоставленного набора: `python3 -B server/src/test/python/dev_local_smoke.py --dataset /absolute/private/invoke.json --serve` из корня. Внешних запросов/модельных результатов нет; ручные ответы — только техническая проверка.
+[Доступ к DEV, версиям чек-листа, ML readiness и текущие ограничения](../docs/BETA_READINESS.md). Локальная проверка предоставленного набора: `python3 -B server/src/test/python/dev_local_smoke.py --dataset /absolute/private/invoke.json --serve` из корня. Внешних запросов/модельных результатов нет; ручные ответы — только техническая проверка.

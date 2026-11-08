@@ -56,7 +56,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    const history=await api('/api/evaluations?conversation_id='+encodeURIComponent(chosen.id));assert(history.some(e=>e.checklist_version===1)&&history.some(e=>e.checklist_version===3),'Both versions persisted');
   });
   await test('batch accounts for 65 denied DEV requests without inference or fake success',async()=>{
-   nav('batch');click('Обновить группы');await until(()=>all('#batch-workspace select option').length>1,'Groups loaded');fill('Группа для оценки',chosen.dataset_group_id,doc.querySelector('#batch-workspace'));click('Подготовить пакет');await until(()=>all('.batch-item').length===65&&idle(),'Batch pinned');click('Запустить / продолжить');await until(()=>all('.batch-item[data-batch-state="failed"]').length===65&&idle(),'All 65 explicit failures');assert((await api('/__tests/status')).ml_posts===0,'No ML POST');
+   nav('batch');click('Обновить группы');await until(()=>all('#batch-workspace select option').length>1,'Groups loaded');fill('Группа для оценки',chosen.dataset_group_id,doc.querySelector('#batch-workspace'));click('Подготовить пакет');await until(()=>all('.batch-item').length===65&&idle(),'Batch pinned');click('Запустить / продолжить');await until(()=>all('.batch-item[data-batch-state="blocked"]').length===65&&idle(),'All 65 explicit failures');assert((await api('/__tests/status')).ml_posts===0,'No ML POST');
   });
   output.textContent='PASS: '+report.children.length+' DEV browser scenarios. ML POST=0; manual technical results only.';
  }catch(e){output.textContent='FAIL: '+e.message;}

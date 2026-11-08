@@ -42,18 +42,29 @@ public class AutoEvaluationService {
         };
     }
     public ResponseEntity<?> evaluate(AutoRequest payload) {
+        return evaluate(payload,false);
+    }
+    public ResponseEntity<?> evaluate(AutoRequest payload,boolean rubricConfirmed) {
         json.validateShape(payload);
         var existing=ledger.find(payload.request_id());if(existing!=null)return replay(payload,existing);
         var context=evaluations.pin(payload.conversation_id(),payload.checklist_key(),payload.checklist_version());
         client.endpoint(); // Preserve unconfigured501 without side effects, including on non-synthetic data.
         var pinned=new EvaluationRequest("2.0.0",payload.request_id(),context.conversation().projection(),context.checklist());
-        ContractValidation.request(pinned);policy.requireApproved(pinned);
+        ContractValidation.request(pinned);var admission=policy.inspect(pinned);
+        if(!admission.allowed() || admission.confirmationRequired()&&!rubricConfirmed)
+            throw new MlFailure(503,"PRIVACY_POLICY_UNCONFIGURED",false,false);
+        if(admission.confirmationRequired()) {
+            // No inference or ledger claim on a known peer denial, mismatched policy or revoked grant.
+            if(MlClient.admissionMismatch(client.health(),policy.mode(),admission)!=null
+                    || !admission.equals(policy.inspect(pinned)))
+                throw new MlFailure(503,"PRIVACY_POLICY_UNCONFIGURED",false,false);
+        }
         byte[] bytes=client.encode(pinned);
         boolean owner=Boolean.TRUE.equals(writes.execute(tx -> ledger.claim(payload,pinned)));
         if(!owner)return replay(payload,Objects.requireNonNull(ledger.find(payload.request_id())));
         try {
             // No SQLite transaction/connection is held during HTTP. Never read latest again.
-            var result=client.evaluate(pinned,bytes);
+            var result=client.evaluate(pinned,bytes,admission.confirmationRequired()&&rubricConfirmed);
             var score=scorer.calculate(pinned.checklist(),result.answers());
             var saved=new EvaluationView(UUID.randomUUID().toString(),pinned.conversation().id(),pinned.checklist().key(),
                 pinned.checklist().version(),"model",Instant.now().toString(),result.answers(),score,result.answers(),score,

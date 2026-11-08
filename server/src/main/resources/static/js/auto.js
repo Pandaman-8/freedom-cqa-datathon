@@ -11,7 +11,9 @@ export function automatic(source,checklist,{drafts,onSaved}) {
   const entry=drafts.get(key,()=>({id:'',view:null,checked:false})).value;
   const reads=new Latest(),readinessReads=new Latest(),readiness=messageNode(),feedback=messageNode(),node=el('section',{class:'panel','data-auto-workspace':''});
   feedback.dataset.requestFeedback='';
-  let active=true,busy=false,recovery=entry.id,ack=false,ready=false;
+  let active=true,busy=false,recovery=entry.id,ack=false,ready=false,confirmationRequired=false,confirmed=false,confirmationScope=null;
+  const rubricConfirmation=field('Подтверждаю передачу этого диалога и выбранной версии чек-листа в Groq GPT-OSS 20B',false,value=>{confirmed=value;render();},{type:'checkbox'});
+  rubricConfirmation.hidden=true;rubricConfirmation.dataset.rubricConfirmation='';
   const idField=field('Идентификатор запроса',recovery,value=>{recovery=value;});
   const idInput=idField.querySelector('input');
   const start=button('Оценить с ИИ',submit,'primary');
@@ -25,7 +27,8 @@ export function automatic(source,checklist,{drafts,onSaved}) {
   });
   const acknowledgement=field('Я проверил статус и допускаю повторную стоимость',false,value=>{ack=value;render();},{type:'checkbox'});
   function render(){
-    start.disabled=busy||!!entry.id||!ready;refresh.disabled=busy;idInput.disabled=busy;
+    start.disabled=busy||!!entry.id||!ready||(confirmationRequired&&!confirmed);refresh.disabled=busy;idInput.disabled=busy;
+    rubricConfirmation.querySelector('input').disabled=busy||!ready;
     retry.disabled=busy||!entry.id||!entry.checked||entry.view?.status==='pending'||!ack;
     open.hidden=!entry.view?.evaluation_id;
   }
@@ -47,17 +50,18 @@ export function automatic(source,checklist,{drafts,onSaved}) {
     }}finally{if(active&&ticket.current()){busy=false;render();}}
   }
   async function submit(){
-    if(busy||drafts.pending||entry.id||!ready)return;
+    if(busy||drafts.pending||entry.id||!ready||(confirmationRequired&&!confirmed))return;
     busy=true;drafts.pending++;drafts.changed();render();
     const ticket=reads.next();
     try{
       // A previously green indicator may be stale after revocation or an ML restart.
       // Do not allocate an inference UUID or durable intent for a known refusal.
       if(!await checkReadiness()||!active||!ticket.current())return;
+      if(confirmationRequired&&!confirmed){status(feedback,new ApiError(0,'RUBRIC_CONFIRMATION_REQUIRED').message,'error');return;}
       entry.id=crypto.randomUUID();recovery=entry.id;idInput.value=entry.id;remember(entry.id);
       entry.checked=false;entry.view=null;
       status(feedback,'ИИ оценивает диалог… Дождитесь результата.','loading');
-      const result=await request('/api/evaluations/auto',{method:'POST',timeout:75000,signal:ticket.signal,
+      const result=await request('/api/evaluations/auto',{method:'POST',timeout:75000,signal:ticket.signal,rubricConfirmed:confirmationRequired&&confirmed,
         body:{request_id:entry.id,conversation_id:source.id,checklist_key:checklist.key,checklist_version:checklist.version}});
       if(!active||!ticket.current())return;
       if(result.status==='pending')display(result);
@@ -70,6 +74,9 @@ export function automatic(source,checklist,{drafts,onSaved}) {
     try {
       const state=await request('/api/ai/status?conversation_id='+pathId(source.id)+'&checklist_key='+pathId(checklist.key)+'&checklist_version='+pathId(String(checklist.version)),ticket);
       if(!active||!ticket.current())return false;
+      confirmationRequired=state.rubric_confirmation_required===true;
+      if(confirmationScope!==state.confirmation_scope){confirmed=false;rubricConfirmation.querySelector('input').checked=false;}
+      confirmationScope=state.confirmation_scope;rubricConfirmation.hidden=!confirmationRequired;
       ready=state.ready;node.dataset.aiState=ready?'ready':'blocked';
       status(readiness,ready?'ML готов. Будут отправлены этот диалог и выбранная версия чек-листа. Это проверка готовности, не гарантия ответа модели.':new ApiError(0,state.reason).message,ready?'ok':'error');
       return ready;
@@ -79,7 +86,7 @@ export function automatic(source,checklist,{drafts,onSaved}) {
   const technical=el('details',{'data-ai-details':''},el('summary',{text:'Подробности и восстановление запроса'}),
     note('При потере связи запрос не повторяется автоматически. Проверьте его состояние перед новой попыткой.'),idField,acknowledgement,retry);
   node.append(el('h3',{text:'Оценка диалога'}),note(`${checklist.title} · версия ${checklist.version}`),
-    el('div',{class:'toolbar'},start,open,button('Проверить готовность ИИ',checkReadiness)),readiness,
+    rubricConfirmation,el('div',{class:'toolbar'},start,open,button('Проверить готовность ИИ',checkReadiness)),readiness,
     el('div',{class:'toolbar'},refresh),feedback,technical);
   const last=storedId();if(uuid.test(last))technical.append(button('Восстановить последний запрос',()=>{if(busy||drafts.pending)return;recovery=last;idInput.value=last;check();}));
   if(entry.view)display(entry.view);render();checkReadiness();

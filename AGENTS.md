@@ -129,10 +129,11 @@ React build is not a prerequisite for the new Vanilla frontend.
   New conversation IDs/text or rubric versions require separate reviewed approval; never
   expand or mock these policies to turn a release-test failure into a success.
 - BETA adds explicit Java approved_dataset mode with a private expiring, endpoint-bound grant:
-  exact dataset hash, explicit conversation IDs and full checklist snapshots; see docs/BETA_READINESS.md.
-  Changing the grant can approve a reviewed new version without source edits. This is not permission
-  to send DEV externally. Python still independently rejects DEV until Nurtas implements and reviews
-  its corresponding gate. Never manufacture approvals or treat the model choice as data consent.
+  exact dataset hash/explicit chat IDs, provider/model and bounded checklist_scope; see docs/DYNAMIC_ADMISSION.md.
+  Approval v2 technical format was accepted in the current user task. Java external inference opt-in
+  defaults false; UI confirmation and matching Python admission metadata are required. A valid new
+  rubric inside scope needs no grant edit. The Nurtas Python-only patch remains a separate dependency.
+  This is not DEV transfer consent. Never manufacture approvals or treat model choice as consent.
 - Release tests may inject an offline provider through Python's existing test seam, with
   external networking forbidden. This is test infrastructure, not a runtime fake mode or
   evidence of model quality. Distinguish 65 operations over six approved inputs from 65

@@ -14,82 +14,25 @@ evidence или score исходный снимок остаётся в раск
 `GET /api/ai/status` — новый Java/UI endpoint, не изменение Python contract2.0.0.
 Параметры выбранного контекста: `conversation_id`, `checklist_key`, `checklist_version`
 (все три или ни одного). Ответ: `ml_configured`, `ml_reachable`, `ml_ready`,
-`selection_allowed`, `ready`, `data_mode`, `reason`. Он делает только bounded GET
+`selection_allowed`, `ready`, `data_mode`, `reason`, `rubric_confirmation_required`,
+`confirmation_scope`. Он делает только bounded GET
 Python `/health`; никаких transcripts, rubric, credentials или provider POST.
 `ml_configured` означает корректный Java ML URL; `ml_ready` — ответ readiness Python.
 Readiness не проверяет квоту, реальные credentials у провайдера или его качество.
 `ready` разрешает попытку с точки зрения Java и health; Python независимо проверяет
 допуск на своём POST и может отклонить его. Отказ не превращается в фиктивный результат.
 
-## Явный допуск: configuration, не обход политики
+## Admission v2 — текущая доработка
 
-- `CQA_ML_DATA_MODE=synthetic_only` — default: прежние шесть **точных пар** остаются
-  без изменений. Ни DEV, ни новая рубрика не получают разрешение от имени группы.
-- `CQA_ML_DATA_MODE=approved_dataset` вместе с `CQA_ML_APPROVAL_FILE` — отдельный режим.
-  Путь абсолютный, файл приватный, рекомендуемое расширение `*.ml-approval.json`
-  (ignored). Неправильный/пустой/истёкший grant, другой endpoint или scope →503 до ML
-  и до ledger claim. Нет fallback в synthetic mode.
+Технический формат v2 согласован по сообщению Farhat. Java теперь использует
+`checklist_scope` вместо списка полных snapshots, отдельный opt-in внешней обработки,
+явное UI-подтверждение рубрики и проверку совместимости Python health. Новая валидная
+версия внутри выбранного key/range не требует правки grant или исходников.
 
-Файл заполняется **только после фактического согласования Farhat/Nurtas и условий
-передачи данных**. Поля `approved_by` — локальное утверждение ответственного оператора,
-не цифровые подписи и не доказательство согласия владельца данных. Не копируйте
-тестовые значения approvals в рабочую конфигурацию. Разрешение на разработку режима
-или согласование модели само по себе не разрешает внешнюю передачу DEV.
-
-Структура приватного grant (значения ниже — обозначения, не действующее разрешение):
-
-```json
-{
-  "approval_reference": "ссылка/номер фактического согласования условий, модели и бюджета",
-  "approved_by": ["Farhat", "Nurtas"],
-  "processing_mode": "external_approved",
-  "destination_description": "Groq GPT-OSS 20B; согласованные условия обработки",
-  "expires_at": "UTC expiration supplied by the approvers",
-  "ml_url": "http://127.0.0.1:8001/v1/evaluate",
-  "dataset_path": "/absolute/private/path/invoke.json",
-  "dataset_sha256": "SHA256 of exact approved file bytes",
-  "conversation_ids": ["explicit full composite IDs of approved chats"],
-  "checklist_snapshots": ["full Checklist objects read from Java GET, not keys or wildcards"]
-}
-```
-
-`processing_mode` допускает только `local_only` или `external_approved`. Local означает
-реально локальную модель, подтверждённую ML-владельцем; loopback-адрес Python сам по себе
-**не** означает, что Python не отправит данные в облако. Текущий Python реализует Groq,
-локального провайдера в этом PR не добавлено.
-
-Java проверяет hash исходного файла, разбирает его тем же import parser и сравнивает
-полный исходный conversation projection (IDs, группа, язык, канал, все сообщения) и
-полный Checklist snapshot (key/version/instructions/levels/weights/NA). В grant явно
-перечисляются разрешённые conversation IDs и полные рубрики. Никаких wildcard-групп,
-всех будущих версий или неявного допуска voice calls.
-
-Новая версия: сохранить в UI → прочитать её через существующий GET → отдельно
-проверить и добавить полный снимок в приватный grant обеих сторон. Java перечитывает
-изменённый grant перед новым допуском; правка исходников и restart не нужны.
-Рекомендуется атомарная замена файла. Удаление/порча/истечение срока немедленно
-блокирует новые запросы. Уже отправленный inference этим не отменяется. Replay
-сохранённого UUID остаётся чтением результата, без повторной отправки.
-
-## Handoff Нуртасу — остающийся blocker
-
-Подтверждённый ML-план из чата: основная модель Groq GPT-OSS20B, первая проверка
-15 существующих чатов (5 RU +5 KZ +5 EN); пять звонков по transcript требуют отдельной
-проверки условий передачи. В этом PR **не создаётся действующее разрешение на DEV**.
-
-Текущий неизменённый Python `Settings.check()` допускает только `synthetic_only`,
-а `/v1/evaluate` сверяет conversation с существующими synthetic fingerprints.
-Поэтому даже Java grant **не делает DEV E2E рабочим автоматически**.
-Нуртас должен независимо реализовать и проверить эквивалентный допуск до Groq:
-точный набор/hash, явно выбранные IDs, полный rubric snapshot, endpoint/destination,
-expiry/revocation, запрет неизвестных режимов и запрет fallback. Можно использовать
-тот же приватный grant как локальный конфигурационный документ; он не передаётся
-в evaluation_request и не меняет contract2.0.0. Формат и правила должны пройти
-совместное ревью; наличие этого документа не выдаётся за полученное ML approval.
-
-Затем, только при подтверждённых условиях передачи и бюджете, согласовать один
-DEV v1→UI replacement→v2 live E2E и серию15 чатов. Обе стороны обязаны блокировать
-неразрешённые snapshots. В текущей работе никаких DEV/Groq-вызовов нет.
+Актуальные поля, конфигурация, миграция, проверка отзыва и точный статус совместного
+прогона: [DYNAMIC_ADMISSION.md](DYNAMIC_ADMISSION.md). Python-only patch Нуртаса пока
+не получен; его реализация не подменяется. Внешняя передача DEV не разрешена этим
+техническим согласованием. Все результаты ниже относятся к предыдущей BETA-проверке.
 
 ## Проверки и границы
 

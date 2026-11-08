@@ -39,4 +39,4 @@ Manifest содержит IDs/status, не transcripts/answers/credentials. Эт
 
 [Release evidence](RELEASE_READINESS.md) разделяет unit/integration/browser, fake provider и исторический live E2E. Direct dependencies и Maven pinned; транзитивные Python зависимости не зафиксированы полным hash lock. [Исторический аудит](CODEX_AUDIT.md) не описывает текущий runtime целиком.
 
-BETA: отдельный `approved_dataset` режим проверяет приватный grant и точные snapshots; [правила и независимый Python blocker](BETA_READINESS.md). `/api/ai/status` читает ML health без inference.
+BETA admission v2: отдельный `approved_dataset` проверяет точный source/IDs, provider/model и bounded checklist_scope; opt-in по умолчанию false. [Текущий формат и Python dependency](DYNAMIC_ADMISSION.md). `/api/ai/status` сопоставляет допуск и Python metadata без inference.

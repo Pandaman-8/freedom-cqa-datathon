@@ -25,6 +25,21 @@ document.querySelector('#run').addEventListener('click',async()=>{
  document.querySelector('#run').disabled=true;status.textContent='RUNNING';
  try{
   fixture=await api('/__tests/fixture.json');await load();let firstId,unknownId;
+  await test('rubric confirmation is explicit and a changed grant clears consent before UUID/POST (readiness response simulated)',async()=>{
+   const native=win.fetch.bind(win);let scope='test-grant-a';const before=(await api('/__tests/state')).calls;
+   win.fetch=async(path,options)=>{
+    const response=await native(path,options);
+    if(String(path).startsWith('/api/ai/status'))return new win.Response(JSON.stringify({...await response.json(),rubric_confirmation_required:true,confirmation_scope:scope}),{status:response.status,headers:{'Content-Type':'application/json'}});
+    return response;
+   };
+   try{
+    click('Проверить готовность ИИ',panel());await until(()=>panel()?.dataset.aiState==='ready'&&!panel().querySelector('[data-rubric-confirmation]').hidden,'confirmation displayed');
+    const label='Подтверждаю передачу этого диалога и выбранной версии чек-листа в Groq GPT-OSS 20B';
+    assert(!field(label,panel()).checked,'Consent not implicit');click('Оценить с ИИ',panel());assert(field('Идентификатор запроса',panel()).value==='','No unconfirmed UUID');
+    fill(label,true,panel());scope='test-grant-b';click('Оценить с ИИ',panel());await until(()=>idle()&&!field(label,panel()).checked,'Changed grant clears consent');
+    assert(field('Идентификатор запроса',panel()).value==='','No stale-consent UUID');assert((await api('/__tests/state')).calls===before,'No inference POST');
+   }finally{win.fetch=native;click('Проверить готовность ИИ',panel());await until(()=>panel()?.dataset.aiState==='ready'&&panel().querySelector('[data-rubric-confirmation]').hidden,'Original readiness restored');}
+  });
   await test('stale ready indicator is checked again before UUID allocation; known ML refusal sends no POST',async()=>{
    const before=(await api('/__tests/state')).calls;
    await api('/__tests/mode',{mode:'unconfigured'});
