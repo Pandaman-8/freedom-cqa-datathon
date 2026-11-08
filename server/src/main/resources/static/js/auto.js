@@ -48,10 +48,15 @@ export function automatic(source,checklist,{drafts,onSaved}) {
   }
   async function submit(){
     if(busy||drafts.pending||entry.id||!ready)return;
-    entry.id=crypto.randomUUID();recovery=entry.id;idInput.value=entry.id;remember(entry.id);
-    entry.checked=false;entry.view=null;busy=true;drafts.pending++;drafts.changed();render();
-    const ticket=reads.next();status(feedback,'ИИ оценивает диалог… Дождитесь результата.','loading');
+    busy=true;drafts.pending++;drafts.changed();render();
+    const ticket=reads.next();
     try{
+      // A previously green indicator may be stale after revocation or an ML restart.
+      // Do not allocate an inference UUID or durable intent for a known refusal.
+      if(!await checkReadiness()||!active||!ticket.current())return;
+      entry.id=crypto.randomUUID();recovery=entry.id;idInput.value=entry.id;remember(entry.id);
+      entry.checked=false;entry.view=null;
+      status(feedback,'ИИ оценивает диалог… Дождитесь результата.','loading');
       const result=await request('/api/evaluations/auto',{method:'POST',timeout:75000,signal:ticket.signal,
         body:{request_id:entry.id,conversation_id:source.id,checklist_key:checklist.key,checklist_version:checklist.version}});
       if(!active||!ticket.current())return;
@@ -64,9 +69,10 @@ export function automatic(source,checklist,{drafts,onSaved}) {
     const ticket=readinessReads.next();ready=false;render();status(readiness,'Проверяем ML и разрешение на выбранные данные…','loading');
     try {
       const state=await request('/api/ai/status?conversation_id='+pathId(source.id)+'&checklist_key='+pathId(checklist.key)+'&checklist_version='+pathId(String(checklist.version)),ticket);
-      if(!active||!ticket.current())return;
+      if(!active||!ticket.current())return false;
       ready=state.ready;node.dataset.aiState=ready?'ready':'blocked';
       status(readiness,ready?'ML готов. Будут отправлены этот диалог и выбранная версия чек-листа. Это проверка готовности, не гарантия ответа модели.':new ApiError(0,state.reason).message,ready?'ok':'error');
+      return ready;
     }catch(e){if(active&&ticket.current()){node.dataset.aiState='unavailable';status(readiness,e.message,'error');}}
     finally{if(active&&ticket.current())render();}
   }

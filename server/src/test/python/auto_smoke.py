@@ -41,8 +41,11 @@ def main():
             if self.path != '/health':
                 self.send_error(404)
                 return
-            payload = b'{"configured":true,"ready":true,"reason":null,"model":"fake-http","contract_version":"2.0.0"}'
-            self.send_response(200)
+            unavailable = state['mode'] == 'unconfigured'
+            payload = json.dumps({'configured': not unavailable, 'ready': not unavailable,
+                                  'reason': 'EVALUATOR_UNCONFIGURED' if unavailable else None,
+                                  'model': 'fake-http', 'contract_version': '2.0.0'}).encode()
+            self.send_response(503 if unavailable else 200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(payload)
@@ -204,7 +207,7 @@ def main():
                         code = 200
                         if self.path == '/__tests/mode' and self.command == 'POST':
                             value = json.loads(body)['mode']
-                            assert value in ('ok', 'invalid', 'timeout')
+                            assert value in ('ok', 'invalid', 'timeout', 'unconfigured')
                             state['mode'] = value
                             data = json.dumps(state).encode()
                         elif self.path == '/__tests/state':

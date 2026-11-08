@@ -25,6 +25,16 @@ document.querySelector('#run').addEventListener('click',async()=>{
  document.querySelector('#run').disabled=true;status.textContent='RUNNING';
  try{
   fixture=await api('/__tests/fixture.json');await load();let firstId,unknownId;
+  await test('stale ready indicator is checked again before UUID allocation; known ML refusal sends no POST',async()=>{
+   const before=(await api('/__tests/state')).calls;
+   await api('/__tests/mode',{mode:'unconfigured'});
+   click('Оценить с ИИ',panel());
+   await until(()=>panel()?.dataset.aiState==='blocked'&&idle(),'fresh readiness refusal');
+   assert(field('Идентификатор запроса',panel()).value==='','no inference UUID for known refusal');
+   assert((await api('/__tests/state')).calls===before,'no inference POST for known refusal');
+   await api('/__tests/mode',{mode:'ok'});click('Проверить готовность ИИ',panel());
+   await until(()=>panel()?.dataset.aiState==='ready','readiness restored explicitly');
+  });
   await test('AI button -> Java -> fake HTTP -> SQLite model score100; double submit blocked; manual draft survives',async()=>{
    fill('Обоснование','Retained manual draft',doc.querySelector('[data-criterion-id="LOCAL_GREETING"]'));
    const before=(await api('/__tests/state')).calls;
