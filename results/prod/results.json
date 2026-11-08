@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "team_name": "Freedom Lens",
+  "model": {
+    "mode": "hybrid",
+    "name": "GPT-6 (ChatGPT assisted); DEV15 human review; Python scoring"
+  },
+  "results": []
+}
