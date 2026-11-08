@@ -18,7 +18,7 @@ Current target: Java21/Spring Boot/SQLite, HTML/CSS/Vanilla JS, separate Python 
 - Demo is **up to 5 minutes**: dialogue (1 min), score/evidence/N/A (2 min), appeal (1 min), replace criterion (1 min).
 - Paid AI API is allowed; disclose model and approximate cost per conversation covering all API calls. Audio is needed to assess diction/intonation; speech recognition is not required.
 
-## Chat Quality Checklist — provisional existing seed (PDF unavailable)
+## Chat Quality Checklist — seed and user-supplied official excerpt (PDF unavailable)
 
 The exact seed is kept in `backend/app/seed/chat_quality.json`; it defines all 8 IDs, sections, descriptions, scales and N/A conditions. These behaviors are particularly easy to misread:
 
@@ -41,3 +41,5 @@ The exact seed is kept in `backend/app/seed/chat_quality.json`; it defines all 8
 - Transcripts contain automated ASR mistakes, internal agent discussions and redactions — do not infer misconduct solely from transcription artifacts without checking context.
 
 This document combines historical guide/dataset notes with the provisional seed; it is not a new organizer grading rubric or proof that both PDFs were verified. Exact judges' weighting between functionality/design/AI was **not supplied**.
+
+Final acceptance: Farhat supplied the C01–C08 rules/weights/types/levels/N/A in the FINAL ACCEPTANCE & CONTROL READINESS task. The seed matches that supplied excerpt; original PDF verification remains unavailable. No scoring/rounding formula was changed. Semantic explanation/evidence quality still requires separately authorized live review.

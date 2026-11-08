@@ -19,7 +19,8 @@ class PublicSafetyTest(unittest.TestCase):
         self.assertEqual([], findings(b'https://example.invalid/?sig=synthetic-fixture'))
 
     def test_private_files_and_explicit_example_exception(self):
-        for name in ['ml-service/.env', 'data/official/guide.pdf', 'invoke.json', 'run.sqlite', 'run.sqlite-wal', 'recordings/call.wav']:
+        for name in ['ml-service/.env', 'data/official/guide.pdf', 'invoke.json', 'run.sqlite', 'run.sqlite-wal', 'recordings/call.wav',
+                     'private/session.ml-approval.json', 'private/selected.approval-selection.json', 'private/hash.dataset-source.json']:
             self.assertTrue(private_path(name), name)
         for name in ['ml-service/.env.example', 'data/.gitkeep', 'examples/synthetic_dataset.json']:
             self.assertFalse(private_path(name), name)

@@ -4,6 +4,7 @@ Never run as a demo model. Uses caller-provided private grant and existing DEV l
 External networking is blocked before importing the service. No .env is loaded.
 """
 import argparse
+import asyncio
 import ipaddress
 import json
 import os
@@ -18,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, required=True)
     parser.add_argument('--counter', type=Path, required=True)
+    parser.add_argument('--behavior', type=Path, help='Private test-only fault control; never a production option')
     args = parser.parse_args()
 
     def local(host):
@@ -59,6 +61,12 @@ def main():
     class OfflineProvider:
         async def complete(self, messages):
             count('offline_provider')
+            mode=args.behavior.read_text() if args.behavior and args.behavior.exists() else 'normal'
+            if mode=='invalid':
+                await asyncio.sleep(.5)
+                return ProviderReply('{"answers":[]}', 'openai/gpt-oss-20b', None, None)
+            if mode=='slow':
+                await asyncio.sleep(2)
             context = json.loads(messages[1]['content'])
             message = next(m for m in context['conversation']['messages'] if m['speaker'] == 'operator' and m['text'].strip())
             answers = []

@@ -32,8 +32,9 @@ export function datasets({drafts, onImported}) {
     event.preventDefault(); const selected = file.files[0];
     if (!selected || selected.size > 16*1024*1024) { status(output, 'Выберите JSON-файл до 16 MiB.', 'error'); return; }
     mutation(upload, output, drafts, async () => {
-      let body; try { body = parse(await selected.text()); } catch { throw new Error('Файл не содержит корректный JSON.'); }
-      const saved = await request('/api/datasets/import', {method:'POST', body, timeout:35000});
+      try { parse(await selected.text()); } catch { throw new Error('Файл не содержит корректный JSON.'); }
+      // Send the original File bytes: reserialization would change the approval source hash.
+      const saved = await request('/api/datasets/import', {method:'POST', body:selected, timeout:35000});
       status(output, `Принято записей: ${display(saved.imported_records)}. Группа: ${saved.dataset_group_id}.`);
       file.value=''; await loadGroups(); await onImported();
     });

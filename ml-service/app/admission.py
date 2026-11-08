@@ -1,4 +1,4 @@
-"""Strict, read-only proposed v2 admission for specifically reviewed DEV chats.
+"""Strict, read-only v2 admission for explicitly approved dataset/chat snapshots.
 
 This is NOT a data-transfer permission or an active policy. Production is disabled
 unless a separate operator decision enables an external-transfer switch. A file's
@@ -97,8 +97,9 @@ def _dataset_projections(raw, expected_sha, ids):
         if not isinstance(envelope, dict) or envelope.get("isSuccess") is not True or envelope.get("error") != "":
             raise denied()
         data = envelope.get("data")
-        if not isinstance(data, dict) or data.get("dataset_group_id") != "DEV":
+        if not isinstance(data, dict) or not _string(data.get("dataset_group_id")):
             raise denied()
+        group = data["dataset_group_id"]  # Bound by the exact source SHA-256 checked above.
         records = data.get("records")
         if (not isinstance(records, list) or not records or type(data.get("total_records")) is not int
                 or data["total_records"] != len(records)):
@@ -112,7 +113,7 @@ def _dataset_projections(raw, expected_sha, ids):
             if not _string(rid) or rid in seen:
                 raise denied()
             seen.add(rid)
-            full_id = "DEV:" + rid
+            full_id = group + ":" + rid
             if full_id not in ids:
                 continue
             if (record.get("channel") != "agent chat" or record.get("language") not in LANGUAGES
@@ -129,7 +130,7 @@ def _dataset_projections(raw, expected_sha, ids):
                 messages.append({"id": f"m{index:04d}", "timestamp": turn["timestamp"],
                                  "speaker": turn["speaker"], "text": turn["text"]})
             result[full_id] = fingerprint({
-                "id": full_id, "dataset_group_id": "DEV", "conversation_id": rid,
+                "id": full_id, "dataset_group_id": group, "conversation_id": rid,
                 "channel": record["channel"], "language": record["language"], "messages": messages,
             })
         if set(result) != ids:
@@ -183,8 +184,8 @@ class ApprovedDatasetAdmission:
                 raise denied()
             _expiry(obj["expires_at"])
             ids = obj["conversation_ids"]
-            if (not isinstance(ids, list) or not (1 <= len(ids) <= 15)
-                    or any(not _string(i) or not i.startswith("DEV:") for i in ids)
+            if (not isinstance(ids, list) or not ids
+                    or any(not _string(i) for i in ids)
                     or len(set(ids)) != len(ids)):
                 raise denied()
             scope = obj["checklist_scope"]

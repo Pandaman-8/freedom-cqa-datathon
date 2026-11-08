@@ -17,6 +17,7 @@ dist/
 *.pem
 *.key
 *.ml-approval.json
+*.approval-selection.json
 *.dataset-source.json
 
 # Datathon datasets, recordings and customer data

@@ -3738,7 +3738,7 @@
       "risks_and_blockers": [
         "Peer review of T14 and dynamic-criterion live AI acceptance remain outstanding; T14 must not be marked done.",
         "Workflow tests intentionally change clarity/flag answers to exercise review and scoring. Exact evidence grounding does not establish semantic relevance or model accuracy.",
-        "Nurtas admission v2 branch through b03ecf8 is integrated with both commits. Shared approved_dataset HTTP and private DEV browser v1→v2/batch acceptance PASS with an isolated offline provider. Actual Groq semantic quality/usage and external DEV transfer consent remain unverified; first session permits15 explicit DEV chats only, no calls or CONTROL. Joint final PR review remains required."
+        "Nurtas technical approval for CONTROL expansion was relayed by Farhat in FINAL ACCEPTANCE & CONTROL READINESS. PR17 removes the Python DEV/15 hardcoding while preserving exact-source/ID admission and no-call policy. Real CONTROL data/transfer consent, live Prompt-v4 semantic quality/cost and final PR review remain outstanding."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
@@ -3840,7 +3840,28 @@
           ],
           "limits": "Real Groq calls0. Offline provider proves transport/admission/validation/persistence/UI behavior, not model understanding, quality, cost or quota. No real Organizer/audio calls. Existing DEV source/grants/databases remain private and disposable; package-lock untouched. T14 remains in_progress for joint review and separately authorized live acceptance."
         },
-        "CONTROL admission expansion proposal requested from Nurtas before validation changes: https://github.com/Pandaman-8/freedom-cqa-datathon/pull/14#issuecomment-6716314799 . Keep approval-v2 JSON; derive group from hash-verified source and explicit composite IDs, remove Python DEV/15 limits while retaining all other gates. No acknowledgment received at this verification; Python unchanged and new-group inference remains BLOCKED. Existing DEV15/50 and UI v1-v2/batch5 scenarios reverified offline after the exact-byte archive fix; no external-transfer consent or live calls."
+        "CONTROL admission expansion proposal requested from Nurtas before validation changes: https://github.com/Pandaman-8/freedom-cqa-datathon/pull/14#issuecomment-6716314799 . Keep approval-v2 JSON; derive group from hash-verified source and explicit composite IDs, remove Python DEV/15 limits while retaining all other gates. No acknowledgment received at this verification; Python unchanged and new-group inference remains BLOCKED. Existing DEV15/50 and UI v1-v2/batch5 scenarios reverified offline after the exact-byte archive fix; no external-transfer consent or live calls.",
+        {
+          "date": "2026-11-08",
+          "kind": "pr17_control_final_acceptance",
+          "branch": "codex/control-readiness",
+          "pr": "https://github.com/Pandaman-8/freedom-cqa-datathon/pull/17",
+          "base_commit": "56f4f555862ee3294387383bec365d93663dbaee",
+          "agreement": "Farhat relayed Nurtas technical APPROVED in FINAL ACCEPTANCE & CONTROL READINESS chat attachment before implementation. This resolves the prior DEV/15 policy-agreement blocker; it is neither GitHub Review nor external DEV/CONTROL transfer consent.",
+          "changes": [
+            "Python approval v2 derives group from SHA-256-verified source and requires every explicitly listed composite ID to exist. Removed DEV/prefix/15 hardcoding; all other independent gates, call/audio exclusions, contract2.0.0 and Prompt v4 unchanged.",
+            "Browser import sends original File bytes instead of reserializing JSON, preserving the private Java source archive hash. CLI inspect/create uses this archive, empty initial selection, explicit IDs/scope/UTC expiry/transfer attestation, private files and no overwrite/provider calls."
+          ],
+          "verification": [
+            "PASS:5996 JUnit clean verify/BUILD SUCCESS;31 JS;368 Python (one existing Starlette/httpx deprecation warning);72 contract fixtures/schema drift;5184 scoring references;4 public-safety detector tests.",
+            "PASS:real Java/Spring and Python/FastAPI HTTP with unchanged admission gates and isolated offline provider. A original DEV15 admitted/50 denied. B original DEV60 admitted/5 calls denied, all60 distinct chats evaluated. C private copy changing only group metadata:60 admitted/5 denied, all60 evaluated; not actual CONTROL.",
+            "PASS:missing opt-ins/grant/confirmation, expiry/revocation, altered source/hash, wrong ID/model/provider/scope and mismatched peer digest refused before provider; v1/v2, ledger and restart.",
+            "PASS:9/9 actual browser scenarios on C: exact-byte UI import/archive/full source fields; five calls/timestamps/audio controls with no audio requests; v1 confirmation/no premature UUID; eight answers/evidence jump/N/A/score/flag; appeal/final/immutable original; UI criterion replacement/v2/history; pinned batch60 success/5 blocked with pause/reload/resume; failed output; unknown timeout/restart with no automatic ML POST replay.",
+            "Seed C01-C08 kinds/weights/levels/NA match the official excerpt supplied by Farhat in this task. Original checklist PDF still unavailable; no scoring change or full PDF verification.",
+            "README operator commands, private approval CLI and actual HTTP startup exercised in acceptance. Demo4:50 budget updated; not a measured live-provider presentation. CI is checked on pushed commit, separately from private local browser runs."
+          ],
+          "limits": "Real Groq calls0; Organizer GET0; audio requests0. Offline structural output is not model-quality, semantic no/na/evidence, usage/cost/latency proof. Actual CONTROL data/grant/transfer terms, Prompt-v4 live quality/human C06/C07 review, official checklist PDF and final Nurtas PR review remain. T14 stays in_progress; all other task statuses unchanged."
+        }
       ],
       "requirement_ids": [
         "R01",
@@ -3966,7 +3987,7 @@
         "Peer review of T16 results remains pending; no done status is inferred from test success.",
         "65 distinct new inputs cannot reach ML under unchanged SyntheticPolicy: six existing approved pairs succeed and59 new own-synthetic sources are explicitly policy-blocked. Separate65 successful evaluation operations reuse those six approved fixtures with new request UUIDs; not65 unique successful conversations.",
         "No new Groq, real Organizer, DEV/CONTROL, audio or live prompt-v4 quality/cost/capacity checks. Fake-provider tests are transport/validation/persistence evidence only.",
-        "T14 new dynamic AI pair and official checklist PDF remain blocked; no policies/contracts/fixtures/scoring are altered. Existing T02/T09/T14/T15/T21 statuses are not changed by this task."
+        "The historical T16 synthetic_only run above remains unchanged. PR17 separately verifies authorized dynamic checklist_scope and new-group configuration offline after Nurtas technical approval. Missing official PDF and live quality/permission remain; existing task statuses are not changed."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
@@ -4125,7 +4146,7 @@
       "risks_and_blockers": [
         "Peer review remains pending; T18 is not marked done before it. Full official acceptance is not claimed.",
         "Missing data/official/chat_quality_checklist.pdf; private student_guide_v3.pdf is present/ignored. Seed fidelity and official rounding cannot be fully verified.",
-        "Unchanged policy blocks arbitrary new conversations/checklists and real DEV/CONTROL. Dynamic AI needs separately approved pairs; prompt-v4 live quality and real CONTROL capacity/cost were not measured.",
+        "Default synthetic_only retains the existing fixture restriction. PR17 approved_dataset permits exact hash-bound groups/IDs and checklist versions in scope through private configuration. Prompt-v4 live quality, actual CONTROL dataset/capacity/cost and external-transfer consent remain unverified.",
         "T02 remains ready without joint acceptance recorded; T09/T15 and T14/T21 retain their existing plan statuses. Reports/merged PRs do not silently replace missing approvals.",
         "Direct dependencies are pinned; no complete transitive Python hash lock. Fresh checkout reused normal download caches. Windows/mobile/cross-browser matrix not run.",
         "Privacy scan covers reachable public heads/tags/history and tracked candidates, not unreachable objects, PR-only refs, releases/assets, Actions logs/artifacts, issues, forks/caches or exhaustive semantic PII. No secrets/private files detected within checked scope."

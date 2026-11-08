@@ -1,40 +1,29 @@
 # Dynamic admission v2 — shared Java/Python integration
 
-Status: Farhat relayed joint technical agreement and acceptance of all four Nurtas comments
-in the FINAL DYNAMIC AI INTEGRATION task (chat, not a GitHub Review). This does not grant
-external DEV transfer consent. Applies to PR #14; evaluation contract 2.0.0/scoring stay unchanged.
+Status: PR #14 integrated admission v2; PR #17 expands its explicitly approved groups/IDs.
+Farhat relayed Nurtas's technical agreement in chat, not a GitHub Review. This does not
+grant external DEV/CONTROL transfer consent. Evaluation contract 2.0.0/scoring stay unchanged.
 
 ## Scope
 
-CONTROL follow-up (after main `4c20692`): policy proposal awaiting Nurtas acknowledgment.
-Keep the v2 JSON fields unchanged; derive `dataset_group_id` from the exact hash-verified
-source and require every explicit composite `conversation_id` to belong to that dataset.
-Remove Python's literal DEV/15 restrictions, without adding wildcards, voice permission,
-changing expiry/revocation, provider/model/endpoint, rubric confirmation or external opt-ins.
-The source/grant byte limits still bound the input. This proposal is not implemented or
-authorized for external transfer merely by documenting it. Current Python still enforces DEV/15.
-Agreement requested from Nurtas (`namantai`) in
-[PR14 comment](https://github.com/Pandaman-8/freedom-cqa-datathon/pull/14#issuecomment-6716314799);
-no acknowledgment received as of this verification. CONTROL inference readiness is BLOCKED.
+CONTROL expansion for PR #17 is technically APPROVED by Nurtas, relayed by Farhat in
+FINAL ACCEPTANCE & CONTROL READINESS (chat attachment, not a GitHub Review). This resolves
+the policy-agreement blocker recorded at56f4f55. It is **not** external-transfer permission.
 
-Java now archives exact Organizer fetch/manual-import transport bytes in a private local
-content-addressed store; see [source storage](../server/README.md). The existing grant fields
-can reference this archive without changing contract2.0.0 or approval-v2 JSON.
+Approval v2 JSON is unchanged. Python now derives `dataset_group_id` from the hash-verified
+source and matches every explicit composite ID as `group_id:conversation_id`. No DEV literal,
+DEV prefix or15-ID cap remains. Exact source membership and existing file-size limits bound
+the list (Java grant256KiB, Python grant1MiB; shared grants use the smaller limit; source16MiB).
+Unknown/duplicate IDs, wildcard strings, wrong-group IDs, calls and audio locators are denied.
+The group name alone grants nothing. Existing synthetic_only behavior is unchanged.
 
-CONTROL preparation verification on 2026-11-08 (branch `codex/control-readiness`):
-
-- Java clean verify:5996 JUnit PASS; JS30 PASS; Python350 PASS (one existing Starlette/httpx
-  deprecation warning); contract72 fixtures PASS; scoring5184 references PASS.
-- Exact-byte fetch/upload archive, permissions, idempotency/restart, corrupt/symlink/insecure
-  destination refusal and no SQLite commit on archive failure verified in Java tests.
-- Existing private `invoke.json`: actual Java/Python HTTP uses Java's archived bytes and the
-  same private grant;15 selected chats admitted,50 denied, missing opt-ins/confirmation,
-  wrong/expired/deleted grants, peer mismatch, dynamic v1/v2 and ledger restart PASS.
-- Actual browser:5/5 PASS, including exact evidence/NA, immutable Original with appeal/review,
-  criterion replacement through UI and pinned v2 batch pause/reload/resume (15 succeed,
-  50 policy-blocked). Provider is offline and rejects external networking; Groq calls0.
-- New group and >15 approved IDs remain NOT RUN/POLICY BLOCKED pending the agreement above.
-  No source/permission/model-quality claim is inferred from these offline checks.
+Java archives exact fetch/upload transport bytes in private0700/0600 storage. Browser upload
+now sends the original File rather than serializing parsed JSON. Existing grant fields reference
+that source. The operator helper `scripts/prepare-approval.py inspect/create` writes private
+selection/grant files without any provider call. Inspection starts with an empty selection;
+creation requires explicit IDs, scope, UTC/Z expiry, approval reference and transfer attestation.
+It validates using the actual Python admission and refuses to overwrite a live grant.
+See [the operator procedure](../README.md#новый-набор-и-approval-v2).
 
 Keep `synthetic_only` as the default. In `approved_dataset`, both services independently
 load the same private, expiring approval file and verify its exact bytes/hash and the
@@ -168,7 +157,7 @@ with no inference attempt; old manifests still load. Only explicit retry can rec
 blocked item. Consent is never stored in localStorage and must match the current grant.
 Unknown outcomes remain unknown even if an explicitly requested retry is denied by policy.
 
-## Private DEV integration check
+## Private dataset integration check
 
 ```bash
 ml-service/.venv/bin/python -B server/src/test/python/admission_dev_smoke.py \
@@ -193,12 +182,11 @@ Every grant is created with mode0600. Expiry is UTC ending in Z. Python requires
 | `ML_ADMISSION_URL=http://127.0.0.1:8001/v1/evaluate` | exactly the configured `CQA_ML_URL` and grant.ml_url |
 
 Use the actual Python names above, not ML_EXTERNAL_INFERENCE_ENABLED/ML_EVALUATE_URL.
-Python additionally restricts this first session to DEV, at most15 explicit chat IDs,
-no audio locators, versions1..1,000,000 and a3..128-character session ID matching
+Python additionally requires no audio locators, versions1..1,000,000 and a3..128-character session ID matching
 `[A-Za-z0-9][A-Za-z0-9_.:-]{2,127}`. Approvers are ordered `["Farhat","Nurtas"]`.
 It rejects symlinks and grants owned by another user or accessible to group/others.
 These are conjunctive restrictions: the DEV name by itself grants no permission.
-CONTROL, voice and broader external runs are not enabled by this integration.
+External transfer of CONTROL, voice and broader live runs is not authorized by this technical integration.
 
 Observed on existing `data/dev/invoke.json`: both independent gates accept the configured
 15 chats (5RU/5KZ/5EN) and reject the other50. Actual HTTP verifies missing opt-ins,
@@ -207,12 +195,77 @@ digest and missing rubric confirmation. V1/v2 outputs pass both validators and J
 scoring; original/ledger survive Java restart. No external inference occurs.
 
 
-## Joint integration verification (2026-11-08)
+## PR17 final acceptance (2026-11-08)
+
+Current branch: `codex/control-readiness`, changes after `56f4f55`. Nurtas's technical
+APPROVED for this expansion was relayed in FINAL ACCEPTANCE & CONTROL READINESS. The
+earlier pending-policy blocker is resolved; final implementation review remains pending.
+
+Actual Java/Spring and Python/FastAPI HTTP services, real admission implementations,
+temporary SQLite and private archived source/grant were used. All grants were prepared
+with the operator CLI under an explicitly isolated TEST ONLY session. External networking
+was blocked in Python before service import; no real credentials, Groq or Organizer GET.
+
+| Acceptance | Observed result |
+| --- | --- |
+| A: original existing DEV, selected15 chats | PASS:15 admitted/50 denied; independent gates, v1/v2, ledger replay/restart |
+| B: original DEV, selected60 chats | PASS:60 admitted/5 calls denied; all60 distinct chats evaluated through offline HTTP |
+| C: same DEV content, temporary changed group metadata | PASS:60 admitted/5 denied and all60 evaluated without code changes; not a real CONTROL dataset |
+| D/E: missing opt-ins/grant, expiry/revocation, changed bytes/hash, wrong provider/model/ID/scope, peer mismatch, missing confirmation | PASS: refused before provider |
+| Browser on C | PASS:9/9 scenarios below; actual Java/Python HTTP, offline dependency only |
+
+The nine browser scenarios cover exact-byte UI file upload/archival and source fields;
+all five calls with original timestamps and audio controls (no audio requests, AI denied);
+v1 consent with no premature UUID/POST; eight answers/exact evidence jump/N/A/Java score
+and separate flag; review changes Final while retaining Original; criterion ID/name/instruction
+replacement through UI/v2/fresh consent/unchanged grant/v1 history; pinned batch60 success/5
+blocked with pause/reload/resume; invalid output saved as failed; timeout saved as unknown
+followed by restart/reload without POST replay. Error/timeout injections are test-only.
+Each failed/unknown item sent one Java ML POST; Python's permitted provider attempts are
+separate. The test was rerun after correcting a test selector reset after forgetting a batch.
+
+Seed C01–C08 kinds/weights/levels/N/A match the official excerpt supplied in the task.
+Java scoring references and evidence validation pass. Offline explanations are labelled
+TEST ONLY: neither semantic relevance, the correctness of no/na reasoning nor model quality
+is established. The original `data/official/chat_quality_checklist.pdf` remains unavailable.
+
+Current regression: **5996 JUnit (BUILD SUCCESS),31 JS,368 Python,72 contract fixtures,
+5184 scoring references and4 public-safety detector tests PASS**. Python reports one existing
+Starlette/httpx deprecation warning. Contract schemas/plan drift pass. The browser/private
+dataset tests ran locally; CI has no organizer dataset. CI results are tied to the pushed SHA.
+
+Reproduce from the repository root after packaging Java, using an installed ML virtualenv:
+
+```bash
+./server/mvnw -f server/pom.xml -DskipTests package
+# A:15 allowed/50 denied
+ml-service/.venv/bin/python -B server/src/test/python/admission_dev_smoke.py \
+  --dataset data/dev/invoke.json --ml-python "$PWD/ml-service/.venv/bin/python"
+# B:60 allowed/5 calls denied
+ml-service/.venv/bin/python -B server/src/test/python/admission_dev_smoke.py \
+  --dataset data/dev/invoke.json --ml-python "$PWD/ml-service/.venv/bin/python" --all-chats
+# C plus browser: open the printed /__tests/ URL and run checks once in a fresh session
+ml-service/.venv/bin/python -B server/src/test/python/admission_dev_smoke.py \
+  --dataset data/dev/invoke.json --ml-python "$PWD/ml-service/.venv/bin/python" \
+  --all-chats --group-id CONTROL-REGRESSION-ONLY --serve
+```
+
+The C copy changes only group metadata in private temporary storage; the original source
+is untouched. Browser upload uses these exact private test bytes. Enter cleans up the
+owned processes/data. No private data or active grants belong in test artifacts or Git.
+
+Real Groq calls **0**; live Prompt-v4 quality/cost/latency **NOT TESTED**. Remaining gates:
+actual CONTROL data and explicit transfer terms/budget, human review including C06/C07,
+missing official PDF and Nurtas's final PR review. T14 remains in_progress. The documented
+4:50 demo is a time budget, not a measured live-provider run.
+
+## Historical PR14 joint integration at6a475ae (2026-11-08)
 
 **PASS:** actual Java/Spring HTTP ↔ actual Python/FastAPI HTTP on the existing private
 DEV source, with one shared grant and an isolated offline provider. No admission mocks.
-The full Python branch is merged (both1b6f790 and b03ecf8); Python files remain exactly
-as supplied by Nurtas. Contract2.0.0, Prompt v4, scoring, SQLite schema and fixtures unchanged.
+At that revision the full Python branch was merged (both1b6f790 and b03ecf8); Python files
+were exactly as supplied by Nurtas. PR17's subsequently approved admission expansion is
+described above. Contract2.0.0, Prompt v4, scoring, SQLite schema and fixtures unchanged.
 
 - HTTP: opt-ins, health metadata/digest,15 allowed /50 rejected, invalid/expired/revoked
   grant, wrong dataset/model/scope, missing confirmation, v1/v2, ledger replay and Java

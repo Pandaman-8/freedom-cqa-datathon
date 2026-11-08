@@ -80,13 +80,20 @@ credential и отдельно согласовать очистку истор�
 
 ## Что остаётся блокером
 
+Текущая приёмка PR #17 (после исторического T16/T18 прогона): **5996 JUnit,31 JS,
+368 Python,72 fixtures,5184 scoring PASS**; реальные Java/Python HTTP на существующем DEV
+15/50 и60/5;9/9 browser scenarios на приватной копии с новым group_id, включая upload,
+v1/v2/review/batch/failed/unknown/restart. Изолированный offline provider, Groq=0.
+Полные границы и команды: [PR17 acceptance](DYNAMIC_ADMISSION.md#pr17-final-acceptance-2026-11-08).
+
 - **Missing official checklist PDF:** `data/official/chat_quality_checklist.pdf`.
   `data/official/student_guide_v3.pdf` присутствует и приватен. Точность полного seed,
   официальных N/A/scales и rounding не подтверждена отсутствующим оригиналом.
-- **65 новых distinct inputs через ML** не разрешены текущей SyntheticPolicy. Мы её
-  не расширяли. Это честное ограничение запрошенного release scenario, не silent success.
-- **Dynamic criterion AI** для нового диалога/рубрики требует согласованных fixture-пар
-  и отдельного разрешения. Manual v2 и историческая v1 проверены; новый live AI не выполнен.
+- **CONTROL/dynamic admission:** the previous DEV/15 hardcoding is removed in PR #17 after
+  Nurtas technical approval. Exact archived source hash, explicit IDs and bounded checklist_scope
+  authorize arbitrary groups/versions through configuration. Default synthetic_only still restricts
+  inputs to its existing fixtures. Current acceptance evidence: [DYNAMIC_ADMISSION](DYNAMIC_ADMISSION.md).
+  A temporary DEV copy with changed group metadata is not a real CONTROL dataset.
 - **Новый live prompt v4 quality pass, реальные DEV/CONTROL, Organizer GET, аудио,
   company KB и CONTROL latency/cost** не проверялись. Старый live T13/v3 и human review
   Нуртаса сохранены в plan.json / [T15 report](../ml-service/reports/t15-quality-and-demo.md),
