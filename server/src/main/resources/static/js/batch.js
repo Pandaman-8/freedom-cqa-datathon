@@ -5,7 +5,7 @@ import {el,button,field,select,note,badge,messageNode,status} from './ui.js';
 
 export function batch(root,{drafts,onOpen,onSaved}) {
   let selected=null,group='',ack=false,runner,broken=false,acting=false,confirmed=false,confirmationScope=null,confirmationRequired=false,confirmedManifest=null;
-  const reads=new Latest(),feedback=messageNode(),progress=messageNode(),list=el('div'),pinned=el('div'),selectedNote=note('Выберите чек-лист сверху.');
+  const reads=new Latest(),feedback=messageNode(),progress=messageNode(),list=el('div'),pinned=el('div'),selectedNote=note('Выберите версию критериев.');
   const groupField=select('Группа для оценки',[['','Выберите группу']],group,v=>{group=v;});
   const groupInput=groupField.querySelector('select');
   const create=button('Подготовить пакет',()=>action(async()=>{await runner.create(group,selected);await loadAdmission();}));
@@ -19,11 +19,11 @@ export function batch(root,{drafts,onOpen,onSaved}) {
     if(window.confirm('Удалить локальный список завершённого пакета? Оценки и журнал запросов останутся в Java.'))action(()=>runner.forget(true));
   },'quiet');
   root.append(el('div',{class:'panel'},el('h2',{text:'Массовая оценка'}),
-    note('Последовательно, один диалог за раз. Используется выбранная сверху версия чек-листа. Состав группы фиксируется перед запуском; новые импорты не добавляются в текущий batch.'),
+    note('Выберите группу и версию критериев. Диалоги оцениваются по одному; состав пакета фиксируется перед запуском.'),
     note('Для каждого диалога и снимка чек-листа требуется серверное разрешение. Название группы не даёт права передавать данные модели.'),
     el('div',{class:'toolbar'},groupField,button('Обновить группы',loadGroups),create),selectedNote,pinned,
     el('div',{class:'toolbar'},run,pause,refresh,forget),rubricConfirmation,acknowledgement,feedback,progress,
-    note('Список хранится в этом браузере для этого адреса: только ID, UUID, версия и статусы. После перезагрузки автоматической отправки нет. Не очищайте данные сайта и не меняйте Java SQLite, пока batch не завершён. Пауза и закрытие вкладки не отменяют текущую обработку.'),list));
+    el('details',{class:'technical-note'},el('summary',{text:'Восстановление и хранение пакета'}),note('Список хранится в этом браузере для этого адреса: только ID, UUID, версия и статусы. После перезагрузки автоматической отправки нет. Не очищайте данные сайта и не меняйте Java SQLite, пока пакет не завершён. Пауза и закрытие вкладки не отменяют текущую обработку.')),list));
   function render(){
     const m=runner?.manifest,busy=!!runner?.running||acting;
     create.disabled=broken||busy||!!m||!selected;groupInput.disabled=busy||!!m;
@@ -33,26 +33,27 @@ export function batch(root,{drafts,onOpen,onSaved}) {
     acknowledgement.querySelector('input').disabled=busy;rubricConfirmation.querySelector('input').disabled=busy;
     if(!m){pinned.replaceChildren();progress.textContent='Пакет ещё не создан.';list.replaceChildren();return;}
     pinned.replaceChildren(badge(m.group),badge(`${m.checklist_key} / v${m.checklist_version}`),note(`Пакет · ${busy?(runner.stopRequested?'пауза запрошена':'выполняется'):m.paused?'остановлен; продолжение только вручную':'незавершённый запуск или другая вкладка; сверьте статусы'}`));
-    const counts={queued:0,succeeded:0,failed:0,pending:0,unknown:0};
-    for(const item of m.items){const s=itemState(item);counts[['conflict','blocked'].includes(s)?'failed':['sending','pending'].includes(s)?'pending':['unresolved','not_found'].includes(s)?'unknown':s]++;}
-    const done=counts.succeeded+counts.failed;
-    status(progress,`Всего ${m.items.length} · завершено ${done} · успешно ${counts.succeeded} · ошибок ${counts.failed} · в работе ${counts.pending} · неизвестно ${counts.unknown} · ожидают ${counts.queued}`);
-    const bar=el('progress',{max:m.items.length,value:done,'aria-label':'Прогресс batch'});
-    list.replaceChildren(bar,...m.items.map(item=>{
+    const counts={queued:0,succeeded:0,failed:0,blocked:0,pending:0,unknown:0};
+    for(const item of m.items){const s=itemState(item);counts[s==='conflict'?'failed':['sending','pending'].includes(s)?'pending':['unresolved','not_found'].includes(s)?'unknown':s]++;}
+    const done=counts.succeeded+counts.failed+counts.blocked;
+    status(progress,`Всего ${m.items.length} · завершено ${done} · успешно ${counts.succeeded} · не допущено ${counts.blocked} · ошибок ${counts.failed} · в работе ${counts.pending} · неизвестно ${counts.unknown} · ожидают ${counts.queued}`);
+    const bar=el('progress',{max:m.items.length,value:done,'aria-label':'Прогресс массовой оценки'});
+    list.replaceChildren(bar,...m.items.map((item,index)=>{
       const a=lastAttempt(item),s=itemState(item);
       const card=el('article',{class:'batch-item','data-batch-conversation':item.conversation_id,'data-batch-state':s},
-        el('h3',{class:'inline-id',text:item.conversation_id}),badge(({queued:'Ожидает',blocked:'Не отправлен: отказ допуска',sending:'Отправляется',pending:'Выполняется',succeeded:'Готово',failed:'Ошибка',unknown:'Исход неизвестен',not_found:'Запрос не найден',unresolved:'Нужна проверка',conflict:'Конфликт'})[s]??s));
+        el('h3',{class:'inline-id',text:`Диалог ${index+1}`}),badge(({queued:'Ожидает',blocked:'Не отправлен: отказ допуска',sending:'Отправляется',pending:'Выполняется',succeeded:'Готово',failed:'Ошибка',unknown:'Исход неизвестен',not_found:'Запрос не найден',unresolved:'Нужна проверка',conflict:'Конфликт'})[s]??s));
+      const technical=el('details',{},el('summary',{text:'Подробности диалога и запроса'}),note(`conversation_id: ${item.conversation_id}`));card.append(technical);
       if(item.blocked_code){
         card.append(note(new ApiError(0,item.blocked_code).message));
-        const retry=button('Проверить допуск и отправить',()=>action(()=>runner.retry(item.conversation_id,ack)));retry.disabled=busy||!ack||broken;card.append(retry);
+        const retry=button('Проверить допуск и отправить',()=>action(()=>runner.retry(item.conversation_id,ack)),'danger');retry.disabled=busy||!ack||broken;card.append(retry);
       }
       if(a){
-        card.append(el('details',{},el('summary',{text:'Подробности запроса'}),note(`request_id: ${a.request_id}`)));
+        technical.append(note(`request_id: ${a.request_id}`));
         if(a.code)card.append(note(new ApiError(0,a.code).message));
         if(['unknown','not_found','unresolved','sending','pending'].includes(s))card.append(note('Исход требует сверки с Java. Никакого автоматического повторного POST. 404 после потери связи не доказывает отмену обработки.'));
         if(a.evaluation_id){const open=button('Открыть результат',()=>onOpen(a.evaluation_id));open.disabled=busy;card.append(open);}
         if(['failed','unknown','not_found','conflict'].includes(s)){
-          const retry=button('Новая попытка для этого диалога',()=>action(()=>runner.retry(item.conversation_id,ack)));
+          const retry=button('Новая попытка для этого диалога',()=>action(()=>runner.retry(item.conversation_id,ack)),'danger');
           retry.disabled=busy||!ack||broken;card.append(retry);
         }
         card.append(el('details',{},el('summary',{text:`История попыток: ${item.attempts.length}`}),...item.attempts.map(a=>note(`${a.request_id} · ${a.state}${a.code?' · '+a.code:''}${a.evaluation_id?' · evaluation '+a.evaluation_id:''}`))));

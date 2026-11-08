@@ -5,11 +5,12 @@ const assert=(ok,message)=>{if(!ok)throw new Error(message);};
 async function until(test,label){for(let i=0;i<375;i++){if(test())return;await new Promise(r=>setTimeout(r,40));}throw new Error('Timeout: '+label);}
 const all=(selector,root=doc)=>[...root.querySelectorAll(selector)];
 const idle=()=>doc.querySelector('#draft-status')?.textContent.startsWith('Несохранённых');
-const nav=name=>doc.querySelector('[data-view="'+name+'"]').click();
+const nav=name=>{if(name==='batch')doc.querySelector('[data-view="results"]').click();doc.querySelector('[data-view="'+name+'"]').click();};
 const workspace=()=>doc.querySelector('#evaluation-workspace');
-function click(text,root=doc){const nodes=all('button',root).filter(n=>n.textContent.trim()===text);assert(nodes.length===1,'Unique button '+text);nodes[0].click();}
+function click(text,root=doc){const nodes=all('button',root).filter(n=>n.textContent.trim()===text);assert(nodes.length===1,'Unique button '+text);reveal(nodes[0]);nodes[0].click();}
 function field(text,root=doc){const labels=all('label',root).filter(n=>n.querySelector('span')?.textContent===text);assert(labels.length===1,'Unique field '+text);return labels[0].querySelector('input,textarea,select');}
-function fill(text,value,root=doc){const n=field(text,root);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
+function reveal(node){const parents=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)parents.unshift(p);for(const p of parents)p.querySelector('summary').click();}
+function fill(text,value,root=doc){const n=field(text,root);reveal(n);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
 async function api(route,method='GET',body,code=200){
  const response=await fetch(route,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
  const data=await response.json();assert(response.status===code,'Harness '+route+' HTTP '+response.status+' expected '+code);return data;
@@ -38,8 +39,8 @@ function pending(criterion){const card=all('.appeal-card').find(n=>n.querySelect
 async function resolved(criterion){await until(()=>!all('.appeal-card').some(n=>n.querySelector('form')&&n.dataset.appealCriterion===criterion)&&idle(),'resolved '+criterion);}
 async function conversation(){
  nav('conversations');await until(()=>all('#conversation-workspace .list-row').length,'conversation list');
- const row=all('#conversation-workspace .list-row').find(n=>n.querySelector('strong')?.textContent===fixture.conversation.id);assert(row,'Synthetic source');row.click();
- await until(()=>doc.querySelector('#conversation-workspace .conversation-grid > :last-child h3')?.textContent===fixture.conversation.id,'source loaded');
+ const row=all('#conversation-workspace .list-row').find(n=>n.dataset.conversationId===fixture.conversation.id);assert(row,'Synthetic source');row.click();
+ await until(()=>doc.querySelector('#conversation-workspace .conversation-detail [data-conversation-id]')?.dataset.conversationId===fixture.conversation.id,'source loaded');
 }
 
 document.querySelector('#run').addEventListener('click',async()=>{

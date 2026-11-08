@@ -81,7 +81,7 @@ def main():
 
         try:
             start(directory)
-            assert b"Freedom CQA" in http("GET", "/", raw=True)
+            assert b"Freedom Lens" in http("GET", "/", raw=True)
             assert b"fetch('/api/health'" in http("GET", "/js/app.js", raw=True)
             assert b"@media" in http("GET", "/styles.css", raw=True)
             seed = http("GET", "/api/checklists/chat-quality?version=1")

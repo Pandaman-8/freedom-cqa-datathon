@@ -27,7 +27,7 @@ export function automatic(source,checklist,{drafts,onSaved}) {
   });
   const acknowledgement=field('Я проверил статус и допускаю повторную стоимость',false,value=>{ack=value;render();},{type:'checkbox'});
   function render(){
-    start.disabled=busy||!!entry.id||!ready||(confirmationRequired&&!confirmed);refresh.disabled=busy;idInput.disabled=busy;
+    start.disabled=busy||!!entry.id||!ready||(confirmationRequired&&!confirmed);refresh.disabled=busy;refresh.hidden=!entry.id;idInput.disabled=busy;
     rubricConfirmation.querySelector('input').disabled=busy||!ready;
     retry.disabled=busy||!entry.id||!entry.checked||entry.view?.status==='pending'||!ack;
     open.hidden=!entry.view?.evaluation_id;
@@ -78,16 +78,16 @@ export function automatic(source,checklist,{drafts,onSaved}) {
       if(confirmationScope!==state.confirmation_scope){confirmed=false;rubricConfirmation.querySelector('input').checked=false;}
       confirmationScope=state.confirmation_scope;rubricConfirmation.hidden=!confirmationRequired;
       ready=state.ready;node.dataset.aiState=ready?'ready':'blocked';
-      status(readiness,ready?'ML готов. Будут отправлены этот диалог и выбранная версия чек-листа. Это проверка готовности, не гарантия ответа модели.':new ApiError(0,state.reason).message,ready?'ok':'error');
+      status(readiness,ready?'ИИ доступен для этого диалога. Будут переданы сообщения и выбранная рубрика.':new ApiError(0,state.reason).message,ready?'ok':'error');
       return ready;
     }catch(e){if(active&&ticket.current()){node.dataset.aiState='unavailable';status(readiness,e.message,'error');}}
     finally{if(active&&ticket.current())render();}
   }
   const technical=el('details',{'data-ai-details':''},el('summary',{text:'Подробности и восстановление запроса'}),
-    note('При потере связи запрос не повторяется автоматически. Проверьте его состояние перед новой попыткой.'),idField,acknowledgement,retry);
+    note('При потере связи запрос не повторяется автоматически. Проверьте его состояние перед новой попыткой.'),button('Проверить готовность ИИ',checkReadiness,'quiet'),idField,acknowledgement,retry);
   node.append(el('h3',{text:'Оценка диалога'}),note(`${checklist.title} · версия ${checklist.version}`),
-    rubricConfirmation,el('div',{class:'toolbar'},start,open,button('Проверить готовность ИИ',checkReadiness)),readiness,
-    el('div',{class:'toolbar'},refresh),feedback,technical);
+    rubricConfirmation,el('div',{class:'toolbar'},start,open,refresh),readiness,
+    feedback,technical);
   const last=storedId();if(uuid.test(last))technical.append(button('Восстановить последний запрос',()=>{if(busy||drafts.pending)return;recovery=last;idInput.value=last;check();}));
   if(entry.view)display(entry.view);render();checkReadiness();
   return {node,dispose(){active=false;reads.cancel();readinessReads.cancel();}};

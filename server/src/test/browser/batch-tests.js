@@ -9,8 +9,9 @@ const state=item=>item.blocked_code?'blocked':item.attempts.at(-1)?.state||'queu
 function button(text,root=doc){const rows=all('button',root).filter(n=>n.textContent.trim()===text);assert(rows.length===1,'Unique button '+text);return rows[0];}
 const click=(text,root=doc)=>button(text,root).click();
 function field(label,root=doc){const rows=all('label',root).filter(n=>n.querySelector('span')?.textContent===label);assert(rows.length===1,'Unique label '+label);return rows[0].querySelector('input,select,textarea');}
-function fill(label,value,root=doc){const input=field(label,root);if(input.type==='checkbox')input.checked=value;else input.value=value;input.dispatchEvent(new win.Event(input.tagName==='SELECT'?'change':'input',{bubbles:true}));}
-const nav=name=>doc.querySelector('[data-view="'+name+'"]').click();
+function reveal(node){const parents=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)parents.unshift(p);for(const p of parents)p.querySelector('summary').click();}
+function fill(label,value,root=doc){const input=field(label,root);reveal(input);if(input.type==='checkbox')input.checked=value;else input.value=value;input.dispatchEvent(new win.Event(input.tagName==='SELECT'?'change':'input',{bubbles:true}));}
+const nav=name=>{if(name==='batch')doc.querySelector('[data-view="results"]').click();doc.querySelector('[data-view="'+name+'"]').click();};
 async function api(path,method='GET',body,expected=200){const r=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});assert(r.status===expected,path+' HTTP '+r.status);return r.json();}
 const fake=()=>api('/__tests/state');
 const mode=value=>api('/__tests/mode','POST',{mode:value});

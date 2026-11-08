@@ -26,14 +26,24 @@ ROOT = Path(__file__).resolve().parents[4]
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=Path, required=True)
+    source_args=parser.add_mutually_exclusive_group(required=True)
+    source_args.add_argument('--dataset', type=Path)
+    source_args.add_argument('--synthetic-fixtures', action='store_true', help='Adapt the six existing ML conversation fixtures; no new text, no real data')
     parser.add_argument('--ml-python', type=Path, required=True)
     parser.add_argument('--serve', action='store_true')
     parser.add_argument('--all-chats', action='store_true', help='Explicitly select every existing chat for this OFFLINE test')
     parser.add_argument('--group-id', help='Test-only copy: change group metadata, never the source conversations')
     args = parser.parse_args()
-    dataset_path=args.dataset.resolve()
-    raw=dataset_path.read_bytes(); envelope=json.loads(raw)
+    dataset_path=args.dataset.resolve() if args.dataset else None
+    if args.synthetic_fixtures:
+        inputs=[json.loads(p.read_bytes())['conversation'] for p in sorted((ROOT/'ml-service/tests/fixtures').glob('*/request.json'))]
+        assert len(inputs)==6 and all(c['dataset_group_id']=='SYNTHETIC' for c in inputs)
+        records=[{'conversation_id':c['conversation_id'],'language':c['language'],'channel':c['channel'],'audio_url':None,
+                  'transcript':[{k:m[k] for k in ('timestamp','speaker','text')} for m in c['messages']]} for c in inputs]
+        envelope={'isSuccess':True,'error':'','data':{'dataset_group_id':'SYNTHETIC','total_records':len(records),'records':records}}
+        raw=json.dumps(envelope,ensure_ascii=False).encode()
+    else:
+        raw=dataset_path.read_bytes(); envelope=json.loads(raw)
     if args.group_id:
         envelope['data']['dataset_group_id']=args.group_id
         raw=json.dumps(envelope,ensure_ascii=False).encode()
@@ -41,7 +51,7 @@ def main():
     selected=[]
     for language in ('RU','KZ','EN'):
         candidates=[r for r in rows if r['channel']=='agent chat' and r['language']==language]
-        assert len(candidates)>=5, 'Existing source must contain five chats per language'
+        assert len(candidates)>=(1 if args.synthetic_fixtures else 5), 'Source must contain the requested language sample'
         selected.extend(group+':'+r['conversation_id'] for r in (candidates if args.all_chats else candidates[:5]))
     def port():
         with socket.socket() as s:
@@ -50,7 +60,7 @@ def main():
     env={k:v for k,v in os.environ.items() if not any(w in k for w in ('GROQ','CQA_','ML_','SPRING_','JAVA_TOOL_OPTIONS','JDK_JAVA_OPTIONS','_JAVA_OPTIONS'))}
     with tempfile.TemporaryDirectory(prefix='cqa-admission-private-') as temporary:
         folder=Path(temporary)
-        if args.group_id:
+        if args.group_id or args.synthetic_fixtures:
             dataset_path=folder/'relabeled-private-source.json';dataset_path.write_bytes(raw);dataset_path.chmod(0o600)
         grant_path=folder/'shared.ml-approval.json';peer_path=folder/'mismatch.ml-approval.json';counter=folder/'counts.log'
         log=(folder/'services.log').open('wb');java=None;python=None;proxy=None;db=folder/'cqa.sqlite';behavior=folder/'offline-behavior'
@@ -212,7 +222,7 @@ def main():
                     def handle_request(self):
                         body=self.rfile.read(int(self.headers.get('Content-Length','0'))) or None
                         if self.path=='/__tests/state':
-                            out=json.dumps({**counts(),'selected':selected,'group':group,'total':len(rows),'source_sha256':hashlib.sha256(raw).hexdigest(),'archive_verified':archived.exists() and archived.read_bytes()==raw}).encode();code=200;ctype='application/json'
+                            out=json.dumps({**counts(),'selected':selected,'group':group,'total':len(rows),'call_count':sum(r['channel']=='voice call' for r in rows),'synthetic':args.synthetic_fixtures,'source_sha256':hashlib.sha256(raw).hexdigest(),'archive_verified':archived.exists() and archived.read_bytes()==raw}).encode();code=200;ctype='application/json'
                         elif self.path=='/__tests/source':
                             out=raw;code=200;ctype='application/json'
                         elif self.path=='/__tests/fault' and self.command=='POST':
@@ -235,7 +245,7 @@ def main():
                     do_GET=handle_request;do_POST=handle_request;do_PUT=handle_request
                 proxy=ThreadingHTTPServer(('127.0.0.1',0),Proxy);threading.Thread(target=proxy.serve_forever,daemon=True).start()
                 print(f'PRIVATE OFFLINE BROWSER http://127.0.0.1:{proxy.server_port}/__tests/',flush=True)
-                input('Enter stops only owned processes and deletes temporary DEV databases.\n')
+                input('Enter stops only owned processes and deletes temporary test databases.\n')
         finally:
             if proxy:proxy.shutdown();proxy.server_close()
             stop(java);stop(python);log.close()

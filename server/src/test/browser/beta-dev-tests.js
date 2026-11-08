@@ -5,10 +5,11 @@ const all=(selector,root=doc)=>[...root.querySelectorAll(selector)];
 const idle=()=>doc.querySelector('#draft-status').textContent.startsWith('Несохранённых');
 async function until(check,label){for(let i=0;i<400;i++){if(check())return;await new Promise(r=>setTimeout(r,40));}throw new Error(label);}
 async function api(path){const r=await fetch(path);assert(r.ok,'API read failed');return r.json();}
-function click(text,root=doc){const buttons=all('button',root).filter(n=>n.textContent.trim()===text);assert(buttons.length===1,'Unique action '+text);buttons[0].click();}
-function fill(label,value,root=doc){const fields=all('label',root).filter(n=>n.querySelector('span')?.textContent===label);assert(fields.length===1,'Unique field '+label);const n=fields[0].querySelector('input,select,textarea');if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
-const nav=name=>doc.querySelector('[data-view="'+name+'"]').click();
-async function selectSource(row){all('#conversation-workspace .list-row').find(n=>n.querySelector('strong').textContent===row.id).click();await until(()=>doc.querySelector('#conversation-workspace .conversation-grid > :last-child h3')?.textContent===row.id,'Source selected');}
+function click(text,root=doc){const buttons=all('button',root).filter(n=>n.textContent.trim()===text);assert(buttons.length===1,'Unique action '+text);reveal(buttons[0]);buttons[0].click();}
+function reveal(node){const parents=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)parents.unshift(p);for(const p of parents)p.querySelector('summary').click();}
+function fill(label,value,root=doc){const fields=all('label',root).filter(n=>n.querySelector('span')?.textContent===label);assert(fields.length===1,'Unique field '+label);const n=fields[0].querySelector('input,select,textarea');reveal(n);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
+const nav=name=>{if(name==='batch')doc.querySelector('[data-view="results"]').click();doc.querySelector('[data-view="'+name+'"]').click();};
+async function selectSource(row){all('#conversation-workspace .list-row').find(n=>n.dataset.conversationId===row.id).click();await until(()=>doc.querySelector('#conversation-workspace .conversation-detail [data-conversation-id]')?.dataset.conversationId===row.id,'Source selected');}
 async function test(label,run){await run();await until(idle,'Pending mutation');const li=document.createElement('li');li.textContent='PASS: '+label;report.append(li);}
 function compose(rubric,source){
  const message=source.messages.find(m=>m.speaker==='operator'&&m.text.trim());

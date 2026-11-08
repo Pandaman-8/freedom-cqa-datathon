@@ -17,7 +17,7 @@ export function review(evaluation, checklist, conversation, {drafts, reload, jum
       drafts.remove(appealKey); await reload(evaluation.id,'Апелляция сохранена. Получена актуальная ревизия.');
     },()=>reload(evaluation.id,'Конфликт апелляции. Данные перечитаны, черновик сохранён. Автоматического повтора не было.'));
   });
-  root.append(create.form);
+  root.append(el('details',{'data-appeal-create':'',open:!!drafts.items.get(appealKey)?.dirty},el('summary',{text:'Оспорить оценку'}),create.form));
   if(!evaluation.appeals.length) root.append(note('Апелляций пока нет.'));
   for(const a of evaluation.appeals) {
     const card=el('article',{class:'appeal-card','data-appeal-id':a.id,'data-appeal-criterion':a.criterion_id},el('div',{class:'toolbar'},badge(reviewText(a.status)),badge(checklist.criteria.find(c=>c.id===a.criterion_id)?.title??a.criterion_id)),
