@@ -1,172 +1,251 @@
 # Freedom Lens
 
-Локальное рабочее место для оценки качества диалогов: **Java 21 + Spring Boot 3.5.16 + SQLite**, HTML/CSS/Vanilla JS и отдельный **Python HTTP ML service**. Java отвечает за проверку evidence, scoring, хранение, апелляции и историю. Python возвращает ответы по полному чек-листу через контракт **2.0.0**, `POST /v1/evaluate`.
+**Оценка качества клиентских диалогов с помощью ИИ.**
 
-Работают импорт/Organizer fetch, RU/KZ/EN, редактор версий, ручная и разрешённая AI-оценка, original/final, evidence jump, review с CAS и последовательный batch с pause/resume/reload. По умолчанию AI разрешён для шести точных fixture-пар. Java поддерживает отдельный approval v2: точный dataset/IDs, ограниченный диапазон версий одного checklist key, выключенный по умолчанию opt-in и подтверждение рубрики через UI. Python admission v2 Нуртаса интегрирован; совместный DEV HTTP-прогон прошёл с изолированным offline provider. Это не проверка качества Groq. Это ограничение безопасности, а не отсутствие импорта или ручной оценки.
+Загрузите разговор, выберите критерии и получите оценку с объяснениями и точными
+цитатами. Проверьте доказательства, подайте апелляцию или измените критерии —
+история предыдущих версий и первоначальная оценка сохранятся.
 
-Подробности BETA и настройки допуска: [BETA_READINESS](docs/BETA_READINESS.md).
-Текущая приёмка PR #17: [CONTROL admission и результаты](docs/DYNAMIC_ADMISSION.md#pr17-final-acceptance-2026-11-08).
+Демо-проект CQA Datathon. Интерфейс на русском, диалоги — RU / KZ / EN.
 
-## Quick Start — без внешних модельных вызовов
+![Freedom Lens — обзор на синтетических данных](docs/images/freedom-lens/overview-desktop.png)
 
-Linux/macOS: JDK 21 (`java` и `javac`), Python 3.12+ с venv, Git, curl. Проверенные версии и результаты — в [release report](docs/RELEASE_READINESS.md). Maven Wrapper скачивает Maven 3.9.11; нужны доступ к Maven Central/PyPI и место под зависимости. Node.js 22 нужен только для JS-тестов, не для запуска UI.
+## Что можно проверить
 
-Из корня свежего checkout. Стабильная версия — актуальный main. Для review редизайна
-Freedom Lens используется отдельная ветка `codex/freedom-lens-ui`:
+- Импорт JSON и загрузку следующего набора по `group_id`.
+- Поиск и фильтры диалогов, исходные роли, время, сообщения и доступное аудио.
+- AI-оценку при разрешённой конфигурации или ручную оценку без модели.
+- Итог /100, N/A, отдельный флаг грубого нарушения и переход к точной реплике.
+- Изменение любого критерия через UI с созданием новой версии чек-листа.
+- Апелляцию и решение проверяющего: Original неизменен, Final пересчитывается.
+- Массовую оценку: закреплённая версия, прогресс, пауза, продолжение и восстановление.
+
+## Стек
+
+| Компонент | Технологии |
+| --- | --- |
+| Приложение и API | Java 21, Spring Boot, JDBC |
+| Интерфейс | HTML, CSS, Vanilla JavaScript; раздаётся Java |
+| Хранилище | SQLite |
+| ML-сервис | Python, FastAPI; отдельный HTTP-процесс |
+| Модель | Groq `openai/gpt-oss-20b` |
+
+Баллы считает Java; модель возвращает ответы, объяснения и evidence.
+React, Node.js и отдельная сборка frontend для запуска приложения не нужны.
+
+## Быстрый запуск
+
+Инструкция для Linux/macOS, Bash. Нужны **JDK 21** (`java` и `javac`), Git и curl.
+Maven Wrapper скачает нужный Maven; первый запуск требует доступа к Maven Central.
+Python 3.12+ с venv понадобится только для ML и offline-проверки ниже.
+
+### 1. Скачать актуальный main и собрать
 
 ```bash
-git clone https://github.com/Pandaman-8/freedom-cqa-datathon.git
+git clone --branch main https://github.com/Pandaman-8/freedom-cqa-datathon.git
 cd freedom-cqa-datathon
-./server/mvnw -f server/pom.xml clean verify
-python3 -m venv ml-service/.venv
-ml-service/.venv/bin/python -m pip install -r ml-service/requirements.txt
+./server/mvnw -f server/pom.xml -DskipTests package
 ```
 
-Терминал 1, из корня репозитория — настоящий Python service, намеренно без ключа:
+Тесты запускаются отдельно — команды в конце README.
+
+### 2. Запустить приложение без внешних вызовов
+
+Из корня репозитория:
 
 ```bash
-GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false ML_DATA_POLICY=synthetic_only \
-  ml-service/.venv/bin/python -m uvicorn app.main:app --app-dir ml-service \
-  --host 127.0.0.1 --port 8001 --workers 1 --no-access-log
-```
-
-Не добавляйте `--env-file`: этот безопасный запуск не читает приватный `.env`.
-
-Терминал 2, также из корня — Java и отдельная временная база:
-
-```bash
-CQA_DEMO_DIR=$(mktemp -d /tmp/freedom-cqa-demo.XXXXXX)
-CQA_ORGANIZER_URL= CQA_DB_PATH="$CQA_DEMO_DIR/cqa.sqlite" \
-  CQA_ML_URL=http://127.0.0.1:8001/v1/evaluate \
+CQA_ML_URL= CQA_ORGANIZER_URL= \
   java -jar server/target/freedom-cqa-server-0.1.0.jar
 ```
 
-Откройте **http://127.0.0.1:8080/**. Проверка из третьего терминала:
+Откройте **http://127.0.0.1:8080/**. Остановка — **Ctrl+C**.
+В этом режиме работают импорт, критерии, ручная оценка и апелляции; ИИ честно
+показывается как недоступный. Ключи и Python для этого шага не нужны.
+
+Проверка сервера из другого терминала:
 
 ```bash
-curl -i http://127.0.0.1:8080/api/health
-curl -i http://127.0.0.1:8001/health
-curl -sS http://127.0.0.1:8080/api/datasets/import \
-  -H 'Content-Type: application/json' --data-binary @examples/synthetic_dataset.json
+curl --fail -sS http://127.0.0.1:8080/api/health
 ```
 
-Ожидается Java health **200**, Python health **503** с `EVALUATOR_UNCONFIGURED`: процесс работает, но внешний провайдер не включён. Ручная оценка и редактор доступны. Этот пример импорта не входит в AI allowlist; кнопка AI не должна показывать успешную фиктивную оценку. Java без `CQA_ML_URL` возвращает 501; настроенная Java с непринятой парой — 503 до ML. Оба процесса останавливаются Ctrl+C.
+Ожидается `status: "ok"`. Это проверка Java, а не готовности модели.
+История хранится в `~/.local/share/freedom-cqa/java/cqa.sqlite` и остаётся после
+перезапуска. Для отдельной базы задайте **абсолютный** `CQA_DB_PATH` при запуске.
+Не запускайте два Java-процесса с одной базой.
 
-Для сохранения истории задайте собственный абсолютный `CQA_DB_PATH` и используйте его при следующем запуске. Без override Java использует `~/.local/share/freedom-cqa/java/cqa.sqlite`. Один Java-процесс владеет одной базой; Python запускается с одним worker. Не открывайте сервисы на `0.0.0.0`: аутентификации нет.
+### 3. Проверить интерфейс
 
-Успешный импорт/fetch сохраняет исходный JSON без изменения байтов в приватный каталог
-`dataset-sources/` рядом с SQLite (либо абсолютный `CQA_DATASET_SOURCE_DIR`). Файлы
-`<SHA-256>.dataset-source.json` имеют права0600, каталог0700; они нужны для проверки
-`dataset_path`/`dataset_sha256` в approval v2. Не публикуйте их. Подробности и поведение при
-ошибке записи — в [инструкции Java](server/README.md).
+1. **Данные → Импортировать JSON**: выберите `examples/synthetic_dataset.json`
+   из клонированного репозитория. Это два учебных диалога, не DEV/CONTROL.
+2. **Диалоги**: выберите разговор, прочитайте сообщения, выберите чек-лист и версию.
+3. Раскройте **Оценить вручную**: заполните ответы и обоснования, добавьте точные
+   цитаты из сообщений, сохраните оценку.
+4. В **Результатах** откройте **Показать доказательство** — интерфейс перейдёт к
+   исходной реплике. Через **Оспорить оценку** создайте апелляцию.
+5. **Критерии → Изменить критерий → Сохранить новую версию** создаёт v2.
+   Предыдущие оценки остаются привязаны к v1.
 
-## Новый набор и approval v2
+Этот учебный JSON предназначен для импорта и ручной работы. Он **не входит** в
+список разрешённых AI-входов; для автоматической проверки используйте следующий раздел.
 
-1. В «Данные» введите выданный `group_id` → «Загрузить группу», либо выберите
-   существующий JSON → «Импортировать JSON». Для fetch настройте Java `CQA_ORGANIZER_URL`
-   приватно, например `read -r -s -p 'Organizer URL: ' CQA_ORGANIZER_URL`, затем
-   `export CQA_ORGANIZER_URL` перед запуском. Не вставляйте signed URL в команды/Git.
-   Новый group_id не требует изменения кода; доступ к нему должен предоставить Organizer.
-2. Проверьте количество диалогов и группу. Выберите соответствующий файл из приватного
-   `dataset-sources/`. Исходные байты загрузки сохраняются, включая пробелы/Unicode.
-3. Подготовьте список кандидатов командой ниже. Он **не даёт разрешения** и содержит пустой
-   `selected_ids`. Заполните только явно согласованные составные IDs из `candidates`.
-   Звонки/аудио не допускаются, wildcard не работает. Нет лимита15 или особых прав у имени DEV.
+## Проверить весь AI-процесс без ключа
 
-```bash
-umask 077
-mkdir -p "$HOME/.local/share/freedom-cqa"
-CQA_SESSION_DIR=$(mktemp -d "$HOME/.local/share/freedom-cqa/approval.XXXXXX")
-read -r -p 'Абсолютный путь к выбранному архиву JSON: ' CQA_SOURCE
-ml-service/.venv/bin/python -B scripts/prepare-approval.py inspect \
-  --source "$CQA_SOURCE" --output "$CQA_SESSION_DIR/selected.approval-selection.json"
-```
+Для технической проверки доступен изолированный **offline provider**: настоящие
+Java и Python HTTP-сервисы, временная SQLite и существующие синтетические fixtures.
+Это тест интеграции, **не настоящие ответы Groq и не оценка качества модели**.
 
-Локально отредактируйте `selected_ids` в этом файле; сохраните права0600. **Только после
-фактического подтверждения условий передачи и бюджета Farhat/Nurtas**, а не одного
-технического APPROVED, подготовьте grant. Все значения срока и scope выбираются явно:
+Из корня репозитория:
 
 ```bash
-read -r -p 'Ссылка/номер фактического согласования передачи (не секрет): ' CQA_APPROVAL_REFERENCE
-read -r -p 'Окончание разрешения UTC, YYYY-MM-DDTHH:MM:SSZ: ' CQA_APPROVAL_EXPIRY
-ml-service/.venv/bin/python -B scripts/prepare-approval.py create \
-  --source "$CQA_SOURCE" --selection "$CQA_SESSION_DIR/selected.approval-selection.json" \
-  --output "$CQA_SESSION_DIR/session.ml-approval.json" \
-  --session-id control-reviewed-session --approval-reference "$CQA_APPROVAL_REFERENCE" \
-  --expires-at "$CQA_APPROVAL_EXPIRY" --ml-url http://127.0.0.1:8001/v1/evaluate \
-  --checklist-key chat-quality --min-version 1 --max-version 10 --max-criteria 100 \
-  --confirm-external-transfer
-```
-
-Команда не обращается к модели и не включает сервисы. Она проверяет hash, точные IDs,
-scope/срок и пишет0600, без перезаписи существующего grant. Обеим службам нужен один и тот
-же абсолютный путь, одна исходная копия архива и одинаковый локальный пользователь.
-
-Java: `CQA_ML_DATA_MODE=approved_dataset`, `CQA_ML_APPROVAL_FILE` = путь grant,
-`CQA_ML_URL=http://127.0.0.1:8001/v1/evaluate`. Python: `ML_DATA_POLICY=approved_dataset`,
-`ML_APPROVAL_FILE` = **тот же** путь, `ML_ADMISSION_URL` = **тот же** URL,
-`GROQ_MODEL=openai/gpt-oss-20b`. Provider key хранится только в приватной среде Python.
-`CQA_ML_EXTERNAL_INFERENCE_ENABLED` и `ML_EXTERNAL_TRANSFER_AUTHORIZED` по умолчанию
-false; оба включаются только после отдельного разрешения передачи. `GROQ_FREE_PLAN_CONFIRMED`
-также требует фактического подтверждения соответствующего режима провайдера. Технические
-проверки ниже не требуют настоящего ключа и не дают этих разрешений.
-
-После запуска/перезапуска с прежней SQLite `/health` Python и `/api/ai/status` Java должны
-подтвердить одну policy, protocol2, grant SHA-256, Groq/model. В UI выберите checklist key/version,
-подтвердите рубрику и нажмите «Оценить с ИИ». Сохранённая новая версия внутри scope не требует
-редактирования grant/Prompt. В «Результаты → Массовая оценка» выберите группу и версию, подготовьте пакет,
-подтвердите рубрику и запустите. Reload только сверяет ledger; resume — явное действие.
-Ошибочные/неизвестные исходы не повторяются автоматически. Удаление grant, изменение source
-или истечение срока блокирует новые вызовы в обеих службах.
-
-## Проверка интеграции без Groq
-
-```bash
-ml-service/.venv/bin/python -B server/src/test/python/release_smoke.py \
-  --ml-python "$PWD/ml-service/.venv/bin/python"
-```
-
-Тест запускает собственные Java и настоящий Python HTTP app, временную SQLite и подставной provider только внутри теста. Сетевая защита Python запрещает внешние соединения. Проверяется 65 разных синтетических записей: **6 разрешены, 59 явно блокируются политикой**. Дополнительно проходят **65 оценок шести разрешённых fixtures**, restart, replay без новых вызовов и review. Это не 65 разных успешных AI-диалогов и не измерение качества LLM.
-
-Для проверки существующего приватного DEV настоящими Java/Python HTTP без Groq:
-
-```bash
+python3 -m venv ml-service/.venv
+ml-service/.venv/bin/python -m pip install -r ml-service/requirements.txt
 ml-service/.venv/bin/python -B server/src/test/python/admission_dev_smoke.py \
-  --dataset data/dev/invoke.json --ml-python "$PWD/ml-service/.venv/bin/python" --serve
+  --synthetic-fixtures --ml-python "$PWD/ml-service/.venv/bin/python" --serve
 ```
 
-Это изолированная тестовая зависимость с запрещённой внешней сетью. По умолчанию разрешены
-15 чатов,50 записей блокируются. `--all-chats` проверяет60 чатов/5 запрещённых звонков;
-`--group-id CONTROL-REGRESSION-ONLY` дополнительно меняет только metadata приватной копии
-для проверки нового набора. Это не настоящий CONTROL и не результат Groq. Напечатанный
-`/__tests/` запускает9 browser scenarios; Enter завершает тестовые процессы/временную базу.
+Дождитесь напечатанного адреса `http://127.0.0.1:<порт>/__tests/` и откройте его.
+Нажмите **Run offline admission regression** один раз. Девять сценариев проверяют
+импорт, оценку по восьми критериям, evidence, апелляцию, изменение критерия v1→v2,
+подтверждение рубрики, batch, ошибки и восстановление после перезапуска.
 
-Для отдельной синтетической репетиции с fake HTTP ML:
+После завершения откройте `/` на **том же адресе и порту** для просмотра workspace
+и сохранённых результатов. Объяснения помечены **OFFLINE TEST ONLY**.
+В наборе пять допустимых чатов и один звонок, который блокируется этой политикой.
+Внешняя сеть тестового ML-процесса запрещена. Enter в терминале завершит стенд и
+удалит только его временную базу. Для повторного полного теста запустите стенд заново.
+
+## Настоящий AI через Groq
+
+Нужны Python-окружение из предыдущего раздела, действующий ключ Groq и подтверждённый
+Free Plan аккаунта. Создайте приватный `ml-service/.env` по
+[примеру](ml-service/.env.example): задайте `GROQ_API_KEY`,
+`GROQ_MODEL=openai/gpt-oss-20b`, `ML_DATA_POLICY=synthetic_only` и
+`GROQ_FREE_PLAN_CONFIRMED=true` **только после проверки плана аккаунта**.
+Этот флаг не является техническим лимитом расходов. Не публикуйте `.env` и ключ.
+
+Терминал 1, из корня репозитория:
 
 ```bash
-python3 -B server/src/test/python/batch_smoke.py --serve
+ml-service/.venv/bin/python -m uvicorn app.main:app \
+  --app-dir ml-service --env-file ml-service/.env \
+  --host 127.0.0.1 --port 8001 --workers 1 --no-access-log
 ```
 
-Откройте напечатанный адрес без `/__tests/` для workspace либо `/__tests/` для девяти browser checks. Сервер содержит только синтетические данные. Enter останавливает его процессы и удаляет временную базу. [Сценарий демонстрации до 5 минут](docs/DEMO.md) явно отделяет fake ML от настоящего inference.
+После настройки можно явно проверить **один существующий синтетический сценарий**:
 
-## Проверки и документация
+```bash
+ml-service/.venv/bin/python ml-service/scripts/smoke.py --case kz_public_na
+```
 
-- [Freedom Lens: UI/UX-аудит, новая навигация и проверки](docs/FREEDOM_LENS.md).
+Эта команда действительно вызывает Groq через Python и может сделать до двух
+provider attempts. Она не записывает результат в Java/SQLite. Успешный HTTP-ответ
+и точные цитаты сами по себе не доказывают правильность суждений модели.
 
-- [Результаты, команды, ограничения и release blockers](docs/RELEASE_READINESS.md).
-- [Архитектура](docs/architecture.md), [Java REST API](docs/api-contract.md), [требования](docs/requirements.md).
-- [Полная инструкция Java/UI](server/README.md), [ML service](ml-service/README.md), [ML handoff](docs/ml-contract.md).
-- [Контракт и 72 fixtures](contracts/README.md), [нормативный transport contract](docs/INTEGRATION_CONTRACT.md), [задачи](plan.json), [правила разработки](AGENTS.md).
+Для UI остановите Java из Quick Start и запустите её с тем же хранилищем:
 
-`backend/`, `frontend/` и `scripts/run-backend.sh` / `run-frontend.sh` — сохранённая legacy Python/React реализация. Она не участвует в Quick Start; её тесты не заменяют Java/Python ML/browser проверки. Vite, React и порт 8000 не нужны целевому приложению.
+```bash
+CQA_ORGANIZER_URL= CQA_ML_URL=http://127.0.0.1:8001/v1/evaluate \
+  java -jar server/target/freedom-cqa-server-0.1.0.jar
+```
 
-## Безопасность и границы сдачи
+<a id="новый-набор-и-approval-v2"></a>
 
-Не публикуйте `.env`, SQLite/WAL, записи/аудио, DEV/CONTROL, signed URLs и официальные PDF. Guide содержит signed API URI. Публичные smoke tests используют собственную синтетику; приватные acceptance tests читают существующий DEV только локально. Настоящий Groq в этих проверках не вызывается. `.gitignore` снижает риск, но не удаляет уже опубликованное из истории; `python3 -B scripts/check-public-safety.py` проверяет tracked files и достижимую Git-историю без вывода найденных значений.
+Подключение ML само по себе не разрешает отправку любого разговора.
+По умолчанию Java допускает только шесть точных пар «диалог + чек-лист» из fixtures.
+Для DEV/CONTROL и новых версий C01–C08 требуется отдельно согласованный режим
+`approved_dataset`: [приватное разрешение и настройка обеих служб](docs/DYNAMIC_ADMISSION.md#настройка-приватного-разрешения).
+Ни имя группы, ни выбор модели не означают согласия на внешнюю передачу.
 
-Точный checklist PDF **отсутствует**: ожидается `data/official/chat_quality_checklist.pdf`.
-Seed C01–C08 сверяется с правилами, переданными Farhat в финальном задании; полная сверка
-оригинального PDF не заявляется. CONTROL admission теперь конфигурируется через approval v2;
-временная копия DEV с другим group_id — техническая регрессия, не настоящий CONTROL.
-Внешняя обработка требует отдельного разрешения. Новый live quality pass Prompt v4,
-семантическая оценка evidence/объяснений и реальные стоимость/задержка — NOT TESTED.
+Без ключа/подтверждения Python возвращает health 503; недоступность и ошибки
+показываются в UI, фиктивного успешного результата нет. После timeout сначала
+проверьте статус запроса: автоматической повторной отправки нет.
+
+## Критерии, новые версии и апелляции
+
+Начальный чек-лист `chat-quality / v1` содержит:
+
+| ID | Критерий | Вес |
+| --- | --- | ---: |
+| C01 | Установление контакта | 10 |
+| C02 | Выявление потребности | 15 |
+| C03 | Идентификация | 20 |
+| C04 | Корректная и полная консультация | 20 |
+| C05 | Эмпатия и клиентоориентированность | 15 |
+| C06 | Управление диалогом, скорость и грамотность | 15 |
+| C07 | Завершение | 5 |
+| C08 | Грубые ошибки | Отдельный флаг |
+
+N/A допустим только там, где он разрешён критерием; его вес исключается из расчёта.
+C08 не обнуляет числовой балл. Полная сверка с оригинальным checklist PDF пока
+невозможна: файл `data/official/chat_quality_checklist.pdf` отсутствует.
+
+В **Критериях** можно менять инструкции, разделы, веса, шкалы и правила N/A.
+После сохранения нажмите **Оценить по новой версии**. Для разрешённой AI-сессии
+новая версия внутри согласованного диапазона не требует правки Java/Python или prompt;
+перед отправкой рубрику нужно подтвердить заново. Старые результаты не изменяются.
+
+В **Результатах → Оспорить оценку** укажите критерий и причину. Проверяющий подтверждает
+ответ либо заменяет его с обоснованием и evidence. Original сохраняется, Final
+пересчитывает Java; решение остаётся в истории. При конфликте изменений перечитайте
+состояние и проверьте черновик перед новой явной отправкой.
+
+## Демонстрация до пяти минут
+
+Сборку, настройку и проверку доступа выполняйте **до начала защиты**.
+Назовите используемый режим: настоящий Groq, сохранённые результаты или offline-тест.
+
+| Время | Что показать |
+| --- | --- |
+| 0:00–0:35 | Обзор, импорт/выбор группы, диалог и фильтры RU/KZ/EN. |
+| 0:35–1:45 | Выбранный чек-лист, разрешённая AI-оценка, итог /100. |
+| 1:45–2:15 | Объяснение, N/A и переход по evidence к реплике. |
+| 2:15–2:50 | Апелляция, решение проверяющего, различие Original/Final. |
+| 2:50–3:20 | Изменение критерия и сохранение v2. |
+| 3:20–4:30 | Оценка по v2 и сохранность истории v1. |
+| 4:30–4:50 | Результаты → Массовая оценка: версия, прогресс, пауза/продолжение. |
+
+Задержка провайдера не гарантируется. Для соблюдения лимита можно показать заранее
+сохранённые результаты, прямо назвав это. [Подробный сценарий и подготовка](docs/DEMO.md).
+Student Guide v3 требует открытый репозиторий, понятный README запуска и защиту
+максимум за пять минут; отдельный шаблон README не установлен.
+
+## DEV/CONTROL и ограничения
+
+- Наборы организаторов и ключи не входят в публичный репозиторий. Новый набор можно
+  импортировать через UI или загрузить по `group_id`, настроив приватный
+  `CQA_ORGANIZER_URL` по [инструкции Java](server/README.md). Менять исходники не нужно.
+- Импорт сохраняет точные байты JSON в приватный `dataset-sources/` рядом с SQLite.
+  Для внешней AI-обработки нужны согласованные условия передачи и действующий grant.
+  Чаты с аудиоссылками и звонки не допускаются в этом режиме; анализ интонации не заявляется.
+- Качество текущего Prompt v4 на настоящем CONTROL, фактическая стоимость и скорость
+  не подтверждены offline-тестами. Предыдущие live-прогоны не заменяют новую приёмку.
+- Batch восстанавливается в том же браузере, по тому же адресу и с той же SQLite.
+  После перезагрузки отправка возобновляется только явно; неизвестный исход не повторяется автоматически.
+- Приложение предназначено для локального показа, без аутентификации. Не открывайте его
+  в интернет. DEV/CONTROL, аудио, приватные URL, официальные PDF, `.env` и SQLite не публикуются.
+
+## Тесты и документация
+
+Для JS-тестов нужен Node.js 22. Из корня репозитория:
+
+```bash
+./server/mvnw -f server/pom.xml clean verify
+node --experimental-default-type=module --test server/src/test/js/*.test.mjs
+python3 server/src/test/python/scoring_reference.py --check
+python3 -B scripts/check-public-safety.py
+```
+
+ML-регрессии без внешнего провайдера:
+
+```bash
+ml-service/.venv/bin/python -m pip install -r ml-service/requirements-dev.txt
+GROQ_API_KEY= GROQ_FREE_PLAN_CONFIRMED=false PYTHONPATH=ml-service \
+  ml-service/.venv/bin/python -B -m pytest -q ml-service/tests
+```
+
+- [Проверка контракта 2.0.0 и 72 fixtures](contracts/README.md).
+- [Результаты проверок UI и скриншоты](docs/FREEDOM_LENS.md), [готовность и блокеры](docs/RELEASE_READINESS.md).
+- [Java/UI](server/README.md), [Python ML](ml-service/README.md), [архитектура](docs/architecture.md).
+- [Приватный допуск AI](docs/DYNAMIC_ADMISSION.md), [задачи](plan.json), [правила разработки](AGENTS.md).
+
+Каталоги `backend/` и `frontend/` сохранены как legacy; для запуска Freedom Lens они не нужны.

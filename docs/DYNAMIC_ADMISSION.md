@@ -23,7 +23,7 @@ that source. The operator helper `scripts/prepare-approval.py inspect/create` wr
 selection/grant files without any provider call. Inspection starts with an empty selection;
 creation requires explicit IDs, scope, UTC/Z expiry, approval reference and transfer attestation.
 It validates using the actual Python admission and refuses to overwrite a live grant.
-See [the operator procedure](../README.md#новый-набор-и-approval-v2).
+See [the operator procedure](#настройка-приватного-разрешения).
 
 Keep `synthetic_only` as the default. In `approved_dataset`, both services independently
 load the same private, expiring approval file and verify its exact bytes/hash and the
@@ -303,3 +303,65 @@ allowed live acceptance. The private browser test is local, not a GitHub CI DEV 
   establish approved_dataset compatibility or live-model quality.
 - At9df9dd6, the joint DEV harness was BLOCKED before inference because Python lacked
   protocol2. That historical blocker is resolved by the integration above. Real Groq calls:0.
+
+## Настройка приватного разрешения
+
+Перенесено из корневого README; формат допуска и команды не изменены.
+
+
+1. В «Данные» введите выданный `group_id` → «Загрузить группу», либо выберите
+   существующий JSON → «Импортировать JSON». Для fetch настройте Java `CQA_ORGANIZER_URL`
+   приватно, например `read -r -s -p 'Organizer URL: ' CQA_ORGANIZER_URL`, затем
+   `export CQA_ORGANIZER_URL` перед запуском. Не вставляйте signed URL в команды/Git.
+   Новый group_id не требует изменения кода; доступ к нему должен предоставить Organizer.
+2. Проверьте количество диалогов и группу. Выберите соответствующий файл из приватного
+   `dataset-sources/`. Исходные байты загрузки сохраняются, включая пробелы/Unicode.
+3. Подготовьте список кандидатов командой ниже. Он **не даёт разрешения** и содержит пустой
+   `selected_ids`. Заполните только явно согласованные составные IDs из `candidates`.
+   Звонки/аудио не допускаются, wildcard не работает. Нет лимита15 или особых прав у имени DEV.
+
+```bash
+umask 077
+mkdir -p "$HOME/.local/share/freedom-cqa"
+CQA_SESSION_DIR=$(mktemp -d "$HOME/.local/share/freedom-cqa/approval.XXXXXX")
+read -r -p 'Абсолютный путь к выбранному архиву JSON: ' CQA_SOURCE
+ml-service/.venv/bin/python -B scripts/prepare-approval.py inspect \
+  --source "$CQA_SOURCE" --output "$CQA_SESSION_DIR/selected.approval-selection.json"
+```
+
+Локально отредактируйте `selected_ids` в этом файле; сохраните права0600. **Только после
+фактического подтверждения условий передачи и бюджета Farhat/Nurtas**, а не одного
+технического APPROVED, подготовьте grant. Все значения срока и scope выбираются явно:
+
+```bash
+read -r -p 'Ссылка/номер фактического согласования передачи (не секрет): ' CQA_APPROVAL_REFERENCE
+read -r -p 'Окончание разрешения UTC, YYYY-MM-DDTHH:MM:SSZ: ' CQA_APPROVAL_EXPIRY
+ml-service/.venv/bin/python -B scripts/prepare-approval.py create \
+  --source "$CQA_SOURCE" --selection "$CQA_SESSION_DIR/selected.approval-selection.json" \
+  --output "$CQA_SESSION_DIR/session.ml-approval.json" \
+  --session-id control-reviewed-session --approval-reference "$CQA_APPROVAL_REFERENCE" \
+  --expires-at "$CQA_APPROVAL_EXPIRY" --ml-url http://127.0.0.1:8001/v1/evaluate \
+  --checklist-key chat-quality --min-version 1 --max-version 10 --max-criteria 100 \
+  --confirm-external-transfer
+```
+
+Команда не обращается к модели и не включает сервисы. Она проверяет hash, точные IDs,
+scope/срок и пишет0600, без перезаписи существующего grant. Обеим службам нужен один и тот
+же абсолютный путь, одна исходная копия архива и одинаковый локальный пользователь.
+
+Java: `CQA_ML_DATA_MODE=approved_dataset`, `CQA_ML_APPROVAL_FILE` = путь grant,
+`CQA_ML_URL=http://127.0.0.1:8001/v1/evaluate`. Python: `ML_DATA_POLICY=approved_dataset`,
+`ML_APPROVAL_FILE` = **тот же** путь, `ML_ADMISSION_URL` = **тот же** URL,
+`GROQ_MODEL=openai/gpt-oss-20b`. Provider key хранится только в приватной среде Python.
+`CQA_ML_EXTERNAL_INFERENCE_ENABLED` и `ML_EXTERNAL_TRANSFER_AUTHORIZED` по умолчанию
+false; оба включаются только после отдельного разрешения передачи. `GROQ_FREE_PLAN_CONFIRMED`
+также требует фактического подтверждения соответствующего режима провайдера. Технические
+проверки ниже не требуют настоящего ключа и не дают этих разрешений.
+
+После запуска/перезапуска с прежней SQLite `/health` Python и `/api/ai/status` Java должны
+подтвердить одну policy, protocol2, grant SHA-256, Groq/model. В UI выберите checklist key/version,
+подтвердите рубрику и нажмите «Оценить с ИИ». Сохранённая новая версия внутри scope не требует
+редактирования grant/Prompt. В «Результаты → Массовая оценка» выберите группу и версию, подготовьте пакет,
+подтвердите рубрику и запустите. Reload только сверяет ledger; resume — явное действие.
+Ошибочные/неизвестные исходы не повторяются автоматически. Удаление grant, изменение source
+или истечение срока блокирует новые вызовы в обеих службах.
