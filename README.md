@@ -1,4 +1,4 @@
-# Freedom CQA
+# Freedom Lens
 
 Локальное рабочее место для оценки качества диалогов: **Java 21 + Spring Boot 3.5.16 + SQLite**, HTML/CSS/Vanilla JS и отдельный **Python HTTP ML service**. Java отвечает за проверку evidence, scoring, хранение, апелляции и историю. Python возвращает ответы по полному чек-листу через контракт **2.0.0**, `POST /v1/evaluate`.
 
@@ -11,8 +11,8 @@
 
 Linux/macOS: JDK 21 (`java` и `javac`), Python 3.12+ с venv, Git, curl. Проверенные версии и результаты — в [release report](docs/RELEASE_READINESS.md). Maven Wrapper скачивает Maven 3.9.11; нужны доступ к Maven Central/PyPI и место под зависимости. Node.js 22 нужен только для JS-тестов, не для запуска UI.
 
-Из корня свежего checkout. Для review PR #17 до merge используется его ветка
-`codex/control-readiness`; после merge — актуальный main:
+Из корня свежего checkout. Стабильная версия — актуальный main. Для review редизайна
+Freedom Lens используется отдельная ветка `codex/freedom-lens-ui`:
 
 ```bash
 git clone https://github.com/Pandaman-8/freedom-cqa-datathon.git
@@ -62,7 +62,7 @@ curl -sS http://127.0.0.1:8080/api/datasets/import \
 
 ## Новый набор и approval v2
 
-1. В «Загрузка данных» введите выданный `group_id` → «Загрузить группу», либо выберите
+1. В «Данные» введите выданный `group_id` → «Загрузить группу», либо выберите
    существующий JSON → «Импортировать JSON». Для fetch настройте Java `CQA_ORGANIZER_URL`
    приватно, например `read -r -s -p 'Organizer URL: ' CQA_ORGANIZER_URL`, затем
    `export CQA_ORGANIZER_URL` перед запуском. Не вставляйте signed URL в команды/Git.
@@ -114,7 +114,7 @@ false; оба включаются только после отдельного 
 После запуска/перезапуска с прежней SQLite `/health` Python и `/api/ai/status` Java должны
 подтвердить одну policy, protocol2, grant SHA-256, Groq/model. В UI выберите checklist key/version,
 подтвердите рубрику и нажмите «Оценить с ИИ». Сохранённая новая версия внутри scope не требует
-редактирования grant/Prompt. В «Массовая оценка» выберите группу и версию, подготовьте пакет,
+редактирования grant/Prompt. В «Результаты → Массовая оценка» выберите группу и версию, подготовьте пакет,
 подтвердите рубрику и запустите. Reload только сверяет ledger; resume — явное действие.
 Ошибочные/неизвестные исходы не повторяются автоматически. Удаление grant, изменение source
 или истечение срока блокирует новые вызовы в обеих службах.
@@ -150,6 +150,8 @@ python3 -B server/src/test/python/batch_smoke.py --serve
 Откройте напечатанный адрес без `/__tests/` для workspace либо `/__tests/` для девяти browser checks. Сервер содержит только синтетические данные. Enter останавливает его процессы и удаляет временную базу. [Сценарий демонстрации до 5 минут](docs/DEMO.md) явно отделяет fake ML от настоящего inference.
 
 ## Проверки и документация
+
+- [Freedom Lens: UI/UX-аудит, новая навигация и проверки](docs/FREEDOM_LENS.md).
 
 - [Результаты, команды, ограничения и release blockers](docs/RELEASE_READINESS.md).
 - [Архитектура](docs/architecture.md), [Java REST API](docs/api-contract.md), [требования](docs/requirements.md).

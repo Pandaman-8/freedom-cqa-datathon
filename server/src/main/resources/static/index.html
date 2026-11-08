@@ -2,51 +2,53 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#163e32"><meta name="referrer" content="no-referrer">
-  <title>Freedom CQA — рабочее пространство</title>
+  <meta name="theme-color" content="#001412"><meta name="referrer" content="no-referrer">
+  <title>Freedom Lens — оценка качества диалогов</title>
   <link rel="stylesheet" href="/styles.css"><script type="module" src="/js/app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">К содержимому</a>
   <aside class="sidebar">
-    <a class="brand" href="#overview"><span class="brand-mark">F</span><span>Freedom <strong>CQA</strong></span></a>
-    <p class="eyebrow">QUALITY WORKSPACE</p>
+    <a class="brand" href="#overview" aria-label="Freedom Lens — обзор">Freedom <strong>Lens</strong></a>
+    <p class="brand-caption">Качество диалогов</p>
     <nav aria-label="Основная навигация">
-      <button type="button" data-view="overview" aria-current="page"><span>01</span> Обзор</button>
-      <button type="button" data-view="conversations"><span>02</span> Диалоги</button>
-      <button type="button" data-view="checklists"><span>03</span> Чек-листы</button>
-      <button type="button" data-view="results"><span>04</span> Результаты и апелляции</button>
-      <button type="button" data-view="datasets"><span>05</span> Загрузка данных</button>
-      <button type="button" data-view="batch"><span>06</span> Массовая оценка</button>
+      <button type="button" data-view="overview" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>Обзор</button>
+      <button type="button" data-view="conversations"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v12H9l-5 4zM8 8h8M8 12h5"/></svg>Диалоги</button>
+      <button type="button" data-view="results"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h4"/></svg>Результаты</button>
+      <button type="button" data-view="checklists"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11M3 6l2 2 3-4M3 12l2 2 3-4M3 18l2 2 3-4"/></svg>Критерии</button>
+      <button type="button" data-view="datasets"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 15v6h16v-6M12 16V3M7 8l5-5 5 5"/></svg>Данные</button>
     </nav>
-    <div class="sidebar-bottom"><span class="badge">LOCAL WORKSPACE</span><p>Прозрачная оценка.<br>Проверяемое решение.</p></div>
+    <div class="sidebar-bottom"><span class="badge">Рабочее пространство</span><p>От диалога к проверяемому решению.</p></div>
   </aside>
-  <main id="workspace">
-    <header class="topbar"><div><p class="eyebrow">CONVERSATION QUALITY ANALYTICS</p><h1 id="page-title">Обзор</h1></div>
-      <div id="connection" data-state="checking"><span id="connection-status" role="status">Проверяем подключение…</span><details class="connection-details"><summary>Подробности</summary><span id="service-version"></span></details><span id="ai-connection" role="status">Проверяем ИИ…</span><button id="check-connection" type="button" class="quiet">Проверить подключение</button></div>
-    </header>
-    <p id="connection-detail" class="muted"></p>
-    <p id="draft-status" class="draft-notice" role="status">Черновики хранятся только до закрытия страницы.</p>
-    <div id="checklist-picker" class="panel compact" aria-label="Активный чек-лист"></div>
-    <section data-panel="overview" id="overview">
-      <div class="hero"><div><p class="eyebrow">КАЧЕСТВО В ДЕТАЛЯХ</p><h2>От диалога<br>к обоснованной оценке.</h2><p>Читайте исходные реплики, связывайте выводы с цитатами<br>и сохраняйте историю каждого решения.</p></div><div class="hero-mark" aria-hidden="true">CQA<span>human review</span></div></div>
-      <div id="overview-counts" class="metrics"></div>
-      <div class="panel"><h2>Рабочий процесс</h2><ol class="steps"><li>Загрузите набор и выберите диалог.</li><li>Выберите чек-лист и нажмите «Оценить с ИИ».</li><li>Проверьте результат и точные цитаты.</li><li>Создайте апелляцию и подтвердите или измените ответ.</li></ol><p class="notice">ИИ доступен при настроенном ML и разрешении на выбранные данные. Итог всегда вычисляет Java.</p></div>
-    </section>
-    <section data-panel="conversations" hidden><div id="conversation-workspace"></div><div id="manual-workspace" class="panel"></div></section>
-    <section data-panel="checklists" hidden><div id="checklist-editor" class="panel"></div></section>
-    <section data-panel="results" hidden><div id="evaluation-workspace"></div></section>
-    <section data-panel="batch" hidden><div id="batch-workspace"></div></section>
-    <section data-panel="datasets" hidden>
-      <div class="panel"><p class="eyebrow">ИМПОРТ</p><h2>Загрузить диалоги</h2><p class="muted" id="group-help">group_id из набора организаторов. Адрес подключения задаётся только на сервере.</p>
-        <form id="dataset-form"><fieldset><label class="field" for="group-id">group_id<input id="group-id" name="group_id" required autocomplete="off" placeholder="DEV" aria-describedby="group-help"></label><button type="submit" id="fetch-dataset">Загрузить группу</button></fieldset></form>
-        <p id="dataset-result" class="notice" role="status" aria-live="polite">Набор ещё не запрошен.</p>
-        <div class="section-heading"><h3>Сохранено диалогов: <output id="conversation-count">—</output></h3><button type="button" id="refresh-datasets" class="secondary">Обновить список</button></div>
-        <p id="dataset-list-status" class="muted" role="status"></p><ul id="dataset-groups" class="group-list" aria-label="Сохранённые группы диалогов"></ul>
+  <main id="workspace" tabindex="-1">
+    <header class="topbar"><div><h1 id="page-title">Обзор</h1><p id="page-description" class="muted">Всё для оценки качества в одном месте</p></div>
+      <div id="connection" data-state="checking"><div class="service-states"><span id="connection-status" role="status">Подключаемся…</span><span id="ai-connection" role="status">Проверяем ИИ…</span></div>
+        <details class="connection-details"><summary>Состояние сервисов</summary><p id="connection-detail" class="muted"></p><p class="muted">Версия Java: <span id="service-version"></span></p><button id="check-connection" type="button" class="secondary small">Проверить подключение</button></details>
       </div>
-      <div class="panel"><h2>Импорт JSON-файла</h2><p class="muted">Файл набора организаторов; максимум 16 МиБ. Данные сохраняются в Java SQLite.</p><form id="upload-form"><fieldset><label class="field">JSON-файл<input type="file" id="dataset-file" accept=".json,application/json" required></label><button type="submit">Импортировать JSON</button></fieldset><p class="notice" id="upload-result" role="status"></p></form></div>
+    </header>
+    <p id="draft-status" class="draft-notice" role="status" hidden></p>
+    <div id="context-picker-slot"><div id="checklist-picker" class="panel compact" aria-label="Активный чек-лист"></div></div>
+    <div id="result-tabs" class="view-tabs" role="navigation" aria-label="Разделы результатов" hidden><button type="button" data-view="results">Сохранённые оценки</button><button type="button" data-view="batch">Массовая оценка</button></div>
+    <section data-panel="overview" id="overview">
+      <div class="overview-intro"><p class="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО</p><h2>Freedom Lens</h2><p>Оценка качества клиентских диалогов с помощью ИИ</p><button id="overview-action" type="button" disabled>Загружаем данные…</button></div>
+      <div id="overview-counts" class="metrics"></div>
+      <section class="panel workflow"><h3>Каждое решение можно проверить</h3><ol class="steps"><li><span>01</span><strong>Диалог</strong><p>Исходные сообщения и контекст</p></li><li><span>02</span><strong>AI-оценка</strong><p>По выбранной версии критериев</p></li><li><span>03</span><strong>Проверка</strong><p>Объяснения и точные цитаты</p></li><li><span>04</span><strong>Результат</strong><p>Итог и история решений</p></li></ol></section>
     </section>
-    <noscript><p class="notice">Для работы с Java API включите JavaScript.</p></noscript>
-    <footer>Freedom CQA <span>Оценка → доказательства → апелляция</span></footer>
+    <section data-panel="conversations" hidden><div id="conversation-workspace"></div><div id="manual-workspace"></div></section>
+    <section data-panel="checklists" hidden><div id="criteria-picker-slot"></div><div id="checklist-editor" class="panel"></div></section>
+    <section data-panel="results" hidden><div id="evaluation-workspace"></div></section>
+    <section data-panel="batch" hidden><div id="batch-picker-slot"></div><div id="batch-workspace"></div></section>
+    <section data-panel="datasets" hidden>
+      <div class="import-grid"><div class="panel"><span class="step-label">Из источника организаторов</span><h2>Загрузить группу</h2><p class="muted" id="group-help">Введите идентификатор выданного набора. Повторная загрузка не создаёт копии одинаковых диалогов.</p>
+        <form id="dataset-form"><fieldset><label class="field" for="group-id">Идентификатор группы (group_id)<input id="group-id" name="group_id" required autocomplete="off" placeholder="Например, DEV" aria-describedby="group-help"></label><button type="submit" id="fetch-dataset">Загрузить группу</button></fieldset></form>
+        <p id="dataset-result" class="notice" role="status" aria-live="polite"></p>
+      </div>
+      <div class="panel"><span class="step-label">С вашего устройства</span><h2>Импортировать JSON</h2><p class="muted">Загрузите исходный файл набора до 16 МиБ. Сообщения, роли и время сохранятся без изменений.</p><form id="upload-form"><fieldset><label class="field">JSON-файл<input type="file" id="dataset-file" accept=".json,application/json" required></label><button type="submit" class="secondary">Импортировать JSON</button></fieldset><p class="notice" id="upload-result" role="status"></p></form></div></div>
+      <div class="panel"><div class="section-heading"><h3>Загружено диалогов: <output id="conversation-count">—</output></h3><button type="button" id="refresh-datasets" class="quiet">Обновить список</button></div><p id="dataset-list-status" class="muted" role="status"></p><ul id="dataset-groups" class="group-list" aria-label="Сохранённые группы диалогов"></ul><button type="button" id="import-open" class="secondary">Открыть диалоги</button>
+        <details class="technical-note"><summary>Хранение и доступ к ИИ</summary><p class="muted">Импорт сохраняет данные локально и сам по себе не разрешает передачу модели. Для ИИ требуется действующий допуск и подтверждение выбранной рубрики. Подключение к источнику и приватный архив настраиваются на сервере.</p></details>
+      </div>
+    </section>
+    <noscript><p class="notice">Для работы приложения включите JavaScript.</p></noscript>
+    <footer><span>Freedom Lens</span><span>Демо-проект дататона</span></footer>
   </main>
 </body></html>

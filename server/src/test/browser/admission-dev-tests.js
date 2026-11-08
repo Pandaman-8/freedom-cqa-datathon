@@ -6,15 +6,16 @@ const panel=()=>doc.querySelector('[data-auto-workspace]');
 const idle=()=>doc.querySelector('#draft-status').textContent.startsWith('Несохранённых');
 async function until(check,label){for(let i=0;i<1000;i++){if(await check())return;await new Promise(r=>setTimeout(r,40));}throw new Error(label);}
 async function api(path){const r=await fetch(path);assert(r.ok,'Local API read failed');return r.json();}
-function click(text,root=doc){const n=all('button',root).filter(x=>x.textContent.trim()===text);assert(n.length===1,'Unique action: '+text);n[0].click();}
+function click(text,root=doc){const n=all('button',root).filter(x=>x.textContent.trim()===text);assert(n.length===1,'Unique action: '+text);reveal(n[0]);n[0].click();}
 function field(text,root=doc){const n=all('label',root).filter(x=>x.querySelector('span')?.textContent===text);assert(n.length===1,'Unique field: '+text);return n[0].querySelector('input,select,textarea');}
-function fill(text,value,root=doc){const n=field(text,root);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
-const nav=name=>doc.querySelector('[data-view="'+name+'"]').click();
+function reveal(node){const parents=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)parents.unshift(p);for(const p of parents)p.querySelector('summary').click();}
+function fill(text,value,root=doc){const n=field(text,root);reveal(n);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
+const nav=name=>{if(name==='batch')doc.querySelector('[data-view="results"]').click();doc.querySelector('[data-view="'+name+'"]').click();};
 const singleConsent='Подтверждаю передачу этого диалога и выбранной версии чек-листа в Groq GPT-OSS 20B';
 const batchConsent='Подтверждаю передачу диалогов этого пакета и закреплённой версии чек-листа в Groq GPT-OSS 20B';
 const manifest=()=>JSON.parse(win.localStorage.getItem('cqa:batch:v1'));
 async function load(){frame.src='/';await new Promise(r=>frame.addEventListener('load',r,{once:true}));doc=frame.contentDocument;win=frame.contentWindow;await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('Выбрано:'),'Workspace loaded');}
-async function select(){nav('conversations');await until(()=>all('#conversation-workspace .list-row').length===selection.total,'Existing source list');all('#conversation-workspace .list-row').find(n=>n.querySelector('strong').textContent===selection.selected[0]).click();await until(()=>panel()?.dataset.aiState==='ready','Both admissions ready');}
+async function select(){nav('conversations');await until(()=>all('#conversation-workspace .list-row').length===selection.total,'Existing source list');all('#conversation-workspace .list-row').find(n=>n.dataset.conversationId===selection.selected[0]).click();await until(()=>panel()?.dataset.aiState==='ready','Both admissions ready');}
 async function test(name,run){await run();const li=document.createElement('li');li.textContent='PASS: '+name;report.append(li);}
 document.querySelector('#run').addEventListener('click',async()=>{
  document.querySelector('#run').disabled=true;output.textContent='RUNNING';
@@ -22,6 +23,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
   selection=await api('/__tests/state');await load();
   await test('UI JSON upload / exact archived bytes / complete group and source fields',async()=>{
    assert((await api('/api/conversations')).length===0&&!selection.archive_verified,'Fresh browser DB and no source archive');
+   assert(doc.querySelector('#overview-action').textContent==='Загрузить данные','Empty workspace points to import');
    nav('datasets');const response=await fetch('/__tests/source');assert(response.ok,'Private local source');
    const bytes=await response.arrayBuffer(), original=JSON.parse(new TextDecoder().decode(bytes));
    const transfer=new win.DataTransfer();transfer.items.add(new win.File([bytes],'private-source.json',{type:'application/json'}));
@@ -34,22 +36,23 @@ document.querySelector('#run').addEventListener('click',async()=>{
     assert(saved.transcript.length===r.transcript.length&&saved.transcript.every((t,i)=>['timestamp','speaker','text'].every(k=>t[k]===r.transcript[i][k]))&&saved.audio_url===r.audio_url,'Exact source fields');
     assert(saved.messages.every((m,i)=>m.id==='m'+String(i+1).padStart(4,'0')),'Positional IDs');}
   });
-  await test('five calls / exact timestamps / audio controls / explicit AI denial without audio requests',async()=>{
+  await test('calls / exact timestamps / audio availability / explicit AI denial without audio requests',async()=>{
    nav('conversations');await until(()=>all('#conversation-workspace .list-row').length===selection.total,'List after upload');
-   const calls=(await api('/api/conversations')).filter(r=>r.channel==='voice call');assert(calls.length===5,'Five source calls');
+   const calls=(await api('/api/conversations')).filter(r=>r.channel==='voice call');assert(calls.length===selection.call_count,'All source calls');
    const before=(await api('/__tests/state')).ml_posts;
-   for(const row of calls){all('#conversation-workspace .list-row').find(n=>n.querySelector('strong').textContent===row.id).click();
-    await until(()=>doc.querySelector('#conversation-workspace .audio-box a')&&panel()?.dataset.aiState==='blocked','Call and policy refusal');
+   for(const row of calls){all('#conversation-workspace .list-row').find(n=>n.dataset.conversationId===row.id).click();
+    await until(()=>doc.querySelector('#conversation-workspace .conversation-detail [data-conversation-id]')?.dataset.conversationId===row.id&&panel()?.dataset.aiState==='blocked','Call and policy refusal');
     const saved=await api('/api/conversations/'+encodeURIComponent(row.id));
     const turns=all('#conversation-workspace .turn');assert(turns.length===saved.messages.length,'All call turns');
     for(let i=0;i<turns.length;i++){assert(turns[i].dataset.messageId===saved.messages[i].id&&turns[i].textContent.includes(saved.messages[i].timestamp),'Original call timestamp');}
-    const audio=doc.querySelector('#conversation-workspace audio');assert(audio.preload==='none'&&!audio.getAttribute('src'),'Audio is not sent or loaded');
-    assert(doc.querySelector('#conversation-workspace .audio-box a').getAttribute('href')===saved.audio_url,'Source audio link preserved');
+    const audio=doc.querySelector('#conversation-workspace audio');if(saved.audio_url){assert(audio.preload==='none'&&!audio.getAttribute('src'),'Audio is not sent or loaded');
+      assert(doc.querySelector('#conversation-workspace .audio-box a').getAttribute('href')===saved.audio_url,'Source audio link preserved');}
+    else assert(!audio&&doc.querySelector('.audio-box').textContent.includes('недоступно'),'No invented audio source');
    }
    assert((await api('/__tests/state')).ml_posts===before,'No ML requests for calls');
   });
   await select();source=await api('/api/conversations/'+encodeURIComponent(selection.selected[0]));
-  await test('existing DEV / both admissions / no UUID or POST until rubric confirmation',async()=>{
+  await test('source / both admissions / no UUID or POST until rubric confirmation',async()=>{
    assert(!field(singleConsent,panel()).checked,'Consent is not implicit');
    const before=(await api('/__tests/state')).ml_posts;click('Оценить с ИИ',panel());
    assert(field('Идентификатор запроса',panel()).value==='','No UUID while unconfirmed');assert((await api('/__tests/state')).ml_posts===before,'No ML POST');
@@ -139,6 +142,6 @@ document.querySelector('#run').addEventListener('click',async()=>{
    assert(JSON.stringify(await api('/api/evaluations/'+first.id))===JSON.stringify(first),'Original/review/v1 survive restart');
    assert(JSON.stringify(await api('/api/evaluations/'+second.id))===JSON.stringify(second),'v2 survives restart');
   });
-  output.textContent='PASS: '+report.children.length+' private DEV Java/Python admission browser scenarios. OFFLINE provider only; Groq=0.';
+  output.textContent='PASS: '+report.children.length+' Java/Python admission browser scenarios. OFFLINE provider only; Groq=0.';
  }catch(error){output.textContent='FAIL: '+error.message;}
 });

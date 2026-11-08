@@ -5,14 +5,16 @@ async function until(test,label){for(let i=0;i<250;i++){if(test())return;await n
 const all=(selector,root=doc)=>[...root.querySelectorAll(selector)];
 const panel=()=>doc.querySelector('[data-auto-workspace]');
 const idle=()=>doc.querySelector('#draft-status').textContent.startsWith('Несохранённых');
-function click(text,root=doc){const nodes=all('button',root).filter(n=>n.textContent===text);assert(nodes.length===1,'Unique button '+text);nodes[0].click();}
+function click(text,root=doc){const nodes=all('button',root).filter(n=>n.textContent===text);assert(nodes.length===1,'Unique button '+text);reveal(nodes[0]);nodes[0].click();}
 function field(text,root=doc){const labels=all('label',root).filter(n=>n.querySelector('span')?.textContent===text);assert(labels.length===1,'Unique field '+text);return labels[0].querySelector('input,textarea,select');}
-function fill(text,value,root=doc){const n=field(text,root);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
+function reveal(node){const parents=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)parents.unshift(p);for(const p of parents)p.querySelector('summary').click();}
+function fill(text,value,root=doc){const n=field(text,root);reveal(n);if(n.type==='checkbox')n.checked=value;else n.value=value;n.dispatchEvent(new win.Event(n.tagName==='SELECT'?'change':'input',{bubbles:true}));}
 async function api(route,body){const response=await fetch(route,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});assert(response.ok,'Harness API '+response.status);return response.json();}
 async function context(){
  doc.querySelector('[data-view="conversations"]').click();
  await until(()=>all('#conversation-workspace .list-row').length,'conversations');
- const row=all('#conversation-workspace .list-row').find(n=>n.querySelector('strong')?.textContent===fixture.conversation.id);assert(row,'fixture conversation');row.click();
+ const row=all('#conversation-workspace .list-row').find(n=>n.dataset.conversationId===fixture.conversation.id);assert(row,'fixture conversation');row.click();
+ await until(()=>doc.querySelector('#conversation-workspace .conversation-detail [data-conversation-id]')?.dataset.conversationId===fixture.conversation.id,'source and contextual picker loaded');
  fill('Чек-лист',fixture.checklist.key);
  await until(()=>panel()&&doc.querySelector('#checklist-picker .notice').textContent.includes(fixture.checklist.key+' / v1.'),'fixture context');
 }

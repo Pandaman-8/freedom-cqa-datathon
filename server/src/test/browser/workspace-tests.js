@@ -7,11 +7,12 @@ async function until(test,label){for(let i=0;i<200;i++){if(test())return;await s
 const all=(selector,root=doc)=>[...root.querySelectorAll(selector)];
 const idle=()=>doc.querySelector('#draft-status')?.textContent.startsWith('Несохранённых');
 function named(label,root=doc){const rows=all('label',root).filter(l=>(l.querySelector('span')?.textContent??l.firstChild?.textContent??'').trim()===label);assert(rows.length===1,'Unique label: '+label);return rows[0].querySelector('input,select,textarea');}
-function fill(label,value,root=doc){const input=named(label,root);if(input.type==='checkbox')input.checked=value;else input.value=value;input.dispatchEvent(new win.Event(input.tagName==='SELECT'?'change':'input',{bubbles:true}));}
-function click(text,root=doc){const buttons=all('button',root).filter(b=>b.textContent.trim()===text);assert(buttons.length===1,'Unique button: '+text);buttons[0].click();}
-const nav=name=>doc.querySelector('[data-view="'+name+'"]').click();
-function source(id){const button=all('.list-row',doc.querySelector('#conversation-workspace')).find(b=>b.querySelector('strong').textContent===id);assert(button,'Conversation listed');button.click();}
-async function selectedSource(id){await until(()=>doc.querySelector('#conversation-workspace .conversation-grid > :last-child h3')?.textContent===id,'selected conversation '+id);}
+function reveal(node){const parents=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)parents.unshift(p);for(const p of parents)p.querySelector('summary').click();}
+function fill(label,value,root=doc){const input=named(label,root);reveal(input);if(input.type==='checkbox')input.checked=value;else input.value=value;input.dispatchEvent(new win.Event(input.tagName==='SELECT'?'change':'input',{bubbles:true}));}
+function click(text,root=doc){const buttons=all('button',root).filter(b=>b.textContent.trim()===text);assert(buttons.length===1,'Unique button: '+text);reveal(buttons[0]);buttons[0].click();}
+const nav=name=>{if(name==='batch')doc.querySelector('[data-view="results"]').click();doc.querySelector('[data-view="'+name+'"]').click();};
+function source(id){const button=all('.list-row',doc.querySelector('#conversation-workspace')).find(b=>b.dataset.conversationId===id);assert(button,'Conversation listed');button.click();}
+async function selectedSource(id){await until(()=>doc.querySelector('#conversation-workspace .conversation-detail [data-conversation-id]')?.dataset.conversationId===id,'selected conversation '+id);}
 async function api(path,method='GET',body){const response=await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:stringify(body)});const data=parse(await response.text());assert(response.ok,'Harness HTTP '+response.status);return data;}
 async function test(name,fn){await until(idle,'ready before '+name);await fn();await until(idle,'settled after '+name);const li=document.createElement('li');li.textContent='PASS: '+name;report.append(li);}
 async function checklistVersion(version){fill('Версия (пусто = последняя)',version);click('Открыть версию');await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('/ v'+version+'.'),'checklist version '+version);}
@@ -27,11 +28,26 @@ document.querySelector('#run').addEventListener('click',async()=>{
   await until(()=>doc.querySelector('#connection').dataset.state==='ok'&&doc.querySelector('#checklist-picker .notice').textContent.includes('Выбрано:'),'initial workspace');
   const nativeFetch=win.fetch.bind(win);
   win.fetch=async(path,options={})=>{calls.push({path:String(path),method:options.method||'GET',body:options.body});return nativeFetch(path,options);};
+  await test('Freedom Lens navigation, useful overview, contextual criteria and collapsed defaults',async()=>{
+   assert(doc.title.startsWith('Freedom Lens'),'Product title');
+   assert(all('.sidebar nav [data-view]').length===5&&!doc.querySelector('.sidebar [data-view="batch"]'),'Five primary destinations');
+   assert(!doc.querySelector('.hero, .hero-mark'),'No decorative hero');
+   assert(doc.querySelector('#overview-action').textContent==='Открыть диалоги','Loaded-data primary action');
+   assert(doc.querySelector('#checklist-picker').hidden,'No global picker on overview');
+   assert(doc.querySelector('#draft-status').hidden,'No empty draft warning');
+   assert(all('#overview-counts .metric').length===3,'Counts and active version');
+   nav('checklists');assert(!all('.criterion-editor').some(n=>n.open),'Criteria start collapsed');
+   const first=doc.querySelector('.criterion-editor');first.querySelector('summary').click();assert(first.open,'One-step criterion editing');
+   assert(!first.querySelector('.editor-advanced').open,'Advanced settings start collapsed');
+   nav('results');assert(!doc.querySelector('#result-tabs').hidden,'Batch is contextual to results');nav('batch');
+   assert(!doc.querySelector('[data-panel="batch"]').hidden&&doc.querySelector('.sidebar [data-view="results"]').getAttribute('aria-current')==='page','Results remains active for batch');
+   nav('overview');
+  });
   await test('real overview counts, RU/KZ/EN filters, exact source text/roles/timestamps/IDs, no DOM XSS',async()=>{
    nav('conversations');await until(()=>all('#conversation-workspace .list-row').length>=3,'conversation list');fill('Группа','UI-SYNTHETIC',doc.querySelector('#conversation-workspace'));assert(all('#conversation-workspace .list-row').length===3,'group filter');
    fill('Язык','KZ',doc.querySelector('#conversation-workspace'));assert(all('#conversation-workspace .list-row').length===1,'language filter');
-   fill('Язык','',doc.querySelector('#conversation-workspace'));fill('Поиск по ID','RU',doc.querySelector('#conversation-workspace'));assert(all('#conversation-workspace .list-row').length===1,'search');
-   fill('Поиск по ID','',doc.querySelector('#conversation-workspace'));source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');
+   fill('Язык','',doc.querySelector('#conversation-workspace'));fill('Найти диалог','RU',doc.querySelector('#conversation-workspace'));assert(all('#conversation-workspace .list-row').length===1,'search');
+   fill('Найти диалог','',doc.querySelector('#conversation-workspace'));source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');
    assert(all('#conversation-workspace .turn').length===5,'all turns');assert(all('#conversation-workspace .turn-meta').every(n=>n.textContent.includes('00:01')),'repeated times preserved');
    assert(doc.querySelector('#conversation-workspace [data-message-id="m0003"] .source-text').textContent===fixture.quote,'exact Unicode/newline');
    assert(doc.querySelector('#conversation-workspace [data-message-id="m0001"] .source-text').textContent==='<img src=x onerror=alert(1)>','literal hostile text');
@@ -45,8 +61,19 @@ document.querySelector('#run').addEventListener('click',async()=>{
     return before(path,options);
    };
    source('UI-SYNTHETIC:RU');await until(()=>started&&release,'delayed A');source('UI-SYNTHETIC:KZ');await selectedSource('UI-SYNTHETIC:KZ');release();await sleep(100);
-   assert(doc.querySelector('#conversation-workspace .conversation-grid > :last-child h3').textContent==='UI-SYNTHETIC:KZ','late A discarded');win.fetch=before;
+   assert(doc.querySelector('#conversation-workspace .conversation-detail [data-conversation-id]').dataset.conversationId==='UI-SYNTHETIC:KZ','late A discarded');win.fetch=before;
    source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');
+  });
+  await test('late conversation response cannot steal the criteria picker; mobile load errors retain back navigation',async()=>{
+   let release;const before=win.fetch;
+   win.fetch=async(path,options={})=>{if(String(path)==='/api/conversations/UI-SYNTHETIC%3ARU'){const response=await nativeFetch(path,options);await new Promise(resolve=>release=resolve);return response;}return before(path,options);};
+   source('UI-SYNTHETIC:RU');await until(()=>release,'delayed conversation');nav('checklists');release();await selectedSource('UI-SYNTHETIC:RU');
+   assert(doc.querySelector('#criteria-picker-slot #checklist-picker'),'Picker remains in active criteria view');
+   nav('conversations');assert(doc.querySelector('#conversation-checklist-slot #checklist-picker'),'Picker returns with conversation');
+   win.fetch=async(path,options={})=>{if(String(path)==='/api/conversations/UI-SYNTHETIC%3AKZ')throw new TypeError('Synthetic read failure');return before(path,options);};
+   source('UI-SYNTHETIC:KZ');await until(()=>doc.querySelector('.conversation-detail .notice[data-state="error"]'),'conversation read failure');
+   click('К списку диалогов',doc.querySelector('.conversation-detail'));assert(doc.querySelector('.conversation-grid').dataset.mobile==='list','Back remains available after failed load');
+   win.fetch=before;source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');
   });
   await test('historical checklist selection and version race; context drafts are not overwritten',async()=>{
    fill('Чек-лист','ui-synthetic');await until(()=>doc.querySelector('#checklist-picker .notice').textContent.includes('ui-synthetic / v2.'),'custom checklist');
@@ -146,7 +173,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    const snapshot=()=>stringify(all('input,textarea,select',editor()).map(n=>({value:n.value,checked:!!n.checked})));
    async function reopen(){
     nav('overview');nav('checklists');fill('Чек-лист',keyA);
-    await until(()=>editor().querySelector('h2')?.textContent===keyA+' · редактор версии','switch to existing checklist');
+    await until(()=>editor().querySelector('form')?.dataset.draftKey.includes(keyA),'switch to existing checklist');
     click('Создать новый чек-лист',editor());
    }
    newBlank();populate(keyA,'Create A');await submitCreated(keyA);
@@ -171,7 +198,7 @@ document.querySelector('#run').addEventListener('click',async()=>{
    const a=await api('/api/checklists/'+keyA),b=await api('/api/checklists/'+keyB);
    assert(String(a.version)==='1'&&String(b.version)==='1'&&a.title==='Create A'&&b.title==='Create B','A and B are separate Java v1 checklists');
    assert(stringify(a)===originalA,'A remains unchanged');newBlank();
-   fill('Чек-лист',key);await until(()=>editor().querySelector('h2')?.textContent===key+' · редактор версии','return to unrelated draft');
+   fill('Чек-лист',key);await until(()=>editor().querySelector('form')?.dataset.draftKey.includes(key),'return to unrelated draft');
    assert(named('Название чек-листа',editor()).value==='Unrelated version draft','successful creates remove only their create draft');
   });
   await test('audio stays unloaded until explicit action, organizer safe503 and honest AI state',async()=>{
@@ -185,6 +212,21 @@ document.querySelector('#run').addEventListener('click',async()=>{
    await api('/api/datasets/import','POST',hostile);click('Обновить список');
    await until(()=>doc.querySelector('#dataset-groups').textContent.includes('<img src=x onerror=alert(1)>'),'literal group ID');
    assert(doc.querySelectorAll('#dataset-groups img').length===0,'HTML-like group is plain text');
+  });
+  await test('responsive pages at1440/1366/768/390 and mobile conversation back navigation',async()=>{
+   for(const width of [1440,1366,768,390]){
+    frame.style.width=width+'px';await sleep(60);
+    for(const name of ['overview','conversations','results','checklists','datasets','batch']){
+     nav(name);await sleep(30);
+     assert(doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1,'No horizontal page overflow: '+width+' '+name);
+    }
+   }
+   nav('conversations');source('UI-SYNTHETIC:RU');await selectedSource('UI-SYNTHETIC:RU');
+   assert(doc.querySelector('.conversation-grid').dataset.mobile==='detail','Mobile shows selected transcript');
+   const back=doc.querySelector('.conversation-detail .mobile-back');
+   assert(doc.activeElement===back&&back.getBoundingClientRect().top>=0,'Mobile selection brings back control into view and restores keyboard focus');
+   click('К списку диалогов');assert(doc.querySelector('.conversation-grid').dataset.mobile==='list','Mobile returns to searchable list');
+   frame.style.width='100%';
   });
   status.textContent='PASS: '+report.children.length+' browser scenarios; actual Java API, synthetic temporary SQLite.';
  }catch(error){status.textContent='FAIL: '+error.message;status.className='fail';}

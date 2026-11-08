@@ -40,7 +40,7 @@ class FoundationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getHeaders().getContentType()).isNotNull()
                 .satisfies(type -> assertThat(type.isCompatibleWith(MediaType.TEXT_HTML)).isTrue());
-        assertThat(response.getBody()).contains("Freedom CQA", "type=\"module\"", "src=\"/js/app.js\"");
+        assertThat(response.getBody()).contains("Freedom Lens", "type=\"module\"", "src=\"/js/app.js\"");
     }
 
     @Test
