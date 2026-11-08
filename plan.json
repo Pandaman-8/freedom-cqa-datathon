@@ -3737,7 +3737,7 @@
       "risks_and_blockers": [
         "Peer review of T14 and dynamic-criterion live AI acceptance remain outstanding; T14 must not be marked done.",
         "Workflow tests intentionally change clarity/flag answers to exercise review and scoring. Exact evidence grounding does not establish semantic relevance or model accuracy.",
-        "Dynamic admission v2 technical format accepted via Farhat chat. Java scope/opt-in/confirmation implemented; Nurtas Python-only admission patch has not been received. Exact /health names and Python environment mapping remain to be verified against that patch. Joint approved_dataset HTTP/browser acceptance is BLOCKED; actual external DEV transfer consent is also absent."
+        "Nurtas admission v2 branch through b03ecf8 is integrated with both commits. Shared approved_dataset HTTP and private DEV browser v1→v2/batch acceptance PASS with an isolated offline provider. Actual Groq semantic quality/usage and external DEV transfer consent remain unverified; first session permits15 explicit DEV chats only, no calls or CONTROL. Joint final PR review remains required."
       ],
       "definition_of_done": [
         "Все acceptance_criteria выполнены с перечисленными verification.",
@@ -3813,6 +3813,31 @@
             "PASS:git diff --check and public tracked-content/reachable-history pattern scan; no private data, active grants, credentials or database staged. Python/contract/scoring/SQLite-schema and user package lock untouched."
           ],
           "limits": "T14 remains in_progress. Python v2 and agreed flat health field names cannot be verified without Nurtas patch/branch/SHA. Joint approved_dataset HTTP and DEV browser v1→v2/batch acceptance NOT RUN/BLOCKED. Real Groq calls0; no new live quality evidence. Separate transfer consent required for subsequent one-chat v1/v2 then15-chat live checks."
+        },
+        {
+          "date": "2026-11-08",
+          "kind": "joint_approved_dataset_http_and_browser",
+          "branch": "codex/T14-dynamic-ai",
+          "python_commits": [
+            "1b6f790",
+            "b03ecf8b4914bfbacd14724aba51887916f4471c"
+          ],
+          "integration_merge": "c9745e5",
+          "agreement": "User supplied the completed Python branch and confirmed technical Java/Python admission v2 agreement. Full branch merged, preserving both Python commits and all admission tests. No external-data consent inferred.",
+          "details": [
+            "Aligned the existing private DEV harness with actual Python config: ML_EXTERNAL_TRANSFER_AUTHORIZED, ML_ADMISSION_URL, UTC/Z expiry, one shared grant created0600. Separate temporary grant only for peer-digest mismatch rejection. No production Java/Vanilla change was necessary in this integration follow-up.",
+            "Verified actual Python health admission_protocol2, policy_mode, grant_sha256, provider groq/model openai/gpt-oss-20b match Java. Real Spring HTTP and FastAPI HTTP run with independent admission and validation; only the provider is injected offline. External DNS/connect forbidden, no real credentials.",
+            "Existing data/dev/invoke.json only:15 selected chats (5RU/5KZ/5EN) pass;50 remaining records including5 calls rejected. Both opt-in defaults, absent/expired/invalid grant, wrong hash/provider/model/key/version, changed session/digest and missing confirmation fail before provider.",
+            "Actual HTTP v1/v2 uses unchanged grant, exact evidence,8 answers, origin=model, Java scoring, immutable originals, duplicate-request ledger replay and persisted Java restart recovery. Offline answers are explicitly labelled structural test outputs, not quality judgments.",
+            "Actual browser5/5 PASS: confirmed v1; evidence/NA/score/flag; appeal/final rescore with original preserved; criterion replacement through UI and fresh v2 confirmation/history; batch pinnedv2 with pause/reload/fresh confirmation/resume,15 successes and50 blocked rows with no inference UUID, exactly15 batch ML POSTs.",
+            "First browser run exposed a test-only race: drafts.pending did not wait for background ledger reconciliation, so the test clicked a disabled Resume button. Fixed the harness to wait for enabled controls; clean-database rerun5/5 PASS. Product correctly sent no premature inference."
+          ],
+          "verification": [
+            "Java clean verify:5989 PASS,0 failures/errors/skipped, BUILD SUCCESS; JS30 PASS; Python350 PASS including intact Nurtas admission tests,1 existing Starlette/httpx deprecation warning.",
+            "Contracts72 fixtures/four schemas/drift PASS; scoring reference5184 PASS. Contract2.0.0, Prompt v4, scoring, SQLite schema and existing fixtures unchanged.",
+            "Default synthetic_only actual Java/Python offline HTTP regression PASS:65 distinct inputs6 accepted/59 denied,65 operations over6 approved inputs, restart/replay0 additional calls; original/final, CAS409 and history preserved. Separate from existing DEV approved_dataset E2E."
+          ],
+          "limits": "Real Groq calls0. Offline provider proves transport/admission/validation/persistence/UI behavior, not model understanding, quality, cost or quota. No real Organizer/audio calls. Existing DEV source/grants/databases remain private and disposable; package-lock untouched. T14 remains in_progress for joint review and separately authorized live acceptance."
         }
       ],
       "requirement_ids": [

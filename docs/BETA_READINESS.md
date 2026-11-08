@@ -1,7 +1,8 @@
 # Fullstack BETA — доступ к данным и проверка продукта
 
 Работа: `codex/T14-dynamic-ai`, исходный main `cbd7771`. Java/Vanilla изменения;
-Python ML, contract2.0.0, scoring и SQLite schema не меняются.
+Python admission v2 Нуртаса интегрирован отдельной веткой; contract2.0.0, Prompt v4, scoring
+и SQLite schema сохранены.
 
 ## Что меняется
 
@@ -30,8 +31,8 @@ Readiness не проверяет квоту, реальные credentials у п
 версия внутри выбранного key/range не требует правки grant или исходников.
 
 Актуальные поля, конфигурация, миграция, проверка отзыва и точный статус совместного
-прогона: [DYNAMIC_ADMISSION.md](DYNAMIC_ADMISSION.md). Python-only patch Нуртаса пока
-не получен; его реализация не подменяется. Внешняя передача DEV не разрешена этим
+прогона: [DYNAMIC_ADMISSION.md](DYNAMIC_ADMISSION.md). Оба коммита Python-only patch Нуртаса интегрированы; общий DEV HTTP-прогон
+проверен с изолированным offline provider, без подмены admission. Внешняя передача DEV не разрешена этим
 техническим согласованием. Все результаты ниже относятся к предыдущей BETA-проверке.
 
 ## Проверки и границы

@@ -132,7 +132,9 @@ React build is not a prerequisite for the new Vanilla frontend.
   exact dataset hash/explicit chat IDs, provider/model and bounded checklist_scope; see docs/DYNAMIC_ADMISSION.md.
   Approval v2 technical format was accepted in the current user task. Java external inference opt-in
   defaults false; UI confirmation and matching Python admission metadata are required. A valid new
-  rubric inside scope needs no grant edit. The Nurtas Python-only patch remains a separate dependency.
+  rubric inside scope needs no grant edit. Nurtas admission v2 branch through b03ecf8 is integrated;
+  Python uses ML_EXTERNAL_TRANSFER_AUTHORIZED and ML_ADMISSION_URL. Shared grants are private0600
+  with UTC/Z expiry; Python first-phase restrictions include DEV chats only and at most15 IDs.
   This is not DEV transfer consent. Never manufacture approvals or treat model choice as consent.
 - Release tests may inject an offline provider through Python's existing test seam, with
   external networking forbidden. This is test infrastructure, not a runtime fake mode or

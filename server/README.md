@@ -669,10 +669,11 @@ This verifies review of a real saved AI result, not a new live model E2E. Only s
 identity/diagnostic evidence is recorded in plan.json; no database or raw model output is
 committed. Automated Java/CI tests remain synthetic and provider-free.
 
-**Current T14 blocker:** default synthetic_only still rejects arbitrary v2. The jointly
-accepted approval v2 format now has a Java scoped implementation; see
-[DYNAMIC_ADMISSION](../docs/DYNAMIC_ADMISSION.md). Joint approved_dataset acceptance awaits
-Nurtas's Python-only patch and exact health metadata alignment. Separate external DEV
+**Remaining T14 acceptance:** the default synthetic_only policy still pins exact pairs.
+Dynamic DEV uses the jointly accepted approval v2 implementation; see
+[DYNAMIC_ADMISSION](../docs/DYNAMIC_ADMISSION.md). Nurtas's two Python admission commits
+are integrated, and approved_dataset HTTP acceptance
+is verified on existing DEV with an isolated offline provider. Separate external DEV
 transfer consent is required before any live run. Existing fixtures are unchanged;
 T14 remains in_progress until dynamic AI acceptance and peer review are complete.
 
@@ -726,7 +727,7 @@ Java scoring and contract2.0.0 are unchanged. Default synthetic_only still permi
 exact fixture pairs. The new approval v2 mode uses scoped versions, explicit outgoing-rubric
 confirmation and matching peer admission; known per-item refusals allocate no inference UUID.
 Reload never restores consent or starts a POST. A batch UI does not authorize external transfer
-or additional Groq calls. Python v2 integration remains pending; see DYNAMIC_ADMISSION.
+or additional Groq calls. Python v2 HTTP integration is verified offline; see DYNAMIC_ADMISSION.
 
 Verification (all local inference uses a fake HTTP peer):
 

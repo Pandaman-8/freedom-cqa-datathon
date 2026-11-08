@@ -1,4 +1,4 @@
-# Dynamic admission v2 — Java implementation and Python handoff
+# Dynamic admission v2 — shared Java/Python integration
 
 Status: Farhat relayed joint technical agreement and acceptance of all four Nurtas comments
 in the FINAL DYNAMIC AI INTEGRATION task (chat, not a GitHub Review). This does not grant
@@ -94,7 +94,7 @@ Existing timeout/unknown recovery, double-click protection and explicit retry st
 At that historical revision the shared policy implementation was still pending agreement.
 
 
-## Current Java implementation
+## Current shared implementation
 
 Java reads `CQA_ML_DATA_MODE=approved_dataset`, absolute `CQA_ML_APPROVAL_FILE`, and
 `CQA_ML_EXTERNAL_INFERENCE_ENABLED=true`. The last flag defaults to **false** and is a
@@ -110,7 +110,7 @@ Java rechecks source bytes on admission; changing/deleting grant or source fails
 A valid replacement grant can establish a newly authorized session. It cannot retroactively
 cancel an already sent inference or convert a ledger replay into a new POST.
 
-The Java adapter currently expects these **flat Python health fields**:
+Java and Nurtas's Python patch use the same **flat health fields**, verified over actual HTTP:
 
 | Field | Required value in approved_dataset |
 | --- | --- |
@@ -120,11 +120,10 @@ The Java adapter currently expects these **flat Python health fields**:
 | `provider` | `groq` |
 | `model` | `openai/gpt-oss-20b` |
 
-**Integration pending:** these exact spellings must be checked against Nurtas's patch;
-no compatible Python implementation has been received in this checkout or published in
-an accessible branch at this verification. They are the current Java adapter interface,
-not a claim that Nurtas has implemented it. Old Python/missing metadata fails closed.
-The existing `configured`, `ready`, `reason`, `contract_version` health checks also apply.
+Both Nurtas commits from `origin/codex/ml-admission-v2` are integrated: `1b6f790` and
+`b03ecf8b4914bfbacd14724aba51887916f4471c`, preserved by branch merge. His admission tests
+remain intact. Old Python/missing metadata fails closed. The existing `configured`,
+`ready`, `reason`, `contract_version` health checks also apply.
 No health request sends transcripts or invokes a provider.
 
 Java UI status adds `rubric_confirmation_required` and `confirmation_scope` (grant hash).
@@ -146,21 +145,65 @@ ml-service/.venv/bin/python -B server/src/test/python/admission_dev_smoke.py \
   --dataset data/dev/invoke.json --ml-python "$PWD/ml-service/.venv/bin/python" --serve
 ```
 
-The test launcher requires Nurtas's admission patch. It uses a disposable grant/database,
-an unusable provider key, the existing Python provider injection seam, and rejects all
-external DNS/connect calls. No policy is mocked. Expected provider responses are structural
-regression outputs labelled OFFLINE TEST ONLY, never Groq results or semantic quality proof.
-The prepared browser suite checks explicit consent, v1→UI criterion replacement→v2,
-review/evidence/history and batch15 accepted/50 blocked, including pause/reload/resume.
-Until Python v2 is available, this suite is **BLOCKED / NOT RUN**, not PASS.
-The test-only `ML_*` environment names likewise must be aligned with the supplied patch.
+The launcher uses the actual merged Python admission and actual Java service, one shared
+private grant/database directory, an unusable provider key and the existing provider
+injection seam. It rejects external DNS/connect calls before importing the ML service.
+No policy is mocked. Structural answers are labelled OFFLINE TEST ONLY, never Groq
+results, user demo results or semantic quality proof. Test grants do not record real consent.
 
-Observed locally: Java selected admission on the supplied65-record DEV accepts exactly
-15 configured chats (5RU/5KZ/5EN); external opt-in absent blocks before ML. The installed
-Python health does not expose protocol2, so the joint test stops there. Groq calls=0.
+The normal run uses one grant path for both processes. Only the mismatch negative check
+uses a separate temporary grant with another session, then restores the shared file.
+Every grant is created with mode0600. Expiry is UTC ending in Z. Python requires:
+
+| Python configuration | Java counterpart / use |
+| --- | --- |
+| `ML_DATA_POLICY=approved_dataset` | `CQA_ML_DATA_MODE=approved_dataset` |
+| `ML_APPROVAL_FILE=/absolute/private/file` | same file as `CQA_ML_APPROVAL_FILE` |
+| `ML_EXTERNAL_TRANSFER_AUTHORIZED=true` | separate from Java `CQA_ML_EXTERNAL_INFERENCE_ENABLED=true`; both default false |
+| `ML_ADMISSION_URL=http://127.0.0.1:8001/v1/evaluate` | exactly the configured `CQA_ML_URL` and grant.ml_url |
+
+Use the actual Python names above, not ML_EXTERNAL_INFERENCE_ENABLED/ML_EVALUATE_URL.
+Python additionally restricts this first session to DEV, at most15 explicit chat IDs,
+no audio locators, versions1..1,000,000 and a3..128-character session ID matching
+`[A-Za-z0-9][A-Za-z0-9_.:-]{2,127}`. Approvers are ordered `["Farhat","Nurtas"]`.
+It rejects symlinks and grants owned by another user or accessible to group/others.
+These are conjunctive restrictions: the DEV name by itself grants no permission.
+CONTROL, voice and broader external runs are not enabled by this integration.
+
+Observed on existing `data/dev/invoke.json`: both independent gates accept the configured
+15 chats (5RU/5KZ/5EN) and reject the other50. Actual HTTP verifies missing opt-ins,
+missing/expired/changed grants, wrong hash/model/provider/version/key, mismatched peer
+digest and missing rubric confirmation. V1/v2 outputs pass both validators and Java
+scoring; original/ledger survive Java restart. No external inference occurs.
 
 
-## Verification of this Java/UI change (2026-11-08)
+## Joint integration verification (2026-11-08)
+
+**PASS:** actual Java/Spring HTTP ↔ actual Python/FastAPI HTTP on the existing private
+DEV source, with one shared grant and an isolated offline provider. No admission mocks.
+The full Python branch is merged (both1b6f790 and b03ecf8); Python files remain exactly
+as supplied by Nurtas. Contract2.0.0, Prompt v4, scoring, SQLite schema and fixtures unchanged.
+
+- HTTP: opt-ins, health metadata/digest,15 allowed /50 rejected, invalid/expired/revoked
+  grant, wrong dataset/model/scope, missing confirmation, v1/v2, ledger replay and Java
+  restart PASS. The grant is unchanged when the criterion/version changes within scope.
+- Actual browser **5/5 PASS**: v1 consent/evaluation; exact evidence/NA/score/flag;
+  appeal/final with immutable original; UI criterion replacement/v2/fresh consent/history;
+  batch pinnedv2 with pause/reload/resume,15 saved evaluations and50 blocked without UUID.
+  Exactly15 batch ML POSTs; no replay on reload. All outputs remain OFFLINE TEST ONLY.
+- The first browser run clicked Resume while background ledger reconciliation still
+  disabled it. Corrected this test race by waiting for enabled controls, then reran all
+  five scenarios on a fresh temporary database. No runtime behavior was weakened.
+- **5989 JUnit,30 JS,350 Python,72 contract fixtures,5184 scoring references PASS**.
+  BUILD SUCCESS; one existing Starlette/httpx deprecation warning in Python tests.
+- Default synthetic_only Java/Python offline HTTP regression also PASS, including
+  restart/replay, CAS409 and the6 accepted /59 refused distinct synthetic inputs.
+
+Real Groq calls **0**. No new claims about semantic relevance, actual provider usage/cost,
+quota, calls or CONTROL. T14 stays in_progress pending joint review and separately
+allowed live acceptance. The private browser test is local, not a GitHub CI DEV run.
+
+## Historical Java-only verification at9df9dd6 (2026-11-08)
 
 - Java clean verify: 5989 JUnit PASS; after the final health-reason change, 25 focused
   admission/readiness cases and packaging PASS. Zero failures/errors/skips.
@@ -175,5 +218,5 @@ Python health does not expose protocol2, so the joint test stops there. Groq cal
   provider seam:65 distinct synthetic inputs =6 accepted/59 blocked;65 sequential operations
   over6 approved inputs PASS, no additional provider calls on restart/replay. This does not
   establish approved_dataset compatibility or live-model quality.
-- New joint DEV v1→v2/browser/batch harness remains BLOCKED before inference because the
-  available Python lacks protocol2. No Nurtas source edits. Real Groq calls:0.
+- At9df9dd6, the joint DEV harness was BLOCKED before inference because Python lacked
+  protocol2. That historical blocker is resolved by the integration above. Real Groq calls:0.

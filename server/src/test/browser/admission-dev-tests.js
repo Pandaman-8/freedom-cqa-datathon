@@ -62,8 +62,10 @@ document.querySelector('#run').addEventListener('click',async()=>{
    assert(manifest().checklist_version==='2'&&!field(batchConsent,root).checked,'Pinned v2 and fresh consent');
    const before=(await api('/__tests/state')).ml_posts;click('Запустить / продолжить',root);assert((await api('/__tests/state')).ml_posts===before,'No unconfirmed batch');
    fill(batchConsent,true,root);click('Запустить / продолжить',root);await until(()=>manifest().items.some(i=>i.attempts.length),'First durable intent');click('Пауза после текущего диалога',root);await until(idle,'Pause settled');
-   const paused=(await api('/__tests/state')).ml_posts;await load();nav('batch');await until(idle,'Reload reconciliation');
-   assert((await api('/__tests/state')).ml_posts===paused,'Reload is GET only');const reloaded=doc.querySelector('#batch-workspace');assert(!field(batchConsent,reloaded).checked,'Reload loses consent');
+   const paused=(await api('/__tests/state')).ml_posts;await load();nav('batch');const reloaded=doc.querySelector('#batch-workspace');
+   // Reload reconciliation is a background GET: drafts.pending alone does not mean it has finished.
+   await until(()=>idle()&&all('button',reloaded).some(n=>n.textContent==='Проверить статусы'&&!n.disabled),'Reload reconciliation');
+   assert((await api('/__tests/state')).ml_posts===paused,'Reload is GET only');assert(!field(batchConsent,reloaded).checked,'Reload loses consent');
    fill(batchConsent,true,reloaded);click('Запустить / продолжить',reloaded);
    await until(()=>manifest().items.every(i=>i.blocked_code||i.attempts.at(-1)?.state==='succeeded')&&idle(),'Batch accounted for every source');
    const m=manifest();assert(m.items.filter(i=>i.attempts.at(-1)?.state==='succeeded').length===15,'Exactly selected15');

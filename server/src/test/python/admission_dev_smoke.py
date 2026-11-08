@@ -44,7 +44,7 @@ def main():
     jp,mp=port(),port();java_url=f'http://127.0.0.1:{jp}';ml_url=f'http://127.0.0.1:{mp}'
     env={k:v for k,v in os.environ.items() if not any(w in k for w in ('GROQ','CQA_','ML_','SPRING_','JAVA_TOOL_OPTIONS','JDK_JAVA_OPTIONS','_JAVA_OPTIONS'))}
     with tempfile.TemporaryDirectory(prefix='cqa-admission-private-') as temporary:
-        folder=Path(temporary);grant_path=folder/'java.ml-approval.json';peer_path=folder/'python.ml-approval.json';counter=folder/'counts.log'
+        folder=Path(temporary);grant_path=folder/'shared.ml-approval.json';peer_path=folder/'mismatch.ml-approval.json';counter=folder/'counts.log'
         log=(folder/'services.log').open('wb');java=None;python=None;proxy=None;db=folder/'cqa.sqlite'
         def counts():
             lines=counter.read_text().splitlines() if counter.exists() else []
@@ -75,19 +75,22 @@ def main():
                 f'--cqa.ml-url={ml_url}/v1/evaluate','--cqa.ml-data-mode=approved_dataset',f'--cqa.ml-approval-file={grant_path}',
                 '--cqa.ml-external-inference-enabled='+str(enabled).lower(),'--cqa.organizer-url=','--logging.level.root=WARN','--spring.main.banner-mode=off'],env=env,cwd=folder,stdout=log,stderr=log)
             wait_ready(java_url,java,'/api/health',200)
-        def start_python(enabled=True,expected=200):
+        def start_python(enabled=True,expected=200,approval=None):
             nonlocal python
-            ml_env={**env,'ML_DATA_POLICY':'approved_dataset','ML_APPROVAL_FILE':str(peer_path),
-                    'ML_EXTERNAL_INFERENCE_ENABLED':str(enabled).lower(),'ML_EVALUATE_URL':ml_url+'/v1/evaluate'}
+            ml_env={**env,'ML_DATA_POLICY':'approved_dataset','ML_APPROVAL_FILE':str(approval or grant_path),
+                    'ML_EXTERNAL_TRANSFER_AUTHORIZED':str(enabled).lower(),'ML_ADMISSION_URL':ml_url+'/v1/evaluate'}
             python=subprocess.Popen([str(args.ml_python.absolute()),'-B',str(ROOT/'server/src/test/python/admission_offline_ml.py'),
                 '--port',str(mp),'--counter',str(counter)],env=ml_env,cwd=folder,stdout=log,stderr=log)
             return wait_ready(ml_url,python,'/health',expected)
-        def write_grant(value,peer=True):
-            content=json.dumps(value,ensure_ascii=False).encode();grant_path.write_bytes(content)
-            if peer:peer_path.write_bytes(content)
+        def write_grant(value,path=None):
+            # One grant file is shared by both processes. A second is used only for the mismatch test.
+            path=path or grant_path
+            with os.fdopen(os.open(path,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600),'wb') as stream:
+                stream.write(json.dumps(value,ensure_ascii=False).encode())
+            path.chmod(0o600)
         grant={'approval_version':2,'session_id':'OFFLINE-REGRESSION-NOT-CONSENT','approval_reference':'TEST ONLY: no external permission',
                'approved_by':['Farhat','Nurtas'],'processing_mode':'external_approved','destination_description':'TEST configuration; outbound network forbidden',
-               'expires_at':(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat(),'ml_url':ml_url+'/v1/evaluate',
+               'expires_at':(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat().replace('+00:00','Z'),'ml_url':ml_url+'/v1/evaluate',
                'dataset_path':str(dataset_path),'dataset_sha256':hashlib.sha256(raw).hexdigest(),'conversation_ids':selected,
                'provider':'groq','model':'openai/gpt-oss-20b','checklist_scope':{'key':'chat-quality','min_version':1,'max_version':10,'max_criteria':100,'require_confirmation':True}}
         write_grant(grant)
@@ -112,7 +115,10 @@ def main():
                 raise SystemExit('BLOCKED: the installed Python service does not expose admission protocol2; Nurtas patch required. Groq calls=0.')
             http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503,confirmed=True)
             assert counts()['offline_provider_calls']==0
-            stop(python);start_python()
+            stop(python);peer_health=start_python()
+            assert all(peer_health.get(k)==v for k,v in {
+                'admission_protocol':2,'policy_mode':'approved_dataset','provider':'groq',
+                'model':'openai/gpt-oss-20b','grant_sha256':hashlib.sha256(grant_path.read_bytes()).hexdigest()}.items())
             assert http(java_url,'GET',status_route(selected[0]))['ready']
             approved_count=0
             for row in rows:
@@ -125,8 +131,7 @@ def main():
                 assert not http(java_url,'GET',status_route(selected[0]))['ready']
                 http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503,confirmed=True)
                 assert counts()['offline_provider_calls']==0
-            write_grant(grant);grant_path.unlink();assert not http(java_url,'GET',status_route(selected[0]))['ready'];write_grant(grant)
-            peer_path.unlink()
+            write_grant(grant);grant_path.unlink();assert not http(java_url,'GET',status_route(selected[0]))['ready']
             http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503,confirmed=True)
             assert not http(java_url,'GET',status_route(selected[0]))['ready'];write_grant(grant)
             # Check the actual Python gate, not only Java's interpretation of /health.
@@ -138,8 +143,10 @@ def main():
                 outside=context(selected[0]);outside['checklist'][field]=value
                 http(ml_url,'POST','/v1/evaluate',outside,expected=503,confirmed=True)
             assert counts()['offline_provider_calls']==0
-            changed=copy.deepcopy(grant);changed['session_id']='OTHER-TEST-SESSION';peer_path.write_text(json.dumps(changed))
-            assert http(java_url,'GET',status_route(selected[0]))['reason']=='PYTHON_GRANT_MISMATCH';write_grant(grant)
+            changed=copy.deepcopy(grant);changed['session_id']='OTHER-TEST-SESSION';write_grant(changed,peer_path)
+            stop(python);start_python(approval=peer_path)
+            assert http(java_url,'GET',status_route(selected[0]))['reason']=='PYTHON_GRANT_MISMATCH'
+            stop(python);start_python();peer_path.unlink()
             http(java_url,'POST','/api/evaluations/auto',auto_body(selected[0]),expected=503)
             http(ml_url,'POST','/v1/evaluate',context(selected[0]),expected=503)
             assert counts()['offline_provider_calls']==0
@@ -154,7 +161,7 @@ def main():
             assert second['checklist_version']==2 and second['original_answers'][0]['criterion_id']=='OFFLINE_DYNAMIC_CRITERION'
             assert http(java_url,'GET','/api/evaluations/'+first['id'])==first
             assert counts()['offline_provider_calls']==2
-            assert hashlib.sha256(grant_path.read_bytes()).hexdigest()==hashlib.sha256(peer_path.read_bytes()).hexdigest()
+            assert http(ml_url,'GET','/health')['grant_sha256']==hashlib.sha256(grant_path.read_bytes()).hexdigest()
             stop(java);start_java();assert http(java_url,'GET','/api/evaluations/'+first['id'])==first
             assert http(java_url,'GET','/api/evaluations/'+second['id'])==second
             print('PASS: real Java/Python HTTP admission, missing confirmation/invalid grants/mismatched peer, offline v1-v2, immutable v1, ledger replay/restart. Groq calls=0.',flush=True)
