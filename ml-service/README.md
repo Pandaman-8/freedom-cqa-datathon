@@ -457,8 +457,9 @@ PYTHONPATH=ml-service ml-service/.venv/bin/python ml-service/scripts/quality_pas
 
 ## T09: проверка Нуртаса и готовность Prompt v3 к PR
 
-Источник — [T09_Нуртас_review.json](reports/T09_Нуртас_review.json), точная копия
-предоставленного экспорта из Downloads. Его SHA-256:
+Исторический источник — локальный `T09_Нуртас_review.json`, предоставленный экспорт
+из Downloads; в текущем публичном checkout этого файла нет. Публичный сводный отчёт:
+[t09-human-review-report.json](reports/t09-human-review-report.json). Зафиксированный SHA-256 экспорта:
 `47debaaa039441359da0d5bd6cd1cfe02f44ef77c3f9274384a6b76c68d2db8a`.
 Время создания экспорта: `2026-11-07T16:03:23.688Z`. Единственный human reviewer —
 **Нуртас**. Пользователь отдельно подтвердил личную проверку всех 24 меток и отсутствие
